@@ -31,7 +31,10 @@ This project demonstrates a secure authentication architecture where:
 - ✅ User registration and login
 - ✅ JWT-based authentication
 - ✅ Secure token verification using JWKS
-- ✅ Protected API endpoints
+- ✅ JWT validation middleware for automatic token verification
+- ✅ Protected API endpoints (all routes protected by default)
+- ✅ Public route exclusion (health checks, docs, etc.)
+- ✅ Comprehensive logging for authentication events
 - ✅ CORS configuration
 - ✅ Type-safe frontend and backend
 - ✅ Modern UI with Tailwind CSS
@@ -120,6 +123,7 @@ nextjs-better-auth-fastapi/
 │   ├── auth.py             # JWT verification logic
 │   ├── config.py           # Configuration constants
 │   ├── main.py             # FastAPI application
+│   ├── middleware.py       # JWT validation middleware
 │   └── pyproject.toml      # Python dependencies
 ├── nextjs/                  # Next.js frontend
 │   ├── app/                # Next.js app directory
@@ -144,8 +148,16 @@ nextjs-better-auth-fastapi/
 
 ### Backend (FastAPI)
 
+**Public Endpoints** (no authentication required):
 - `GET /` - Health check endpoint
+- `GET /docs` - API documentation (Swagger UI)
+- `GET /openapi.json` - OpenAPI schema
+- `GET /redoc` - Alternative API documentation
+
+**Protected Endpoints** (JWT authentication required):
 - `POST /getdata` - Protected endpoint that requires JWT authentication
+
+All other endpoints are protected by default via the JWT validation middleware.
 
 ### Frontend (Next.js)
 
@@ -158,12 +170,42 @@ nextjs-better-auth-fastapi/
 2. **Token Issuance**: Better Auth issues a JWT token signed with Ed25519
 3. **Token Storage**: Token is stored in cookies and available for API requests
 4. **API Request**: Frontend sends requests to FastAPI backend with JWT token in Authorization header
-5. **Token Verification**: FastAPI backend:
-   - Fetches JWKS from Better Auth endpoint
+5. **JWT Middleware Validation**: The `JWTAuthMiddleware` intercepts all requests:
+   - Checks if the route is in the public routes list (excluded from authentication)
+   - Extracts the JWT token from the `Authorization: Bearer <token>` header
+   - Validates the token using the verification logic
+   - Stores the validated token payload in `request.state.token_data` for route handlers
+6. **Token Verification Process**:
+   - Fetches JWKS from Better Auth endpoint (with caching)
    - Extracts the public key based on token's `kid` (key ID)
    - Verifies token signature using Ed25519 public key
    - Validates issuer and audience claims
-6. **Protected Access**: If verification succeeds, the request is processed
+7. **Protected Access**: If verification succeeds, the request proceeds to the route handler with token data available in `request.state.token_data`
+
+### Accessing Token Data in Routes
+
+In your FastAPI route handlers, you can access the validated token payload:
+
+```python
+from fastapi import Request
+
+@app.post("/protected-endpoint")
+async def protected_route(request: Request):
+    token_data = request.state.token_data
+    user_id = token_data.get("sub") or token_data.get("id")
+    # Use token_data as needed
+    return {"user_id": user_id}
+```
+
+### Logging
+
+The middleware provides comprehensive logging:
+- **INFO**: Request entry and successful token validation
+- **WARNING**: Authentication failures (missing headers, invalid tokens)
+- **ERROR**: Unexpected errors during token verification
+- **DEBUG**: Detailed flow information
+
+All logs include HTTP method, path, and client IP for traceability.
 
 ## Development
 
