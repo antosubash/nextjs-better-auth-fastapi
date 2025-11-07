@@ -5,9 +5,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from dotenv import load_dotenv
 import sys
+import os
+import logging
 from pathlib import Path
 
 load_dotenv()
+
+# Configure logging
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    force=True,  # Override any existing configuration
+)
+
+# Get logger for this module
+logger = logging.getLogger(__name__)
 
 backend_dir = Path(__file__).parent
 if str(backend_dir) not in sys.path:
@@ -16,6 +30,8 @@ if str(backend_dir) not in sys.path:
 from auth import verify_token
 
 app = FastAPI()
+
+logger.info("FastAPI application initialized")
 
 origins = [
     "http://localhost:3000",

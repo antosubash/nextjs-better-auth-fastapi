@@ -1,12 +1,15 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
-from jose.utils import base64url_decode
+import jwt
+from jwt.exceptions import InvalidTokenError, DecodeError
+import base64
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-from cryptography.hazmat.primitives import serialization
 import httpx
+import logging
 from typing import Optional
 from config import JWKS_URL, JWT_ISSUER, JWT_AUDIENCE
+
+logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 
@@ -38,8 +41,19 @@ async def get_jwks(force_refresh: bool = False) -> dict:
         )
 
 
+def base64url_decode(data: str) -> bytes:
+    """Decode base64url string to bytes."""
+    # Add padding if needed
+    padding = 4 - len(data) % 4
+    if padding != 4:
+        data += "=" * padding
+    # Replace URL-safe characters
+    data = data.replace("-", "+").replace("_", "/")
+    return base64.b64decode(data)
+
+
 def get_public_key_from_jwks(jwks: dict, kid: str) -> Ed25519PublicKey:
-    """Extract public key from JWKS for a given key ID."""
+    """Extract and construct Ed25519 public key from JWKS for a given key ID."""
     keys = jwks.get("keys", [])
     
     for key in keys:
@@ -60,54 +74,76 @@ async def verify_token(
     token = credentials.credentials
     
     try:
-        # Decode token header to get the key ID (kid)
+        # Decode token header to get the key ID (kid) - PyJWT way
         unverified_header = jwt.get_unverified_header(token)
         kid = unverified_header.get("kid")
+        alg = unverified_header.get("alg")
+        
+        logger.info(f"Token header - kid: {kid}, alg: {alg}")
         
         if not kid:
+            logger.error("Token missing key ID (kid)")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token missing key ID (kid)"
             )
         
+        # Decode token without verification to check issuer/audience
+        try:
+            unverified_payload = jwt.decode(token, options={"verify_signature": False})
+            token_issuer = unverified_payload.get("iss")
+            token_audience = unverified_payload.get("aud")
+            logger.info(f"Token payload - iss: {token_issuer}, aud: {token_audience}")
+            logger.info(f"Expected - iss: {JWT_ISSUER}, aud: {JWT_AUDIENCE}")
+        except Exception as e:
+            logger.warning(f"Failed to decode token payload for inspection: {str(e)}")
+        
         # Fetch JWKS, refresh if kid is not in cache
         force_refresh = _jwks_cache is not None and kid not in _cached_kids
+        if force_refresh:
+            logger.info(f"Refreshing JWKS cache - kid {kid} not found in cached keys")
         jwks = await get_jwks(force_refresh=force_refresh)
+        logger.info(f"JWKS fetched successfully, {len(jwks.get('keys', []))} keys available")
         
-        # Get the public key for this kid
-        public_key = get_public_key_from_jwks(jwks, kid)
+        # Get the Ed25519 public key for this kid
+        try:
+            public_key = get_public_key_from_jwks(jwks, kid)
+            logger.info(f"Ed25519 public key extracted successfully for kid: {kid}")
+        except ValueError as e:
+            logger.error(f"Failed to extract public key: {str(e)}")
+            raise
         
-        # Serialize public key in PEM format for jose
-        public_key_pem = public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
+        # PyJWT supports Ed25519 keys directly from cryptography
+        logger.info("Attempting to verify token with EdDSA algorithm using PyJWT")
         
-        # Verify and decode the token
-        # python-jose supports Ed25519 when cryptography is installed
+        # PyJWT accepts cryptography key objects directly
+        # PyJWT API: decode(token, key, algorithms, issuer, audience, options)
         payload = jwt.decode(
             token,
-            public_key_pem,
+            public_key,
             algorithms=["EdDSA"],
             issuer=JWT_ISSUER,
             audience=JWT_AUDIENCE,
-            options={"verify_signature": True, "verify_iss": True, "verify_aud": True}
         )
         
+        logger.info("Token verified successfully")
         return payload
     except HTTPException:
         raise
-    except JWTError as e:
+    except (InvalidTokenError, DecodeError) as e:
+        logger.error(f"JWT verification error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid authentication token: {str(e)}"
         )
     except ValueError as e:
+        logger.error(f"Value error during token verification: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token verification failed: {str(e)}"
         )
     except Exception as e:
+        logger.error(f"Unexpected error during token verification: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token verification error: {str(e)}"

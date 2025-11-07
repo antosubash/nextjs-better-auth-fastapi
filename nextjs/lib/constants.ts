@@ -42,6 +42,10 @@ export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
 } as const;
 
+export const BETTER_AUTH_CONFIG = {
+  BASE_URL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+} as const;
+
 export const JWT_CONFIG = {
   ALGORITHM: "HS256",
 } as const;
@@ -61,7 +65,8 @@ export const API_DATA = {
 export const LANDING_PAGE = {
   HERO_TITLE: "Welcome to Better Auth",
   HERO_SUBTITLE: "Secure, fast, and easy authentication for your applications",
-  HERO_DESCRIPTION: "Get started in minutes with our powerful authentication system built on Next.js and FastAPI.",
+  HERO_DESCRIPTION:
+    "Get started in minutes with our powerful authentication system built on Next.js and FastAPI.",
   GET_STARTED: "Get Started",
   CREATE_ACCOUNT: "Create Account",
   SIGN_IN_DESCRIPTION: "Sign in to your account to continue",
@@ -70,7 +75,8 @@ export const LANDING_PAGE = {
   FEATURES: [
     {
       TITLE: "Secure by Default",
-      DESCRIPTION: "Enterprise-grade security with modern authentication protocols",
+      DESCRIPTION:
+        "Enterprise-grade security with modern authentication protocols",
     },
     {
       TITLE: "Lightning Fast",
@@ -82,4 +88,3 @@ export const LANDING_PAGE = {
     },
   ],
 } as const;
-
