@@ -67,12 +67,8 @@ def get_public_key_from_jwks(jwks: dict, kid: str) -> Ed25519PublicKey:
     raise ValueError(f"Key with kid '{kid}' not found in JWKS")
 
 
-async def verify_token(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-) -> dict:
-    """Verify JWT token using JWKS from better-auth."""
-    token = credentials.credentials
-    
+async def verify_token_string(token: str) -> dict:
+    """Verify JWT token string using JWKS from better-auth."""
     try:
         # Decode token header to get the key ID (kid) - PyJWT way
         unverified_header = jwt.get_unverified_header(token)
@@ -148,4 +144,11 @@ async def verify_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token verification error: {str(e)}"
         )
+
+
+async def verify_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> dict:
+    """Verify JWT token using JWKS from better-auth (dependency function)."""
+    return await verify_token_string(credentials.credentials)
 
