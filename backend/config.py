@@ -1,0 +1,7 @@
+import os
+
+BETTER_AUTH_URL = os.getenv("BETTER_AUTH_URL", "http://localhost:3000")
+JWKS_URL = f"{BETTER_AUTH_URL}/api/auth/jwks"
+JWT_ISSUER = BETTER_AUTH_URL
+JWT_AUDIENCE = BETTER_AUTH_URL
+

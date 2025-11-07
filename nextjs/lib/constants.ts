@@ -38,6 +38,26 @@ export const STORAGE_KEYS = {
   SESSION_TOKEN: "better-auth.session_token",
 } as const;
 
+export const API_CONFIG = {
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+} as const;
+
+export const JWT_CONFIG = {
+  ALGORITHM: "HS256",
+} as const;
+
+export const API_DATA = {
+  TITLE: "API Data",
+  SEND_DATA: "Send Data",
+  CONTENT_PLACEHOLDER: "Enter content to send",
+  LOADING: "Loading...",
+  ERROR: "Error",
+  SUCCESS: "Success",
+  NO_DATA: "No data to display",
+  SEND_BUTTON: "Send",
+  RESPONSE_LABEL: "Response:",
+} as const;
+
 export const LANDING_PAGE = {
   HERO_TITLE: "Welcome to Better Auth",
   HERO_SUBTITLE: "Secure, fast, and easy authentication for your applications",

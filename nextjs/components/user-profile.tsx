@@ -5,6 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, PROFILE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { User, Mail, LogOut, CheckCircle2 } from "lucide-react";
+import { ApiData } from "./api-data";
 
 export function UserProfile() {
   const [user, setUser] = useState<{ name?: string; email?: string } | null>(
@@ -124,6 +125,11 @@ export function UserProfile() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* API Data Component */}
+      <div className="mb-6">
+        <ApiData />
       </div>
 
       {/* Logout Button */}
