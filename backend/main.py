@@ -66,4 +66,6 @@ async def create_secret(
         formatted_date = now.strftime("%B %d, %Y at %I:%M %p")
         f.write(formatted_date + ": " + payload.content)
         f.write('\n')
+        logger.info(f"Data written to output_file.txt: {payload.content}")
+    logger.info(f"Token data: {token_data}")
     return payload.content
