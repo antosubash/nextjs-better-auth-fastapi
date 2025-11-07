@@ -41,7 +41,6 @@ This project demonstrates a secure authentication architecture where:
 - **Node.js** 18+ and **pnpm**
 - **Python** 3.12+
 - **uv** (Python package manager)
-- **PostgreSQL**, **MinIO**, and **Redis** (assumed to be running on your system)
 
 ## Installation
 
