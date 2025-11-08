@@ -190,6 +190,7 @@ export const ADMIN_DASHBOARD = {
 export const ADMIN_NAVIGATION = {
   DASHBOARD: "Dashboard",
   USER_MANAGEMENT: "User Management",
+  ORGANIZATIONS: "Organizations",
   MENU_TOGGLE: "Toggle menu",
   CLOSE_MENU: "Close menu",
 } as const;
@@ -197,4 +198,201 @@ export const ADMIN_NAVIGATION = {
 export const ADMIN_LAYOUT = {
   LOADING: "Loading...",
   ACCESS_DENIED: "Access Denied",
+} as const;
+
+export const ORGANIZATION_ROLES = {
+  ADMIN: "admin",
+  MEMBER: "member",
+  OWNER: "owner",
+  MY_CUSTOM_ROLE: "myCustomRole",
+} as const;
+
+export const ORGANIZATION_LABELS = {
+  TITLE: "Organizations",
+  CREATE_ORGANIZATION: "Create Organization",
+  EDIT_ORGANIZATION: "Edit Organization",
+  DELETE_ORGANIZATION: "Delete Organization",
+  SET_ACTIVE: "Set Active",
+  NAME: "Name",
+  SLUG: "Slug",
+  DESCRIPTION: "Description",
+  CREATED_AT: "Created At",
+  ACTIONS: "Actions",
+  NO_ORGANIZATIONS: "No organizations found",
+  LOADING: "Loading organizations...",
+  SEARCH_ORGANIZATIONS: "Search organizations...",
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
+  MEMBERS: "Members",
+  TEAMS: "Teams",
+  INVITATIONS: "Invitations",
+  SETTINGS: "Settings",
+  DASHBOARD: "Dashboard",
+  STATUS: "Status",
+  CONFIRM_DELETE: "Are you sure you want to delete this organization?",
+  CONFIRM_LEAVE: "Are you sure you want to leave this organization?",
+  SAVE: "Save",
+  CANCEL: "Cancel",
+  VIEW_DETAILS: "View Details",
+} as const;
+
+export const ORGANIZATION_PLACEHOLDERS = {
+  NAME: "Enter organization name",
+  SLUG: "Enter organization slug",
+  DESCRIPTION: "Enter organization description (optional)",
+} as const;
+
+export const ORGANIZATION_ERRORS = {
+  CREATE_FAILED: "Failed to create organization",
+  UPDATE_FAILED: "Failed to update organization",
+  DELETE_FAILED: "Failed to delete organization",
+  SET_ACTIVE_FAILED: "Failed to set active organization",
+  LOAD_ORGANIZATIONS_FAILED: "Failed to load organizations",
+  LOAD_ORGANIZATION_FAILED: "Failed to load organization",
+  ACCESS_DENIED: "Access denied",
+  INVALID_NAME: "Invalid organization name",
+  INVALID_SLUG: "Invalid organization slug",
+} as const;
+
+export const ORGANIZATION_SUCCESS = {
+  ORGANIZATION_CREATED: "Organization created successfully",
+  ORGANIZATION_UPDATED: "Organization updated successfully",
+  ORGANIZATION_DELETED: "Organization deleted successfully",
+  ORGANIZATION_ACTIVATED: "Organization activated successfully",
+} as const;
+
+export const MEMBER_LABELS = {
+  TITLE: "Members",
+  ADD_MEMBER: "Add Member",
+  REMOVE_MEMBER: "Remove Member",
+  UPDATE_ROLE: "Update Role",
+  LEAVE_ORGANIZATION: "Leave Organization",
+  EMAIL: "Email",
+  ROLE: "Role",
+  JOINED_AT: "Joined At",
+  ACTIONS: "Actions",
+  NO_MEMBERS: "No members found",
+  LOADING: "Loading members...",
+  SEARCH_MEMBERS: "Search members...",
+  CONFIRM_REMOVE: "Are you sure you want to remove this member?",
+  CONFIRM_LEAVE: "Are you sure you want to leave this organization?",
+  CANCEL: "Cancel",
+} as const;
+
+export const MEMBER_PLACEHOLDERS = {
+  EMAIL: "Enter member email",
+  ROLE: "Select role",
+} as const;
+
+export const MEMBER_ERRORS = {
+  ADD_FAILED: "Failed to add member",
+  REMOVE_FAILED: "Failed to remove member",
+  UPDATE_ROLE_FAILED: "Failed to update member role",
+  LEAVE_FAILED: "Failed to leave organization",
+  LOAD_MEMBERS_FAILED: "Failed to load members",
+  INVALID_EMAIL: "Invalid email address",
+  INVALID_ROLE: "Invalid role",
+} as const;
+
+export const MEMBER_SUCCESS = {
+  MEMBER_ADDED: "Member added successfully",
+  MEMBER_REMOVED: "Member removed successfully",
+  ROLE_UPDATED: "Member role updated successfully",
+  LEFT_ORGANIZATION: "Left organization successfully",
+} as const;
+
+export const INVITATION_LABELS = {
+  TITLE: "Invitations",
+  SEND_INVITATION: "Send Invitation",
+  ACCEPT_INVITATION: "Accept Invitation",
+  REJECT_INVITATION: "Reject Invitation",
+  CANCEL_INVITATION: "Cancel Invitation",
+  RESEND_INVITATION: "Resend Invitation",
+  EMAIL: "Email",
+  ROLE: "Role",
+  STATUS: "Status",
+  SENT_AT: "Sent At",
+  EXPIRES_AT: "Expires At",
+  ACTIONS: "Actions",
+  NO_INVITATIONS: "No invitations found",
+  LOADING: "Loading invitations...",
+  PENDING: "Pending",
+  ACCEPTED: "Accepted",
+  REJECTED: "Rejected",
+  EXPIRED: "Expired",
+  CONFIRM_CANCEL: "Are you sure you want to cancel this invitation?",
+  CONFIRM_REJECT: "Are you sure you want to reject this invitation?",
+} as const;
+
+export const INVITATION_PLACEHOLDERS = {
+  EMAIL: "Enter email address",
+  ROLE: "Select role",
+} as const;
+
+export const INVITATION_ERRORS = {
+  SEND_FAILED: "Failed to send invitation",
+  ACCEPT_FAILED: "Failed to accept invitation",
+  REJECT_FAILED: "Failed to reject invitation",
+  CANCEL_FAILED: "Failed to cancel invitation",
+  RESEND_FAILED: "Failed to resend invitation",
+  LOAD_INVITATIONS_FAILED: "Failed to load invitations",
+  INVALID_TOKEN: "Invalid invitation token",
+  EXPIRED_TOKEN: "Invitation token has expired",
+} as const;
+
+export const INVITATION_SUCCESS = {
+  INVITATION_SENT: "Invitation sent successfully",
+  INVITATION_ACCEPTED: "Invitation accepted successfully",
+  INVITATION_REJECTED: "Invitation rejected successfully",
+  INVITATION_CANCELLED: "Invitation cancelled successfully",
+  INVITATION_RESENT: "Invitation resent successfully",
+} as const;
+
+export const TEAM_LABELS = {
+  TITLE: "Teams",
+  CREATE_TEAM: "Create Team",
+  EDIT_TEAM: "Edit Team",
+  DELETE_TEAM: "Delete Team",
+  SET_ACTIVE: "Set Active Team",
+  NAME: "Name",
+  CREATED_AT: "Created At",
+  ACTIONS: "Actions",
+  NO_TEAMS: "No teams found",
+  LOADING: "Loading teams...",
+  MEMBERS: "Team Members",
+  ADD_MEMBER: "Add Team Member",
+  REMOVE_MEMBER: "Remove Team Member",
+  CONFIRM_DELETE: "Are you sure you want to delete this team?",
+} as const;
+
+export const TEAM_PLACEHOLDERS = {
+  NAME: "Enter team name",
+} as const;
+
+export const TEAM_ERRORS = {
+  CREATE_FAILED: "Failed to create team",
+  UPDATE_FAILED: "Failed to update team",
+  DELETE_FAILED: "Failed to delete team",
+  SET_ACTIVE_FAILED: "Failed to set active team",
+  ADD_MEMBER_FAILED: "Failed to add team member",
+  REMOVE_MEMBER_FAILED: "Failed to remove team member",
+  LOAD_TEAMS_FAILED: "Failed to load teams",
+  LOAD_TEAM_FAILED: "Failed to load team",
+  INVALID_NAME: "Invalid team name",
+} as const;
+
+export const TEAM_SUCCESS = {
+  TEAM_CREATED: "Team created successfully",
+  TEAM_UPDATED: "Team updated successfully",
+  TEAM_DELETED: "Team deleted successfully",
+  TEAM_ACTIVATED: "Team activated successfully",
+  MEMBER_ADDED: "Team member added successfully",
+  MEMBER_REMOVED: "Team member removed successfully",
+} as const;
+
+export const ORGANIZATION_SWITCHER = {
+  SELECT_ORGANIZATION: "Select Organization",
+  NO_ORGANIZATIONS: "No organizations available",
+  SWITCHING: "Switching...",
+  CURRENT: "Current",
 } as const;

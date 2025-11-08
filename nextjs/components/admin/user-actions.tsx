@@ -8,7 +8,14 @@ import {
   ADMIN_SUCCESS,
   USER_ROLES,
 } from "@/lib/constants";
-import { MoreVertical, Ban, UserCheck, Trash2, Edit, Shield } from "lucide-react";
+import {
+  MoreVertical,
+  Ban,
+  UserCheck,
+  Trash2,
+  Edit,
+  Shield,
+} from "lucide-react";
 
 interface User {
   id: string;
@@ -36,7 +43,9 @@ export function UserActions({
   const [showBanModal, setShowBanModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [banReason, setBanReason] = useState("");
-  const [newRole, setNewRole] = useState(user.role || USER_ROLES.USER);
+  const [newRole, setNewRole] = useState<"user" | "admin">(
+    (user.role as "user" | "admin") || USER_ROLES.USER,
+  );
 
   const handleBan = async () => {
     setIsLoading(true);
@@ -54,7 +63,8 @@ export function UserActions({
         setBanReason("");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.BAN_FAILED;
+      const errorMessage =
+        err instanceof Error ? err.message : ADMIN_ERRORS.BAN_FAILED;
       alert(errorMessage);
     } finally {
       setIsLoading(false);
@@ -74,7 +84,8 @@ export function UserActions({
         onActionSuccess(ADMIN_SUCCESS.USER_UNBANNED);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.UNBAN_FAILED;
+      const errorMessage =
+        err instanceof Error ? err.message : ADMIN_ERRORS.UNBAN_FAILED;
       alert(errorMessage);
     } finally {
       setIsLoading(false);
@@ -96,7 +107,8 @@ export function UserActions({
         setShowRoleModal(false);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.SET_ROLE_FAILED;
+      const errorMessage =
+        err instanceof Error ? err.message : ADMIN_ERRORS.SET_ROLE_FAILED;
       alert(errorMessage);
     } finally {
       setIsLoading(false);
@@ -120,7 +132,8 @@ export function UserActions({
         onDelete();
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.DELETE_FAILED;
+      const errorMessage =
+        err instanceof Error ? err.message : ADMIN_ERRORS.DELETE_FAILED;
       alert(errorMessage);
     } finally {
       setIsLoading(false);
@@ -261,7 +274,7 @@ export function UserActions({
               </label>
               <select
                 value={newRole}
-                onChange={(e) => setNewRole(e.target.value)}
+                onChange={(e) => setNewRole(e.target.value as "user" | "admin")}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
               >
                 <option value={USER_ROLES.USER}>{USER_ROLES.USER}</option>
@@ -279,7 +292,9 @@ export function UserActions({
               <button
                 onClick={() => {
                   setShowRoleModal(false);
-                  setNewRole(user.role || USER_ROLES.USER);
+                  setNewRole(
+                    (user.role as "user" | "admin") || USER_ROLES.USER,
+                  );
                 }}
                 disabled={isLoading}
                 className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50"
@@ -293,4 +308,3 @@ export function UserActions({
     </>
   );
 }
-

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, X } from "lucide-react";
+import { LayoutDashboard, Users, Building2, X } from "lucide-react";
 import { ADMIN_NAVIGATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,11 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       href: "/admin",
       label: ADMIN_NAVIGATION.USER_MANAGEMENT,
       icon: Users,
+    },
+    {
+      href: "/admin/organizations",
+      label: ADMIN_NAVIGATION.ORGANIZATIONS,
+      icon: Building2,
     },
   ];
 
@@ -61,7 +66,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       <aside
         className={cn(
           "fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex flex-col h-full">
@@ -83,7 +88,10 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
           <nav className="flex-1 p-4 space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              const isActive =
+                item.href === "/admin/organizations"
+                  ? pathname?.startsWith("/admin/organizations")
+                  : pathname === item.href;
 
               return (
                 <Link
@@ -94,7 +102,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                     "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                     isActive
                       ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
                   )}
                 >
                   <Icon className="w-5 h-5" />
@@ -108,4 +116,3 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     </>
   );
 }
-

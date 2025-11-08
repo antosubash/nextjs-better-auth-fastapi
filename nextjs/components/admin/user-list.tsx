@@ -52,11 +52,18 @@ export function UserList() {
       if (result.error) {
         setError(result.error.message || ADMIN_ERRORS.LOAD_USERS_FAILED);
       } else if (result.data) {
-        setUsers(result.data.users || []);
+        const usersData = (result.data as { users?: User[] })?.users || [];
+        setUsers(
+          usersData.map((u) => ({
+            ...u,
+            banned: u.banned ?? false,
+          })),
+        );
         setTotalUsers(result.data.total || 0);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.LOAD_USERS_FAILED;
+      const errorMessage =
+        err instanceof Error ? err.message : ADMIN_ERRORS.LOAD_USERS_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -197,7 +204,10 @@ export function UserList() {
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                    <tr
+                      key={user.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                         {user.name}
                       </td>
@@ -267,4 +277,3 @@ export function UserList() {
     </div>
   );
 }
-

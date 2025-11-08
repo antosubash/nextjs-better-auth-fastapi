@@ -2,6 +2,7 @@
 
 import { Menu } from "lucide-react";
 import { ADMIN_NAVIGATION } from "@/lib/constants";
+import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 
 interface AdminHeaderProps {
   onMenuToggle: () => void;
@@ -19,8 +20,10 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
           <Menu className="w-6 h-6" />
         </button>
         <div className="flex-1 lg:ml-0" />
+        <div className="flex items-center gap-3">
+          <OrganizationSwitcher />
+        </div>
       </div>
     </header>
   );
 }
-

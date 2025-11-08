@@ -7,6 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, DASHBOARD } from "@/lib/constants";
 import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 
 export function MainNavbar() {
   const router = useRouter();
@@ -110,6 +111,7 @@ export function MainNavbar() {
 
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
+                <OrganizationSwitcher />
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800">
                   <div className="w-8 h-8 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center text-sm font-medium">
                     {getInitials(user.name, user.email)}
@@ -171,6 +173,9 @@ export function MainNavbar() {
 
             {isAuthenticated && user ? (
               <div className="space-y-3">
+                <div className="px-4">
+                  <OrganizationSwitcher />
+                </div>
                 <div className="flex items-center gap-3 px-4 py-2">
                   <div className="w-10 h-10 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center text-sm font-medium">
                     {getInitials(user.name, user.email)}
