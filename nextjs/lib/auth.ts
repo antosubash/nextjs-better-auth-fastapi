@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { bearer, jwt, admin } from "better-auth/plugins";
+import { bearer, jwt, admin, organization } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "./database";
 import * as schema from "./auth-schema";
@@ -29,6 +29,7 @@ export const auth = betterAuth({
     admin({
       defaultRole: USER_ROLES.USER,
     }),
+    organization(),
     nextCookies(),
   ],
 });
