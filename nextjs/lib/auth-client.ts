@@ -1,9 +1,11 @@
 import { createAuthClient } from "better-auth/react";
-import { jwtClient } from "better-auth/client/plugins"
+import { jwtClient, adminClient } from "better-auth/client/plugins";
+import { BETTER_AUTH_CONFIG } from "./constants";
 
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:3000",
+  baseURL: BETTER_AUTH_CONFIG.BASE_URL,
   plugins: [
-    jwtClient() 
-  ]
+    jwtClient(),
+    adminClient(),
+  ],
 });

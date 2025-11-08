@@ -1,10 +1,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { bearer, jwt } from "better-auth/plugins";
+import { bearer, jwt, admin } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "./database";
 import * as schema from "./auth-schema";
-import { BETTER_AUTH_CONFIG } from "./constants";
+import { BETTER_AUTH_CONFIG, USER_ROLES } from "./constants";
 
 const secret = process.env.BETTER_AUTH_SECRET || "change-me-in-production";
 
@@ -27,5 +27,8 @@ export const auth = betterAuth({
       },
     }),
     nextCookies(),
+    admin({
+      defaultRole: USER_ROLES.USER,
+    }),
   ],
 });

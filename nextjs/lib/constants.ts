@@ -88,3 +88,65 @@ export const LANDING_PAGE = {
     },
   ],
 } as const;
+
+export const USER_ROLES = {
+  ADMIN: "admin",
+  USER: "user",
+} as const;
+
+export const ADMIN_LABELS = {
+  TITLE: "User Management",
+  CREATE_USER: "Create User",
+  EDIT_USER: "Edit User",
+  DELETE_USER: "Delete User",
+  BAN_USER: "Ban User",
+  UNBAN_USER: "Unban User",
+  SET_ROLE: "Set Role",
+  SEARCH_USERS: "Search users...",
+  NO_USERS: "No users found",
+  LOADING: "Loading users...",
+  ACTIONS: "Actions",
+  ROLE: "Role",
+  STATUS: "Status",
+  BANNED: "Banned",
+  ACTIVE: "Active",
+  EMAIL: "Email",
+  NAME: "Name",
+  CREATED_AT: "Created At",
+  BAN_REASON: "Ban Reason",
+  BAN_EXPIRES: "Ban Expires",
+  SAVE: "Save",
+  CANCEL: "Cancel",
+  CONFIRM_DELETE: "Are you sure you want to delete this user?",
+  CONFIRM_BAN: "Are you sure you want to ban this user?",
+  CONFIRM_UNBAN: "Are you sure you want to unban this user?",
+} as const;
+
+export const ADMIN_PLACEHOLDERS = {
+  EMAIL: "Enter email",
+  PASSWORD: "Enter password",
+  NAME: "Enter name",
+  ROLE: "Select role",
+  BAN_REASON: "Enter ban reason (optional)",
+} as const;
+
+export const ADMIN_ERRORS = {
+  CREATE_FAILED: "Failed to create user",
+  UPDATE_FAILED: "Failed to update user",
+  DELETE_FAILED: "Failed to delete user",
+  BAN_FAILED: "Failed to ban user",
+  UNBAN_FAILED: "Failed to unban user",
+  SET_ROLE_FAILED: "Failed to set user role",
+  LOAD_USERS_FAILED: "Failed to load users",
+  ACCESS_DENIED: "Access denied. Admin privileges required.",
+  INVALID_ROLE: "Invalid role",
+} as const;
+
+export const ADMIN_SUCCESS = {
+  USER_CREATED: "User created successfully",
+  USER_UPDATED: "User updated successfully",
+  USER_DELETED: "User deleted successfully",
+  USER_BANNED: "User banned successfully",
+  USER_UNBANNED: "User unbanned successfully",
+  ROLE_SET: "User role updated successfully",
+} as const;

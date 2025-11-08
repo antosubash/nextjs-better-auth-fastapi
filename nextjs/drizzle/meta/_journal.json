@@ -15,6 +15,13 @@
       "when": 1762553350636,
       "tag": "0001_heavy_tyrannus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1762608329607,
+      "tag": "0002_zippy_black_queen",
+      "breakpoints": true
     }
   ]
 }
