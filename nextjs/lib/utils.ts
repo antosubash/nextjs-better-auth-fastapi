@@ -6,6 +6,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function getDashboardPath(userRole?: string): string {
+export function getDashboardPath(userRole?: string | null): string {
   return userRole === USER_ROLES.ADMIN ? "/admin/dashboard" : "/dashboard"
 }
