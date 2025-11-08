@@ -1,34 +1,87 @@
 import "dotenv/config";
 import { USER_ROLES } from "../lib/constants";
+import { auth } from "../lib/auth";
 import { db } from "../lib/database";
-import { user, account } from "../lib/auth-schema";
+import { user } from "../lib/auth-schema";
 import { eq } from "drizzle-orm";
-import { generateId } from "better-auth/utils/id";
-import { hash } from "bcryptjs";
 
 const SEED_USERS = [
   {
-    email: "[email protected]",
+    email: "admin@example.com",
     password: "admin123",
     name: "Admin User",
     role: USER_ROLES.ADMIN,
   },
   {
-    email: "[email protected]",
-    password: "user123",
+    email: "user1@example.com",
+    password: "user1234",
     name: "Test User 1",
     role: USER_ROLES.USER,
   },
   {
-    email: "[email protected]",
-    password: "user123",
+    email: "user2@example.com",
+    password: "user1234",
     name: "Test User 2",
     role: USER_ROLES.USER,
   },
   {
-    email: "[email protected]",
-    password: "user123",
+    email: "user3@example.com",
+    password: "user1234",
     name: "Test User 3",
+    role: USER_ROLES.USER,
+  },
+  {
+    email: "user4@example.com",
+    password: "user1234",
+    name: "Alice Johnson",
+    role: USER_ROLES.USER,
+  },
+  {
+    email: "user5@example.com",
+    password: "user1234",
+    name: "Bob Smith",
+    role: USER_ROLES.USER,
+  },
+  {
+    email: "user6@example.com",
+    password: "user1234",
+    name: "Charlie Brown",
+    role: USER_ROLES.USER,
+  },
+  {
+    email: "user7@example.com",
+    password: "user1234",
+    name: "Diana Prince",
+    role: USER_ROLES.USER,
+  },
+  {
+    email: "user8@example.com",
+    password: "user1234",
+    name: "Ethan Hunt",
+    role: USER_ROLES.USER,
+  },
+  {
+    email: "user9@example.com",
+    password: "user1234",
+    name: "Fiona Chen",
+    role: USER_ROLES.USER,
+  },
+  {
+    email: "user10@example.com",
+    password: "user1234",
+    name: "George Wilson",
+    role: USER_ROLES.USER,
+  },
+  {
+    email: "hannah.martinez@example.com",
+    password: "user1234",
+    name: "Hannah Martinez",
+    role: USER_ROLES.USER,
+  },
+  {
+    email: "hannah@example.com",
+    password: "user1234",
+    name: "Isaac Newton",
     role: USER_ROLES.USER,
   },
 ];
@@ -45,33 +98,34 @@ async function seedUsers() {
         .limit(1);
 
       if (existingUsers.length > 0) {
-        console.log(`⊘ User already exists: ${userData.email}`);
-        continue;
+        const existingUser = existingUsers[0];
+        console.log(`⊘ User already exists: ${userData.email}, deleting...`);
+
+        await db.delete(user).where(eq(user.id, existingUser.id));
+
+        console.log(`✓ Deleted existing user: ${userData.email}`);
       }
 
-      const userId = generateId();
-      const hashedPassword = await hash(userData.password, 10);
-
-      await db.insert(user).values({
-        id: userId,
-        email: userData.email,
-        name: userData.name,
-        role: userData.role,
-        emailVerified: false,
+      const result = await auth.api.signUpEmail({
+        body: {
+          name: userData.name,
+          email: userData.email,
+          password: userData.password,
+        },
       });
 
-      await db.insert(account).values({
-        id: generateId(),
-        accountId: userData.email,
-        providerId: "credential",
-        userId: userId,
-        password: hashedPassword,
-      });
+      if (result.user?.id && userData.role) {
+        await db
+          .update(user)
+          .set({ role: userData.role })
+          .where(eq(user.id, result.user.id));
+      }
 
       console.log(`✓ Created user: ${userData.email} (${userData.role})`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error(`✗ Failed to create user ${userData.email}:`, errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error(`✗ Failed to process user ${userData.email}:`, errorMessage);
     }
   }
 
@@ -86,4 +140,3 @@ seedUsers()
     console.error("Seeding failed:", error);
     process.exit(1);
   });
-
