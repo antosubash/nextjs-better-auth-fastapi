@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { ADMIN_ERRORS, ADMIN_LAYOUT, USER_ROLES } from "@/lib/constants";
+import { ADMIN_ERRORS, ADMIN_LAYOUT, USER_ROLES, PAGE_CONTAINER } from "@/lib/constants";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminHeader } from "@/components/admin/admin-header";
 
@@ -86,7 +86,7 @@ export default function AdminLayout({
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="lg:pl-64">
         <AdminHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="container mx-auto px-4 py-8 md:py-12">
+        <main className={PAGE_CONTAINER.CLASS}>
           {children}
         </main>
       </div>

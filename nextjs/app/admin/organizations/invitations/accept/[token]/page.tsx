@@ -55,8 +55,7 @@ export default function AcceptInvitationPage() {
   }, [token, router]);
 
   return (
-    <main className="container mx-auto px-4 py-8 md:py-12">
-      <div className="max-w-md mx-auto">
+    <div className="max-w-md mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
           {status === "loading" || status === "processing" ? (
             <>
@@ -96,6 +95,5 @@ export default function AcceptInvitationPage() {
           )}
         </div>
       </div>
-    </main>
   );
 }

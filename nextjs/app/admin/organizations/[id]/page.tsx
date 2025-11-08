@@ -77,29 +77,25 @@ export default function OrganizationDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="container mx-auto px-4 py-8 md:py-12">
-        <div className="text-center text-gray-600 dark:text-gray-400">
-          {ORGANIZATION_LABELS.LOADING}
-        </div>
-      </main>
+      <div className="text-center text-gray-600 dark:text-gray-400">
+        {ORGANIZATION_LABELS.LOADING}
+      </div>
     );
   }
 
   if (error || !organization) {
     return (
-      <main className="container mx-auto px-4 py-8 md:py-12">
-        <div className="text-center">
-          <p className="text-lg text-red-600 dark:text-red-400">
-            {error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED}
-          </p>
-          <Link
-            href="/admin/organizations"
-            className="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Back to Organizations
-          </Link>
-        </div>
-      </main>
+      <div className="text-center">
+        <p className="text-lg text-red-600 dark:text-red-400">
+          {error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED}
+        </p>
+        <Link
+          href="/admin/organizations"
+          className="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          Back to Organizations
+        </Link>
+      </div>
     );
   }
 
@@ -112,7 +108,7 @@ export default function OrganizationDetailPage() {
   };
 
   return (
-    <main className="container mx-auto px-4 py-8 md:py-12">
+    <div>
       <div className="mb-6">
         <Link
           href="/admin/organizations"
@@ -189,7 +185,7 @@ export default function OrganizationDetailPage() {
       {activeTab === "invitations" && (
         <InvitationList organizationId={organizationId} />
       )}
-    </main>
+    </div>
   );
 }
 

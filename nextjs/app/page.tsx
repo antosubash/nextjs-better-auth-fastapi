@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { LoginForm } from "@/components/login-form";
 import { SignupForm } from "@/components/signup-form";
-import { LANDING_PAGE } from "@/lib/constants";
+import { LANDING_PAGE, PAGE_CONTAINER } from "@/lib/constants";
 import { getDashboardPath } from "@/lib/utils";
 import { Shield, Zap, Code } from "lucide-react";
 
@@ -60,7 +60,7 @@ export default function Home() {
 
   return (
     <main className="w-full">
-        <div className="container mx-auto px-4 py-8 md:py-12 lg:py-20 max-w-7xl">
+        <div className={PAGE_CONTAINER.CLASS}>
           {/* Hero Section */}
           <div className="text-center mb-12 md:mb-16 lg:mb-24 w-full">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-gray-900 dark:text-white">

@@ -400,3 +400,7 @@ export const ORGANIZATION_SWITCHER = {
   SWITCHING: "Switching...",
   CURRENT: "Current",
 } as const;
+
+export const PAGE_CONTAINER = {
+  CLASS: "container mx-auto px-4 py-8 md:py-12 max-w-7xl",
+} as const;

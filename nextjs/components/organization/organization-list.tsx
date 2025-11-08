@@ -130,7 +130,7 @@ export function OrganizationList() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
+    <div>
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Building2 className="w-8 h-8 text-gray-900 dark:text-white" />

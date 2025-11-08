@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { DASHBOARD, USER_ROLES } from "@/lib/constants";
+import { DASHBOARD, USER_ROLES, PAGE_CONTAINER } from "@/lib/constants";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { MetricsGrid } from "@/components/dashboard/metrics-grid";
@@ -122,7 +122,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8 md:py-12">
+    <main className={PAGE_CONTAINER.CLASS}>
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
             {DASHBOARD.TITLE}
