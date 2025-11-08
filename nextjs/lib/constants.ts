@@ -348,6 +348,10 @@ export const INVITATION_SUCCESS = {
   INVITATION_RESENT: "Invitation resent successfully",
 } as const;
 
+export const INVITATION_CONFIG = {
+  EXPIRY_DAYS: 7,
+} as const;
+
 export const TEAM_LABELS = {
   TITLE: "Teams",
   CREATE_TEAM: "Create Team",
