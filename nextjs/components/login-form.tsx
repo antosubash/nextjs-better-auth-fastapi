@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, AUTH_PLACEHOLDERS, AUTH_ERRORS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, getDashboardPath } from "@/lib/utils";
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;
 }
 
 export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -29,7 +31,9 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       if (result.error) {
         setError(AUTH_ERRORS.INVALID_CREDENTIALS);
       } else {
-        window.location.reload();
+        const session = await authClient.getSession();
+        const userRole = session?.data?.user?.role;
+        router.push(getDashboardPath(userRole));
       }
     } catch {
       setError(AUTH_ERRORS.LOGIN_FAILED);

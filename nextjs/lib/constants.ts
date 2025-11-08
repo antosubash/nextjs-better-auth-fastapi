@@ -150,3 +150,51 @@ export const ADMIN_SUCCESS = {
   USER_UNBANNED: "User unbanned successfully",
   ROLE_SET: "User role updated successfully",
 } as const;
+
+export const DASHBOARD = {
+  TITLE: "Dashboard",
+  WELCOME: "Welcome to your dashboard",
+  LOADING: "Loading dashboard...",
+  ERROR: "Failed to load dashboard data",
+  ACCOUNT_INFO: "Account Information",
+  ACTIVE_SESSIONS: "Active Sessions",
+  ACCOUNT_CREATED: "Account Created",
+  EMAIL_VERIFIED: "Email Verified",
+  EMAIL_NOT_VERIFIED: "Email Not Verified",
+  RECENT_ACTIVITY: "Recent Activity",
+  NO_ACTIVITY: "No recent activity",
+  SESSION_CREATED: "Session created",
+  VIEW_DETAILS: "View Details",
+} as const;
+
+export const ADMIN_DASHBOARD = {
+  TITLE: "Admin Dashboard",
+  WELCOME: "System Overview",
+  LOADING: "Loading admin dashboard...",
+  ERROR: "Failed to load admin dashboard data",
+  TOTAL_USERS: "Total Users",
+  ACTIVE_SESSIONS: "Active Sessions",
+  BANNED_USERS: "Banned Users",
+  RECENT_REGISTRATIONS: "Recent Registrations",
+  RECENT_REGISTRATIONS_SUBTITLE: "Last 7 days",
+  RECENT_USERS: "Recent Users",
+  RECENT_SESSIONS: "Recent Sessions",
+  NO_USERS: "No users found",
+  NO_SESSIONS: "No sessions found",
+  USER_MANAGEMENT: "User Management",
+  VIEW_ALL_USERS: "View All Users",
+  NEW_USER: "New user registered",
+  NEW_SESSION: "New session created",
+} as const;
+
+export const ADMIN_NAVIGATION = {
+  DASHBOARD: "Dashboard",
+  USER_MANAGEMENT: "User Management",
+  MENU_TOGGLE: "Toggle menu",
+  CLOSE_MENU: "Close menu",
+} as const;
+
+export const ADMIN_LAYOUT = {
+  LOADING: "Loading...",
+  ACCESS_DENIED: "Access Denied",
+} as const;

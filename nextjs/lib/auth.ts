@@ -26,9 +26,9 @@ export const auth = betterAuth({
         audience: BETTER_AUTH_CONFIG.BASE_URL,
       },
     }),
-    nextCookies(),
     admin({
       defaultRole: USER_ROLES.USER,
     }),
+    nextCookies(),
   ],
 });

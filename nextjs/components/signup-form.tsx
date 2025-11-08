@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, AUTH_PLACEHOLDERS, AUTH_ERRORS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, getDashboardPath } from "@/lib/utils";
 
 interface SignupFormProps {
   onSwitchToLogin: () => void;
 }
 
 export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +33,9 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       if (result.error) {
         setError(result.error.message || AUTH_ERRORS.SIGNUP_FAILED);
       } else {
-        window.location.reload();
+        const session = await authClient.getSession();
+        const userRole = session?.data?.user?.role;
+        router.push(getDashboardPath(userRole));
       }
     } catch {
       setError(AUTH_ERRORS.SIGNUP_FAILED);

@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { LoginForm } from "@/components/login-form";
 import { SignupForm } from "@/components/signup-form";
-import { UserProfile } from "@/components/user-profile";
 import { LANDING_PAGE } from "@/lib/constants";
+import { getDashboardPath } from "@/lib/utils";
 import { Shield, Zap, Code } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,7 +19,13 @@ export default function Home() {
     const checkAuth = async () => {
       try {
         const session = await authClient.getSession();
-        setIsAuthenticated(!!session?.data?.session);
+        const hasSession = !!session?.data?.session;
+        setIsAuthenticated(hasSession);
+        
+        if (hasSession) {
+          const userRole = session?.data?.user?.role;
+          router.push(getDashboardPath(userRole));
+        }
       } catch (err) {
         console.error("Failed to check auth:", err);
       } finally {
@@ -26,11 +34,11 @@ export default function Home() {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-lg text-gray-600 dark:text-gray-400">Loading...</div>
       </div>
     );
@@ -38,10 +46,8 @@ export default function Home() {
 
   if (isAuthenticated) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-black dark:to-gray-900">
-        <main className="container mx-auto px-4 py-12 md:py-16 lg:py-20">
-          <UserProfile />
-        </main>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg text-gray-600 dark:text-gray-400">Loading...</div>
       </div>
     );
   }
@@ -53,8 +59,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-black dark:to-gray-900">
-      <main className="w-full">
+    <main className="w-full">
         <div className="container mx-auto px-4 py-8 md:py-12 lg:py-20 max-w-7xl">
           {/* Hero Section */}
           <div className="text-center mb-12 md:mb-16 lg:mb-24 w-full">
@@ -127,6 +132,5 @@ export default function Home() {
           </div>
         </div>
       </main>
-    </div>
   );
 }
