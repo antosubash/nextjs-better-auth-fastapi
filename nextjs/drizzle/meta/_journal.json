@@ -29,6 +29,13 @@
       "when": 1762634363415,
       "tag": "0003_wealthy_killer_shrike",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1762637196974,
+      "tag": "0004_awesome_caretaker",
+      "breakpoints": true
     }
   ]
 }

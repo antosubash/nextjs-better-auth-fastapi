@@ -5,6 +5,7 @@ import { nextCookies } from "better-auth/next-js";
 import { db } from "./database";
 import * as schema from "./auth-schema";
 import { BETTER_AUTH_CONFIG, USER_ROLES } from "./constants";
+import { accessControl, memberRole, adminRole, ownerRole, myCustomRole } from "./permissions";
 
 const secret = process.env.BETTER_AUTH_SECRET || "change-me-in-production";
 
@@ -29,7 +30,18 @@ export const auth = betterAuth({
     admin({
       defaultRole: USER_ROLES.USER,
     }),
-    organization(),
+    organization({
+      accessControl,
+      roles: {
+        admin: adminRole,
+        member: memberRole,
+        owner: ownerRole,
+        myCustomRole: myCustomRole,
+      },
+      teams: {
+        enabled: true,
+      },
+    }),
     nextCookies(),
   ],
 });
