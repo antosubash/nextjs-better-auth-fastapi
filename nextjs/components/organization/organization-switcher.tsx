@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_SWITCHER, ORGANIZATION_ERRORS } from "@/lib/constants";
 import { ChevronDown, Building2 } from "lucide-react";
+import { ErrorToast } from "@/components/ui/error-toast";
 
 interface Organization {
   id: string;
@@ -20,6 +21,7 @@ export function OrganizationSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadOrganizations = async () => {
     setIsLoading(true);
@@ -67,7 +69,7 @@ export function OrganizationSwitcher() {
       });
 
       if (result.error) {
-        alert(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+        setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
       } else {
         const org = organizations.find((o) => o.id === organizationId);
         if (org) {
@@ -78,7 +80,7 @@ export function OrganizationSwitcher() {
       }
     } catch (err) {
       console.error("Failed to switch organization:", err);
-      alert(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+      setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
     } finally {
       setIsSwitching(false);
     }
@@ -97,7 +99,15 @@ export function OrganizationSwitcher() {
   }
 
   return (
-    <div className="relative">
+    <>
+      {error && (
+        <ErrorToast
+          message={error}
+          onDismiss={() => setError(null)}
+          duration={5000}
+        />
+      )}
+      <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isSwitching}
@@ -156,5 +166,6 @@ export function OrganizationSwitcher() {
         </>
       )}
     </div>
+    </>
   );
 }

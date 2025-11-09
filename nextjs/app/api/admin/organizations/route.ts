@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { ADMIN_ERRORS, ORGANIZATION_ERRORS, USER_ROLES } from "@/lib/constants";
+import { normalizeDate } from "@/lib/utils/date";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -39,12 +40,7 @@ export async function GET(_request: NextRequest) {
           name: org.name,
           slug: org.slug,
           logo: org.logo || undefined,
-          createdAt:
-            org.createdAt instanceof Date
-              ? org.createdAt.getTime()
-              : typeof org.createdAt === "number"
-                ? org.createdAt
-                : Date.now(),
+          createdAt: normalizeDate(org.createdAt),
           metadata: org.metadata || undefined,
         })),
       });

@@ -5,6 +5,14 @@ import { getPermissions } from "@/lib/permissions-api";
 import { Permission } from "@/lib/permissions-utils";
 import { PERMISSION_LABELS, PERMISSION_ERRORS } from "@/lib/constants";
 import { Search, Shield } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export function PermissionList() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -78,46 +86,41 @@ export function PermissionList() {
           {PERMISSION_LABELS.NO_PERMISSIONS}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                  {PERMISSION_LABELS.RESOURCE}
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                  {PERMISSION_LABELS.ACTION}
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                  {PERMISSION_LABELS.PERMISSION}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPermissions.map((permission) => (
-                <tr
-                  key={permission.key}
-                  className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                >
-                  <td className="py-3 px-4 text-gray-900 dark:text-white">
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium">{permission.resource}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
-                    {permission.action}
-                  </td>
-                  <td className="py-3 px-4">
-                    <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white">
-                      {permission.key}
-                    </code>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="font-semibold">
+                {PERMISSION_LABELS.RESOURCE}
+              </TableHead>
+              <TableHead className="font-semibold">
+                {PERMISSION_LABELS.ACTION}
+              </TableHead>
+              <TableHead className="font-semibold">
+                {PERMISSION_LABELS.PERMISSION}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredPermissions.map((permission) => (
+              <TableRow key={permission.key}>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-gray-400" />
+                    <span className="font-medium">{permission.resource}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-gray-700 dark:text-gray-300">
+                  {permission.action}
+                </TableCell>
+                <TableCell>
+                  <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm text-gray-900 dark:text-white">
+                    {permission.key}
+                  </code>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

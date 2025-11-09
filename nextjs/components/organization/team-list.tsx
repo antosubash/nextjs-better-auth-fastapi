@@ -7,6 +7,18 @@ import { TeamForm } from "./team-form";
 import { TeamActions } from "./team-actions";
 import { TeamMemberList } from "./team-member-list";
 import { Plus, UsersRound, Search } from "lucide-react";
+import { formatDate } from "@/lib/utils/date";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Team {
   id: string;
@@ -91,13 +103,6 @@ export function TeamList({ organizationId }: TeamListProps) {
     team.name.toLowerCase().includes(searchValue.toLowerCase()),
   );
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   return (
     <div className="w-full">
@@ -108,13 +113,10 @@ export function TeamList({ organizationId }: TeamListProps) {
             {TEAM_LABELS.TITLE}
           </h2>
         </div>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-        >
-          <Plus className="w-5 h-5" />
+        <Button onClick={() => setShowCreateForm(true)}>
+          <Plus className="w-4 h-4 mr-2" />
           {TEAM_LABELS.CREATE_TEAM}
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -163,99 +165,85 @@ export function TeamList({ organizationId }: TeamListProps) {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {TEAM_LABELS.LOADING}
-          </div>
-        ) : filteredTeams.length === 0 ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {TEAM_LABELS.NO_TEAMS}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {TEAM_LABELS.NAME}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {TEAM_LABELS.CREATED_AT}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {TEAM_LABELS.ACTIONS}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredTeams.map((team) => {
-                  const isActive = team.id === activeTeamId;
-                  const isExpanded = expandedTeamId === team.id;
-                  return (
-                    <Fragment key={team.id}>
-                      <tr className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                          {team.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                          {formatDate(team.createdAt)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {isActive ? (
-                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200">
-                              Inactive
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() =>
-                                setExpandedTeamId(isExpanded ? null : team.id)
-                              }
-                              className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
-                            >
-                              {isExpanded ? "Hide" : "View"} Members
-                            </button>
-                            <TeamActions
-                              team={team}
-                              organizationId={organizationId}
-                              onEdit={() => setEditingTeam(team)}
-                              onDelete={handleTeamDeleted}
-                              onActionSuccess={handleActionSuccess}
-                              isActive={isActive}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                      {isExpanded && (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="px-6 py-4 bg-gray-50 dark:bg-gray-900"
-                          >
-                            <TeamMemberList
-                              teamId={team.id}
-                            />
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 text-center text-muted-foreground">
+              {TEAM_LABELS.LOADING}
+            </div>
+          ) : filteredTeams.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              {TEAM_LABELS.NO_TEAMS}
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{TEAM_LABELS.NAME}</TableHead>
+                    <TableHead>{TEAM_LABELS.CREATED_AT}</TableHead>
+                    <TableHead>{TEAM_LABELS.STATUS}</TableHead>
+                    <TableHead>{TEAM_LABELS.ACTIONS}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTeams.map((team) => {
+                    const isActive = team.id === activeTeamId;
+                    const isExpanded = expandedTeamId === team.id;
+                    return (
+                      <Fragment key={team.id}>
+                        <TableRow>
+                          <TableCell className="font-medium">
+                            {team.name}
+                          </TableCell>
+                          <TableCell>{formatDate(team.createdAt)}</TableCell>
+                          <TableCell>
+                            {isActive ? (
+                              <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                                Active
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">Inactive</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  setExpandedTeamId(isExpanded ? null : team.id)
+                                }
+                              >
+                                {isExpanded ? "Hide" : "View"} Members
+                              </Button>
+                              <TeamActions
+                                team={team}
+                                organizationId={organizationId}
+                                onEdit={() => setEditingTeam(team)}
+                                onDelete={handleTeamDeleted}
+                                onActionSuccess={handleActionSuccess}
+                                isActive={isActive}
+                              />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                        {isExpanded && (
+                          <TableRow>
+                            <TableCell colSpan={4} className="bg-muted/50">
+                              <TeamMemberList teamId={team.id} />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

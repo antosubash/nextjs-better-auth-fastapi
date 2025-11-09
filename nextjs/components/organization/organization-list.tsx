@@ -11,6 +11,7 @@ import {
 import { OrganizationForm } from "./organization-form";
 import { OrganizationActions } from "./organization-actions";
 import { Search, Plus, Building2 } from "lucide-react";
+import { formatDate, normalizeDate } from "@/lib/utils/date";
 
 interface Organization {
   id: string;
@@ -68,12 +69,7 @@ export function OrganizationList() {
           setOrganizations(
             orgs.map((org) => ({
               ...org,
-              createdAt:
-                org.createdAt instanceof Date
-                  ? org.createdAt.getTime()
-                  : typeof org.createdAt === "number"
-                    ? org.createdAt
-                    : Date.now(),
+              createdAt: normalizeDate(org.createdAt),
             })),
           );
         }
@@ -138,13 +134,6 @@ export function OrganizationList() {
       org.slug.toLowerCase().includes(searchValue.toLowerCase()),
   );
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   return (
     <div>
@@ -232,7 +221,7 @@ export function OrganizationList() {
                     {ORGANIZATION_LABELS.CREATED_AT}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
+                    {ORGANIZATION_LABELS.STATUS}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     {ORGANIZATION_LABELS.ACTIONS}

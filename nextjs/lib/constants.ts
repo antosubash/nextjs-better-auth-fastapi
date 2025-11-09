@@ -269,12 +269,17 @@ export const ORGANIZATION_LABELS = {
   SAVE: "Save",
   CANCEL: "Cancel",
   VIEW_DETAILS: "View Details",
+  SAVING: "Saving...",
+  BACK_TO_ORGANIZATIONS: "Back to Organizations",
+  CREATED_ON: "Created on",
+  REFRESH: "Refresh",
 } as const;
 
 export const ORGANIZATION_PLACEHOLDERS = {
   NAME: "Enter organization name",
   SLUG: "Enter organization slug",
   DESCRIPTION: "Enter organization description (optional)",
+  SLUG_HINT: "e.g., my-organization",
 } as const;
 
 export const ORGANIZATION_ERRORS = {
@@ -287,6 +292,9 @@ export const ORGANIZATION_ERRORS = {
   ACCESS_DENIED: "Access denied",
   INVALID_NAME: "Invalid organization name",
   INVALID_SLUG: "Invalid organization slug",
+  INVALID_SLUG_FORMAT: "Slug must be lowercase alphanumeric with hyphens",
+  SLUG_REQUIRED: "Slug is required",
+  NAME_TOO_LONG: "Name must be less than 100 characters",
 } as const;
 
 export const ORGANIZATION_SUCCESS = {
@@ -312,6 +320,7 @@ export const MEMBER_LABELS = {
   CONFIRM_REMOVE: "Are you sure you want to remove this member?",
   CONFIRM_LEAVE: "Are you sure you want to leave this organization?",
   CANCEL: "Cancel",
+  SAVING: "Saving...",
 } as const;
 
 export const MEMBER_PLACEHOLDERS = {
@@ -402,6 +411,10 @@ export const TEAM_LABELS = {
   ADD_MEMBER: "Add Team Member",
   REMOVE_MEMBER: "Remove Team Member",
   CONFIRM_DELETE: "Are you sure you want to delete this team?",
+  SAVING: "Saving...",
+  SAVE: "Save",
+  CANCEL: "Cancel",
+  STATUS: "Status",
 } as const;
 
 export const TEAM_PLACEHOLDERS = {

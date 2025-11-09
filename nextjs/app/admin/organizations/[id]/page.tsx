@@ -1,22 +1,57 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+import Image from "next/image";
 import {
   ORGANIZATION_LABELS,
   ORGANIZATION_ERRORS,
+  ORGANIZATION_SUCCESS,
 } from "@/lib/constants";
 import { MemberList } from "@/components/organization/member-list";
 import { TeamList } from "@/components/organization/team-list";
 import { InvitationList } from "@/components/organization/invitation-list";
-import { Building2, Users, UserPlus, UsersRound } from "lucide-react";
+import { OrganizationForm } from "@/components/organization/organization-form";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ErrorToast } from "@/components/ui/error-toast";
+import {
+  Building2,
+  Users,
+  UserPlus,
+  UsersRound,
+  Edit,
+  Trash2,
+  RefreshCw,
+  ArrowLeft,
+} from "lucide-react";
+import { formatDate } from "@/lib/utils/date";
+import { authClient } from "@/lib/auth-client";
 
 interface Organization {
   id: string;
   name: string;
   slug: string;
+  logo?: string;
   metadata?: {
     description?: string;
   };
@@ -25,59 +60,99 @@ interface Organization {
 
 export default function OrganizationDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const organizationId = params.id as string;
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [activeTab, setActiveTab] = useState<"members" | "teams" | "invitations">("members");
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    const loadOrganization = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const result = await authClient.organization.list();
-
-        if (result.error) {
-          setError(
-            result.error.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED
-          );
-        } else if (result.data) {
-          const orgs = Array.isArray(result.data) ? result.data : [];
-          const org = orgs.find((o) => o.id === organizationId);
-          if (org) {
-            setOrganization({
-              ...org,
-              createdAt:
-                org.createdAt instanceof Date
-                  ? org.createdAt.getTime()
-                  : typeof org.createdAt === "number"
-                    ? org.createdAt
-                    : Date.now(),
-            });
-          } else {
-            setError(ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED);
-          }
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED;
-        setError(errorMessage);
-      } finally {
-        setIsLoading(false);
+  const loadOrganization = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/organizations/${organizationId}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(
+          errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED
+        );
+        return;
       }
-    };
 
-    if (organizationId) {
-      loadOrganization();
+      const data = await response.json();
+      if (data.organization) {
+        setOrganization(data.organization);
+      } else {
+        setError(ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED;
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, [organizationId]);
 
+  useEffect(() => {
+    if (organizationId) {
+      loadOrganization();
+    }
+  }, [organizationId, loadOrganization]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    loadOrganization();
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditDialog(false);
+    setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_UPDATED);
+    setTimeout(() => setSuccess(""), 3000);
+    loadOrganization();
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await authClient.organization.delete({
+        organizationId: organization.id,
+      });
+
+      if (result.error) {
+        setError(result.error.message || ORGANIZATION_ERRORS.DELETE_FAILED);
+        setShowDeleteDialog(false);
+      } else {
+        setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_DELETED);
+        setTimeout(() => {
+          router.push("/admin/organizations");
+        }, 1000);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : ORGANIZATION_ERRORS.DELETE_FAILED;
+      setError(errorMessage);
+      setShowDeleteDialog(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="text-center text-gray-600 dark:text-gray-400">
+      <div className="text-center text-gray-600 dark:text-gray-400 py-8">
         {ORGANIZATION_LABELS.LOADING}
       </div>
     );
@@ -85,107 +160,182 @@ export default function OrganizationDetailPage() {
 
   if (error || !organization) {
     return (
-      <div className="text-center">
-        <p className="text-lg text-red-600 dark:text-red-400">
+      <div className="text-center py-8">
+        <p className="text-lg text-red-600 dark:text-red-400 mb-4">
           {error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED}
         </p>
-        <Link
-          href="/admin/organizations"
-          className="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          Back to Organizations
+        <Link href="/admin/organizations">
+          <Button variant="outline">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {ORGANIZATION_LABELS.BACK_TO_ORGANIZATIONS}
+          </Button>
         </Link>
       </div>
     );
   }
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
-    <div>
-      <div className="mb-6">
-        <Link
-          href="/admin/organizations"
-          className="text-blue-600 dark:text-blue-400 hover:underline mb-4 inline-block"
-        >
-          ← Back to Organizations
-        </Link>
-        <div className="flex items-center gap-3 mb-2">
-          <Building2 className="w-8 h-8 text-gray-900 dark:text-white" />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {organization.name}
-          </h1>
-        </div>
-        {organization.metadata?.description && (
-          <p className="text-gray-600 dark:text-gray-400">
-            {organization.metadata.description}
+    <div className="space-y-6">
+      {error && (
+        <ErrorToast
+          message={error}
+          onDismiss={() => setError("")}
+          duration={5000}
+        />
+      )}
+
+      {success && (
+        <div className="fixed top-4 right-4 z-50 max-w-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg shadow-lg p-4">
+          <p className="text-sm font-medium text-green-800 dark:text-green-200">
+            {success}
           </p>
-        )}
-        <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-          Created on {formatDate(organization.createdAt)}
-        </p>
-      </div>
+        </div>
+      )}
 
-      <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav className="flex gap-4">
-          <button
-            onClick={() => setActiveTab("members")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === "members"
-                ? "border-b-2 border-gray-900 dark:border-white text-gray-900 dark:text-white"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              {ORGANIZATION_LABELS.MEMBERS}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-4">
+                <Link href="/admin/organizations">
+                  <Button variant="ghost" size="sm">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    {ORGANIZATION_LABELS.BACK_TO_ORGANIZATIONS}
+                  </Button>
+                </Link>
+              </div>
+              <div className="flex items-center gap-4">
+                {organization.logo ? (
+                  <div className="w-12 h-12 rounded-lg overflow-hidden relative">
+                    <Image
+                      src={organization.logo}
+                      alt={organization.name}
+                      width={48}
+                      height={48}
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <CardTitle className="text-3xl mb-2">
+                    {organization.name}
+                  </CardTitle>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline">{organization.slug}</Badge>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {ORGANIZATION_LABELS.CREATED_ON}{" "}
+                      {formatDate(organization.createdAt, "long")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {organization.metadata?.description && (
+                <p className="text-gray-600 dark:text-gray-400 mt-4">
+                  {organization.metadata.description}
+                </p>
+              )}
             </div>
-          </button>
-          <button
-            onClick={() => setActiveTab("teams")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === "teams"
-                ? "border-b-2 border-gray-900 dark:border-white text-gray-900 dark:text-white"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <UsersRound className="w-4 h-4" />
-              {ORGANIZATION_LABELS.TEAMS}
+            <div className="flex items-center gap-2 ml-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                title={ORGANIZATION_LABELS.REFRESH}
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+                />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowEditDialog(true)}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                {ORGANIZATION_LABELS.EDIT_ORGANIZATION}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {ORGANIZATION_LABELS.DELETE_ORGANIZATION}
+              </Button>
             </div>
-          </button>
-          <button
-            onClick={() => setActiveTab("invitations")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === "invitations"
-                ? "border-b-2 border-gray-900 dark:border-white text-gray-900 dark:text-white"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <UserPlus className="w-4 h-4" />
-              {ORGANIZATION_LABELS.INVITATIONS}
-            </div>
-          </button>
-        </nav>
-      </div>
+          </div>
+        </CardHeader>
+      </Card>
 
-      {activeTab === "members" && (
-        <MemberList organizationId={organizationId} />
-      )}
-      {activeTab === "teams" && (
-        <TeamList organizationId={organizationId} />
-      )}
-      {activeTab === "invitations" && (
-        <InvitationList organizationId={organizationId} />
-      )}
+      <Card>
+        <CardContent className="pt-6">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+            <TabsList>
+              <TabsTrigger value="members">
+                <Users className="w-4 h-4 mr-2" />
+                {ORGANIZATION_LABELS.MEMBERS}
+              </TabsTrigger>
+              <TabsTrigger value="teams">
+                <UsersRound className="w-4 h-4 mr-2" />
+                {ORGANIZATION_LABELS.TEAMS}
+              </TabsTrigger>
+              <TabsTrigger value="invitations">
+                <UserPlus className="w-4 h-4 mr-2" />
+                {ORGANIZATION_LABELS.INVITATIONS}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="members" className="mt-6">
+              <MemberList organizationId={organizationId} />
+            </TabsContent>
+            <TabsContent value="teams" className="mt-6">
+              <TeamList organizationId={organizationId} />
+            </TabsContent>
+            <TabsContent value="invitations" className="mt-6">
+              <InvitationList organizationId={organizationId} />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{ORGANIZATION_LABELS.EDIT_ORGANIZATION}</DialogTitle>
+          </DialogHeader>
+          <OrganizationForm
+            organization={organization}
+            onSuccess={handleEditSuccess}
+            onCancel={() => setShowEditDialog(false)}
+            hideHeader={true}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{ORGANIZATION_LABELS.DELETE_ORGANIZATION}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {ORGANIZATION_LABELS.CONFIRM_DELETE}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              {ORGANIZATION_LABELS.CANCEL}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? ORGANIZATION_LABELS.SAVING : ORGANIZATION_LABELS.DELETE_ORGANIZATION}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
-

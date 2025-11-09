@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { ADMIN_USER_DETAILS, ROLE_DISPLAY_NAMES, ADMIN_LABELS } from "@/lib/constants";
 import {
   Dialog,
@@ -41,10 +42,18 @@ function formatDate(timestamp: number): string {
 }
 
 export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (!user) return null;
 
-  const isBanExpired =
-    user.banExpires && user.banExpires < Date.now();
+  const isBanExpired = user.banExpires && user.banExpires < currentTime;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

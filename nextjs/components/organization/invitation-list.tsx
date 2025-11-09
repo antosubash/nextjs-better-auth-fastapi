@@ -10,6 +10,18 @@ import {
 import { InvitationForm } from "./invitation-form";
 import { InvitationActions } from "./invitation-actions";
 import { Plus, Mail, Search } from "lucide-react";
+import { formatDate } from "@/lib/utils/date";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Invitation {
   id: string;
@@ -130,45 +142,37 @@ export function InvitationList({ organizationId }: InvitationListProps) {
     inv.email.toLowerCase().includes(searchValue.toLowerCase()),
   );
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
         return (
-          <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200">
+          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 border-yellow-300 dark:border-yellow-800">
             {INVITATION_LABELS.PENDING}
-          </span>
+          </Badge>
         );
       case "accepted":
         return (
-          <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
+          <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border-green-300 dark:border-green-800">
             {INVITATION_LABELS.ACCEPTED}
-          </span>
+          </Badge>
         );
       case "rejected":
         return (
-          <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200">
+          <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border-red-300 dark:border-red-800">
             {INVITATION_LABELS.REJECTED}
-          </span>
+          </Badge>
         );
       case "expired":
         return (
-          <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200">
+          <Badge variant="secondary">
             {INVITATION_LABELS.EXPIRED}
-          </span>
+          </Badge>
         );
       default:
         return (
-          <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200">
+          <Badge variant="secondary">
             {status}
-          </span>
+          </Badge>
         );
     }
   };
@@ -182,13 +186,10 @@ export function InvitationList({ organizationId }: InvitationListProps) {
             {INVITATION_LABELS.TITLE}
           </h2>
         </div>
-        <button
-          onClick={() => setShowInviteForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-        >
-          <Plus className="w-5 h-5" />
+        <Button onClick={() => setShowInviteForm(true)}>
+          <Plus className="w-4 h-4 mr-2" />
           {INVITATION_LABELS.SEND_INVITATION}
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -226,72 +227,55 @@ export function InvitationList({ organizationId }: InvitationListProps) {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {INVITATION_LABELS.LOADING}
-          </div>
-        ) : filteredInvitations.length === 0 ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {INVITATION_LABELS.NO_INVITATIONS}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {INVITATION_LABELS.EMAIL}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {INVITATION_LABELS.ROLE}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {INVITATION_LABELS.STATUS}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {INVITATION_LABELS.SENT_AT}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {INVITATION_LABELS.ACTIONS}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 text-center text-muted-foreground">
+              {INVITATION_LABELS.LOADING}
+            </div>
+          ) : filteredInvitations.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              {INVITATION_LABELS.NO_INVITATIONS}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{INVITATION_LABELS.EMAIL}</TableHead>
+                  <TableHead>{INVITATION_LABELS.ROLE}</TableHead>
+                  <TableHead>{INVITATION_LABELS.STATUS}</TableHead>
+                  <TableHead>{INVITATION_LABELS.SENT_AT}</TableHead>
+                  <TableHead>{INVITATION_LABELS.ACTIONS}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredInvitations.map((invitation) => (
-                  <tr
-                    key={invitation.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                  <TableRow key={invitation.id}>
+                    <TableCell className="font-medium">
                       {invitation.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
-                        {invitation.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{invitation.role}</Badge>
+                    </TableCell>
+                    <TableCell>
                       {getStatusBadge(invitation.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                      {formatDate(invitation.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    </TableCell>
+                    <TableCell>{formatDate(invitation.createdAt)}</TableCell>
+                    <TableCell>
                       <InvitationActions
                         invitation={invitation}
                         organizationId={organizationId}
                         onActionSuccess={handleActionSuccess}
                         onInvitationRemoved={handleInvitationRemoved}
                       />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

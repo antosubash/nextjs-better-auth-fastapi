@@ -8,6 +8,14 @@ import {
   INVITATION_SUCCESS,
 } from "@/lib/constants";
 import { MoreVertical, X, RotateCcw } from "lucide-react";
+import { ErrorToast } from "@/components/ui/error-toast";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Invitation {
   id: string;
@@ -31,8 +39,8 @@ export function InvitationActions({
   onActionSuccess,
   onInvitationRemoved,
 }: InvitationActionsProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCancel = async () => {
     if (!confirm(INVITATION_LABELS.CONFIRM_CANCEL)) {
@@ -46,7 +54,7 @@ export function InvitationActions({
       });
 
       if (result.error) {
-        alert(result.error.message || INVITATION_ERRORS.CANCEL_FAILED);
+        setError(result.error.message || INVITATION_ERRORS.CANCEL_FAILED);
       } else {
         onActionSuccess(INVITATION_SUCCESS.INVITATION_CANCELLED);
         onInvitationRemoved();
@@ -54,10 +62,9 @@ export function InvitationActions({
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : INVITATION_ERRORS.CANCEL_FAILED;
-      alert(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
-      setIsOpen(false);
     }
   };
 
@@ -72,63 +79,59 @@ export function InvitationActions({
       });
 
       if (result.error) {
-        alert(result.error.message || INVITATION_ERRORS.RESEND_FAILED);
+        setError(result.error.message || INVITATION_ERRORS.RESEND_FAILED);
       } else {
         onActionSuccess(INVITATION_SUCCESS.INVITATION_RESENT);
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : INVITATION_ERRORS.RESEND_FAILED;
-      alert(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
-      setIsOpen(false);
     }
   };
 
   const isPending = invitation.status === "pending";
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={isLoading}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-      >
-        <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-      </button>
-
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
-            {isPending && (
-              <button
-                onClick={handleResend}
-                disabled={isLoading}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-              >
-                <RotateCcw className="w-4 h-4" />
-                {INVITATION_LABELS.RESEND_INVITATION}
-              </button>
-            )}
-
-            {isPending && (
-              <button
-                onClick={handleCancel}
-                disabled={isLoading}
-                className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-              >
-                <X className="w-4 h-4" />
-                {INVITATION_LABELS.CANCEL_INVITATION}
-              </button>
-            )}
-          </div>
-        </>
+    <>
+      {error && (
+        <ErrorToast
+          message={error}
+          onDismiss={() => setError(null)}
+          duration={5000}
+        />
       )}
-    </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" disabled={isLoading}>
+            <MoreVertical className="w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {isPending && (
+            <DropdownMenuItem
+              onClick={handleResend}
+              disabled={isLoading}
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              {INVITATION_LABELS.RESEND_INVITATION}
+            </DropdownMenuItem>
+          )}
+
+          {isPending && (
+            <DropdownMenuItem
+              onClick={handleCancel}
+              disabled={isLoading}
+              className="text-red-600 dark:text-red-400"
+            >
+              <X className="w-4 h-4 mr-2" />
+              {INVITATION_LABELS.CANCEL_INVITATION}
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }

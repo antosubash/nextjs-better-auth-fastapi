@@ -4,6 +4,7 @@ import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { TEAM_LABELS, TEAM_ERRORS } from "@/lib/constants";
 import { MoreVertical, UserMinus } from "lucide-react";
+import { ErrorToast } from "@/components/ui/error-toast";
 
 interface TeamMember {
   id: string;
@@ -27,6 +28,7 @@ export function TeamMemberActions({
 }: TeamMemberActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleRemove = async () => {
     if (!confirm("Are you sure you want to remove this team member?")) {
@@ -42,14 +44,14 @@ export function TeamMemberActions({
       });
 
       if (result.error) {
-        alert(result.error.message || TEAM_ERRORS.REMOVE_MEMBER_FAILED);
+        setError(result.error.message || TEAM_ERRORS.REMOVE_MEMBER_FAILED);
       } else {
         onMemberRemoved();
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : TEAM_ERRORS.REMOVE_MEMBER_FAILED;
-      alert(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
       setIsOpen(false);
@@ -57,7 +59,15 @@ export function TeamMemberActions({
   };
 
   return (
-    <div className="relative">
+    <>
+      {error && (
+        <ErrorToast
+          message={error}
+          onDismiss={() => setError(null)}
+          duration={5000}
+        />
+      )}
+      <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
@@ -85,5 +95,6 @@ export function TeamMemberActions({
         </>
       )}
     </div>
+    </>
   );
 }

@@ -8,6 +8,8 @@ import {
   ORGANIZATION_SUCCESS,
 } from "@/lib/constants";
 import { MoreVertical, Trash2, Edit, CheckCircle2 } from "lucide-react";
+import { ErrorToast } from "@/components/ui/error-toast";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Organization {
   id: string;
@@ -32,6 +34,7 @@ export function OrganizationActions({
 }: OrganizationActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSetActive = async () => {
     setIsLoading(true);
@@ -41,7 +44,7 @@ export function OrganizationActions({
       });
 
       if (result.error) {
-        alert(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+        setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
       } else {
         onActionSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_ACTIVATED);
         setIsOpen(false);
@@ -51,7 +54,7 @@ export function OrganizationActions({
         err instanceof Error
           ? err.message
           : ORGANIZATION_ERRORS.SET_ACTIVE_FAILED;
-      alert(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -69,21 +72,29 @@ export function OrganizationActions({
       });
 
       if (result.error) {
-        alert(result.error.message || ORGANIZATION_ERRORS.DELETE_FAILED);
+        setError(result.error.message || ORGANIZATION_ERRORS.DELETE_FAILED);
       } else {
         onDelete();
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : ORGANIZATION_ERRORS.DELETE_FAILED;
-      alert(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative">
+    <>
+      {error && (
+        <ErrorToast
+          message={error}
+          onDismiss={() => setError(null)}
+          duration={5000}
+        />
+      )}
+      <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
@@ -106,9 +117,13 @@ export function OrganizationActions({
                   handleSetActive();
                 }}
                 disabled={isLoading}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50"
               >
-                <CheckCircle2 className="w-4 h-4" />
+                {isLoading ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4" />
+                )}
                 {ORGANIZATION_LABELS.SET_ACTIVE}
               </button>
             )}
@@ -124,20 +139,25 @@ export function OrganizationActions({
               {ORGANIZATION_LABELS.EDIT_ORGANIZATION}
             </button>
 
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                handleDelete();
-              }}
-              disabled={isLoading}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              {ORGANIZATION_LABELS.DELETE_ORGANIZATION}
-            </button>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  handleDelete();
+                }}
+                disabled={isLoading}
+                className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {ORGANIZATION_LABELS.DELETE_ORGANIZATION}
+              </button>
           </div>
         </>
       )}
     </div>
+    </>
   );
 }

@@ -5,6 +5,14 @@ import { authClient } from "@/lib/auth-client";
 import { TEAM_LABELS, TEAM_ERRORS, MEMBER_PLACEHOLDERS } from "@/lib/constants";
 import { TeamMemberActions } from "./team-member-actions";
 import { Plus } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface TeamMember {
   id: string;
@@ -162,39 +170,34 @@ export function TeamMemberList({
           No team members
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {members.map((member) => (
-                <tr
-                  key={member.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                >
-                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                    {member.user?.email || "Unknown"}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm">
-                    <TeamMemberActions
-                      member={member}
-                      teamId={teamId}
-                      onMemberRemoved={handleMemberRemoved}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Email
+              </TableHead>
+              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {members.map((member) => (
+              <TableRow key={member.id}>
+                <TableCell className="font-medium whitespace-nowrap">
+                  {member.user?.email || "Unknown"}
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
+                  <TeamMemberActions
+                    member={member}
+                    teamId={teamId}
+                    onMemberRemoved={handleMemberRemoved}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

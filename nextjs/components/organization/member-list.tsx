@@ -11,6 +11,18 @@ import {
 import { MemberActions } from "./member-actions";
 import { Plus, Users, Search } from "lucide-react";
 import { MemberRoleSelector } from "./member-role-selector";
+import { formatDate } from "@/lib/utils/date";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Member {
   id: string;
@@ -152,13 +164,6 @@ export function MemberList({ organizationId }: MemberListProps) {
       member.user?.name?.toLowerCase().includes(searchValue.toLowerCase()),
   );
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   return (
     <div className="w-full">
@@ -169,13 +174,10 @@ export function MemberList({ organizationId }: MemberListProps) {
             {MEMBER_LABELS.TITLE}
           </h2>
         </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-        >
-          <Plus className="w-5 h-5" />
+        <Button onClick={() => setShowAddForm(true)}>
+          <Plus className="w-4 h-4 mr-2" />
           {MEMBER_LABELS.ADD_MEMBER}
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -256,52 +258,37 @@ export function MemberList({ organizationId }: MemberListProps) {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {MEMBER_LABELS.LOADING}
-          </div>
-        ) : filteredMembers.length === 0 ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {MEMBER_LABELS.NO_MEMBERS}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {MEMBER_LABELS.EMAIL}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {MEMBER_LABELS.ROLE}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {MEMBER_LABELS.JOINED_AT}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {MEMBER_LABELS.ACTIONS}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 text-center text-muted-foreground">
+              {MEMBER_LABELS.LOADING}
+            </div>
+          ) : filteredMembers.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              {MEMBER_LABELS.NO_MEMBERS}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{MEMBER_LABELS.EMAIL}</TableHead>
+                  <TableHead>{MEMBER_LABELS.ROLE}</TableHead>
+                  <TableHead>{MEMBER_LABELS.JOINED_AT}</TableHead>
+                  <TableHead>{MEMBER_LABELS.ACTIONS}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredMembers.map((member) => (
-                  <tr
-                    key={member.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                  <TableRow key={member.id}>
+                    <TableCell className="font-medium">
                       {member.user?.email || "Unknown"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
-                        {member.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                      {formatDate(member.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{member.role}</Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(member.createdAt)}</TableCell>
+                    <TableCell>
                       <MemberActions
                         member={member}
                         organizationId={organizationId}
@@ -309,14 +296,14 @@ export function MemberList({ organizationId }: MemberListProps) {
                         onActionSuccess={handleActionSuccess}
                         onMemberRemoved={handleMemberRemoved}
                       />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

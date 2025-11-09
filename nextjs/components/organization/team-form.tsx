@@ -123,7 +123,7 @@ export function TeamForm({
             disabled={isLoading}
             className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Saving..." : "Save"}
+            {isLoading ? TEAM_LABELS.SAVING : TEAM_LABELS.SAVE}
           </button>
           <button
             type="button"
@@ -131,7 +131,7 @@ export function TeamForm({
             disabled={isLoading}
             className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {TEAM_LABELS.CANCEL}
           </button>
         </div>
       </form>
