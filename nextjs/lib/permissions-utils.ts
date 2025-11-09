@@ -10,6 +10,18 @@ export interface RoleInfo {
   permissions: Permission[];
 }
 
+// In-memory store for role permissions (can be replaced with database later)
+const rolePermissionsStore: Record<string, Record<string, string[]>> = {
+  user: {},
+  member: { project: ["create"] },
+  admin: { project: ["create", "update"] },
+  owner: { project: ["create", "update", "delete"] },
+  myCustomRole: {
+    project: ["create", "update", "delete"],
+    organization: ["update"],
+  },
+};
+
 export function getAllPermissions(): Permission[] {
   const statement = {
     project: ["create", "share", "update", "delete"],
@@ -32,30 +44,7 @@ export function getAllPermissions(): Permission[] {
 }
 
 export function getRolePermissions(roleName: string): Permission[] {
-  let rolePermissions: Record<string, string[]>;
-  
-  switch (roleName) {
-    case "user":
-      rolePermissions = {};
-      break;
-    case "member":
-      rolePermissions = { project: ["create"] };
-      break;
-    case "admin":
-      rolePermissions = { project: ["create", "update"] };
-      break;
-    case "owner":
-      rolePermissions = { project: ["create", "update", "delete"] };
-      break;
-    case "myCustomRole":
-      rolePermissions = {
-        project: ["create", "update", "delete"],
-        organization: ["update"],
-      };
-      break;
-    default:
-      return [];
-  }
+  const rolePermissions = rolePermissionsStore[roleName] || {};
 
   const permissions: Permission[] = [];
 
@@ -87,21 +76,7 @@ export function formatPermissionKey(resource: string, action: string): string {
 }
 
 export function getAllRoles(): RoleInfo[] {
-  const roles = [
-    { name: "user", permissions: {} },
-    { name: "member", permissions: { project: ["create"] } },
-    { name: "admin", permissions: { project: ["create", "update"] } },
-    { name: "owner", permissions: { project: ["create", "update", "delete"] } },
-    {
-      name: "myCustomRole",
-      permissions: {
-        project: ["create", "update", "delete"],
-        organization: ["update"],
-      },
-    },
-  ];
-
-  return roles.map(({ name, permissions: rolePermissions }) => {
+  return Object.entries(rolePermissionsStore).map(([name, rolePermissions]) => {
     const permissions: Permission[] = [];
 
     for (const [resource, actions] of Object.entries(rolePermissions)) {
@@ -121,5 +96,25 @@ export function getAllRoles(): RoleInfo[] {
       permissions,
     };
   });
+}
+
+export function updateRolePermissions(
+  roleName: string,
+  permissions: Permission[]
+): void {
+  const rolePermissions: Record<string, string[]> = {};
+
+  for (const permission of permissions) {
+    if (!rolePermissions[permission.resource]) {
+      rolePermissions[permission.resource] = [];
+    }
+    rolePermissions[permission.resource].push(permission.action);
+  }
+
+  rolePermissionsStore[roleName] = rolePermissions;
+}
+
+export function getRolePermissionsFromStore(roleName: string): Record<string, string[]> {
+  return rolePermissionsStore[roleName] || {};
 }
 

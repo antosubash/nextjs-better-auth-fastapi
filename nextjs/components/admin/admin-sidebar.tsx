@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Building2, X, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Building2, X, Shield, UserCog } from "lucide-react";
 import { ADMIN_NAVIGATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,11 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       href: "/admin/organizations",
       label: ADMIN_NAVIGATION.ORGANIZATIONS,
       icon: Building2,
+    },
+    {
+      href: "/admin/roles",
+      label: ADMIN_NAVIGATION.ROLES,
+      icon: UserCog,
     },
     {
       href: "/admin/permissions",
@@ -98,7 +103,9 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                   ? pathname?.startsWith("/admin/organizations")
                   : item.href === "/admin/permissions"
                     ? pathname?.startsWith("/admin/permissions")
-                    : pathname === item.href;
+                    : item.href === "/admin/roles"
+                      ? pathname?.startsWith("/admin/roles")
+                      : pathname === item.href;
 
               return (
                 <Link

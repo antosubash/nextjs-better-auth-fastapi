@@ -33,7 +33,8 @@ export function TeamList({ organizationId }: TeamListProps) {
     setIsLoading(true);
     setError("");
     try {
-      const listResult = await (authClient.organization as any).listTeams({
+      // @ts-expect-error - better-auth organization client API method
+      const listResult = await authClient.organization.listTeams({
         query: {
           organizationId,
         },

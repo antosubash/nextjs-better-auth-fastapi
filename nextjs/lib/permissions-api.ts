@@ -42,3 +42,24 @@ export async function getUserPermissions(userId: string): Promise<UserPermission
   return response.json();
 }
 
+export async function updateRolePermissions(
+  roleName: string,
+  permissions: Permission[]
+): Promise<RoleInfo> {
+  const response = await fetch(`/api/permissions/roles/${roleName}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ permissions }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to update role permissions");
+  }
+
+  const data = await response.json();
+  return data.role;
+}
+

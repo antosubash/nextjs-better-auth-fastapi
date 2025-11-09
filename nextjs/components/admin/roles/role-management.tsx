@@ -3,11 +3,16 @@
 import { useState, useEffect } from "react";
 import { getRoles } from "@/lib/permissions-api";
 import { RoleInfo } from "@/lib/permissions-utils";
-import { PERMISSION_LABELS, PERMISSION_ERRORS, ROLE_DISPLAY_NAMES, ROLE_DESCRIPTIONS } from "@/lib/constants";
-import { Search, Shield, Users, Edit2 } from "lucide-react";
-import { RolePermissionEditor } from "./role-permission-editor";
+import {
+  ROLE_MANAGEMENT_LABELS,
+  ROLE_MANAGEMENT_ERRORS,
+  ROLE_DISPLAY_NAMES,
+  ROLE_DESCRIPTIONS,
+} from "@/lib/constants";
+import { Search, Shield, Users, Edit2, ArrowLeft } from "lucide-react";
+import { RolePermissionEditor } from "../permissions/role-permission-editor";
 
-export function RolePermissions() {
+export function RoleManagement() {
   const [roles, setRoles] = useState<RoleInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,7 +33,7 @@ export function RolePermissions() {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : PERMISSION_ERRORS.LOAD_ROLES_FAILED;
+          : ROLE_MANAGEMENT_ERRORS.LOAD_ROLES_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -52,7 +57,9 @@ export function RolePermissions() {
 
   const filteredRoles = roles.filter((role) => {
     const searchLower = searchValue.toLowerCase();
-    const displayName = ROLE_DISPLAY_NAMES[role.name as keyof typeof ROLE_DISPLAY_NAMES] || role.name;
+    const displayName =
+      ROLE_DISPLAY_NAMES[role.name as keyof typeof ROLE_DISPLAY_NAMES] ||
+      role.name;
     return (
       role.name.toLowerCase().includes(searchLower) ||
       displayName.toLowerCase().includes(searchLower)
@@ -63,7 +70,7 @@ export function RolePermissions() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-gray-600 dark:text-gray-400">
-          {PERMISSION_LABELS.LOADING}
+          {ROLE_MANAGEMENT_LABELS.LOADING}
         </div>
       </div>
     );
@@ -71,22 +78,42 @@ export function RolePermissions() {
 
   if (editingRole) {
     return (
-      <RolePermissionEditor
-        role={editingRole}
-        onSave={handleSaveRole}
-        onCancel={handleCancelEdit}
-      />
+      <div>
+        <div className="mb-6">
+          <button
+            onClick={handleCancelEdit}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {ROLE_MANAGEMENT_LABELS.BACK_TO_ROLES}
+          </button>
+        </div>
+        <RolePermissionEditor
+          role={editingRole}
+          onSave={handleSaveRole}
+          onCancel={handleCancelEdit}
+        />
+      </div>
     );
   }
 
   return (
     <div>
       <div className="mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Shield className="w-8 h-8 text-gray-900 dark:text-white" />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {ROLE_MANAGEMENT_LABELS.TITLE}
+          </h1>
+        </div>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          {ROLE_MANAGEMENT_LABELS.DESCRIPTION}
+        </p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder={PERMISSION_LABELS.SEARCH_ROLES}
+            placeholder={ROLE_MANAGEMENT_LABELS.SEARCH_ROLES}
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
@@ -102,14 +129,19 @@ export function RolePermissions() {
 
       {filteredRoles.length === 0 ? (
         <div className="text-center py-12 text-gray-600 dark:text-gray-400">
-          {PERMISSION_LABELS.NO_ROLES}
+          {ROLE_MANAGEMENT_LABELS.NO_ROLES}
         </div>
       ) : (
         <div className="space-y-6">
           {filteredRoles.map((role) => {
-            const displayName = ROLE_DISPLAY_NAMES[role.name as keyof typeof ROLE_DISPLAY_NAMES] || role.name;
-            const description = ROLE_DESCRIPTIONS[role.name as keyof typeof ROLE_DESCRIPTIONS] || "";
-            
+            const displayName =
+              ROLE_DISPLAY_NAMES[role.name as keyof typeof ROLE_DISPLAY_NAMES] ||
+              role.name;
+            const description =
+              ROLE_DESCRIPTIONS[
+                role.name as keyof typeof ROLE_DESCRIPTIONS
+              ] || "";
+
             return (
               <div
                 key={role.name}
@@ -137,7 +169,7 @@ export function RolePermissions() {
                         className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center gap-2"
                       >
                         <Edit2 className="w-4 h-4" />
-                        {PERMISSION_LABELS.EDIT_PERMISSIONS}
+                        {ROLE_MANAGEMENT_LABELS.EDIT_PERMISSIONS}
                       </button>
                     </div>
                   </div>
@@ -145,11 +177,11 @@ export function RolePermissions() {
 
                 <div className="mt-4">
                   <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Permissions ({role.permissions.length})
+                    {ROLE_MANAGEMENT_LABELS.PERMISSIONS} ({role.permissions.length})
                   </h4>
                   {role.permissions.length === 0 ? (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      No permissions assigned
+                      {ROLE_MANAGEMENT_LABELS.NO_PERMISSIONS}
                     </p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">

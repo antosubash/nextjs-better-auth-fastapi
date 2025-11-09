@@ -192,6 +192,7 @@ export const ADMIN_NAVIGATION = {
   USER_MANAGEMENT: "User Management",
   ORGANIZATIONS: "Organizations",
   PERMISSIONS: "Permissions",
+  ROLES: "Roles",
   MENU_TOGGLE: "Toggle menu",
   CLOSE_MENU: "Close menu",
 } as const;
@@ -426,6 +427,12 @@ export const PERMISSION_LABELS = {
   UPDATE_ROLE: "Update Role",
   CURRENT_ROLE: "Current Role",
   SELECT_ROLE: "Select role",
+  EDIT_PERMISSIONS: "Edit Permissions",
+  SAVE_PERMISSIONS: "Save Permissions",
+  CANCEL_EDIT: "Cancel",
+  SELECT_ALL: "Select All",
+  DESELECT_ALL: "Deselect All",
+  PERMISSIONS_FOR_ROLE: "Permissions for",
 } as const;
 
 export const PERMISSION_ERRORS = {
@@ -434,12 +441,14 @@ export const PERMISSION_ERRORS = {
   LOAD_USER_PERMISSIONS_FAILED: "Failed to load user permissions",
   ASSIGN_ROLE_FAILED: "Failed to assign role",
   UPDATE_ROLE_FAILED: "Failed to update role",
+  UPDATE_ROLE_PERMISSIONS_FAILED: "Failed to update role permissions",
   ACCESS_DENIED: "Access denied. Admin privileges required.",
 } as const;
 
 export const PERMISSION_SUCCESS = {
   ROLE_ASSIGNED: "Role assigned successfully",
   ROLE_UPDATED: "Role updated successfully",
+  ROLE_PERMISSIONS_UPDATED: "Role permissions updated successfully",
 } as const;
 
 export const ROLE_DISPLAY_NAMES = {
@@ -456,4 +465,21 @@ export const ROLE_DESCRIPTIONS = {
   member: "Organization member with limited permissions",
   owner: "Organization owner with full permissions",
   myCustomRole: "Custom role with specific permissions",
+} as const;
+
+export const ROLE_MANAGEMENT_LABELS = {
+  TITLE: "Role Management",
+  DESCRIPTION: "Manage roles and their permissions. Click Edit Permissions to modify what each role can do.",
+  LOADING: "Loading...",
+  SEARCH_ROLES: "Search roles...",
+  NO_ROLES: "No roles found",
+  EDIT_PERMISSIONS: "Edit Permissions",
+  PERMISSIONS: "Permissions",
+  NO_PERMISSIONS: "No permissions assigned",
+  BACK_TO_ROLES: "Back to Roles",
+} as const;
+
+export const ROLE_MANAGEMENT_ERRORS = {
+  LOAD_ROLES_FAILED: "Failed to load roles",
+  UPDATE_ROLE_PERMISSIONS_FAILED: "Failed to update role permissions",
 } as const;
