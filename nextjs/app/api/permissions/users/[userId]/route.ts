@@ -64,14 +64,18 @@ export async function GET(
         },
       });
 
-      if (userListResult.error) {
+      // Handle the result - it can be either success or error format
+      if (!userListResult || ("error" in userListResult && userListResult.error)) {
         return NextResponse.json(
           { error: PERMISSION_ERRORS.LOAD_USER_PERMISSIONS_FAILED },
           { status: 500 }
         );
       }
 
-      const users = (userListResult.data as { users?: Array<{ id: string; name: string; email: string; role?: string | null }> })?.users || [];
+      // Type guard to check if result has users array
+      const users = ("users" in userListResult && Array.isArray(userListResult.users))
+        ? userListResult.users
+        : [];
       const targetUser = users.find((u) => u.id === targetUserId);
 
       if (!targetUser) {

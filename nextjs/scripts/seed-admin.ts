@@ -7,12 +7,6 @@ import { eq } from "drizzle-orm";
 
 const SEED_USERS = [
   {
-    email: "superadmin@example.com",
-    password: "admin123",
-    name: "Super Admin",
-    role: USER_ROLES.SUPER_ADMIN,
-  },
-  {
     email: "admin@example.com",
     password: "admin123",
     name: "Admin User",
@@ -132,7 +126,7 @@ async function seedUsers() {
 
       // Create user with a basic role first (createUser API only accepts "user" or "admin")
       const basicRole =
-        userData.role === USER_ROLES.ADMIN || userData.role === USER_ROLES.SUPER_ADMIN
+        userData.role === USER_ROLES.ADMIN
           ? USER_ROLES.ADMIN
           : USER_ROLES.USER;
 
@@ -141,7 +135,6 @@ async function seedUsers() {
           email: userData.email,
           password: userData.password,
           name: userData.name,
-          role: basicRole,
         },
       });
 

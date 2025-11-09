@@ -135,7 +135,7 @@ export function UserRoleManager() {
     try {
       const result = await authClient.admin.setRole({
         userId: editingRole.userId,
-        role: editingRole.newRole as string,
+        role: editingRole.newRole as "user" | "admin",
       });
 
       if (result.error) {

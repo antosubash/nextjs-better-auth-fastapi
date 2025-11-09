@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "./auth";
 import { getUserEffectivePermissions, formatPermissionKey } from "./permissions-utils";
-import { PERMISSION_ERRORS } from "./constants";
+import { PERMISSION_ERRORS, USER_ROLES } from "./constants";
 
 export interface PermissionCheckResult {
   hasPermission: boolean;
@@ -25,8 +25,8 @@ export function checkUserPermission(
     };
   }
 
-  // Super admin has all permissions
-  if (userRole === "superAdmin") {
+  // Admin has all permissions
+  if (userRole === USER_ROLES.ADMIN) {
     return {
       hasPermission: true,
     };

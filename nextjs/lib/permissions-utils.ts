@@ -25,13 +25,41 @@ function getAllPermissionsFromStatement(): Record<string, string[]> {
 const roleDefinitions: Record<string, Record<string, string[]>> = {
   user: {},
   member: { project: ["create"] },
-  admin: { project: ["create", "update"], role: ["read"] },
+  admin: getAllPermissionsFromStatement(),
   owner: { project: ["create", "update", "delete"], role: ["read"] },
   myCustomRole: {
     project: ["create", "update", "delete"],
     organization: ["update"],
   },
-  superAdmin: getAllPermissionsFromStatement(),
+  moderator: {
+    project: ["read", "list", "view", "update", "delete"],
+    organization: ["read", "list", "view", "update"],
+    user: ["read", "list", "view", "update"],
+    team: ["read", "list", "view", "update", "remove"],
+    file: ["read", "list", "view", "update", "delete", "download"],
+    settings: ["read"],
+  },
+  editor: {
+    project: ["read", "list", "view", "create", "share", "update"],
+    organization: ["read", "list", "view", "update"],
+    team: ["read", "list", "view", "create", "update", "invite"],
+    file: ["read", "list", "view", "create", "update", "upload", "download"],
+    settings: ["read"],
+  },
+  viewer: {
+    project: ["read", "list", "view"],
+    organization: ["read", "list", "view"],
+    user: ["read", "list", "view"],
+    team: ["read", "list", "view"],
+    file: ["read", "list", "view", "download"],
+    settings: ["read"],
+  },
+  support: {
+    user: ["read", "list", "view", "update"],
+    organization: ["read", "list", "view", "update"],
+    team: ["read", "list", "view"],
+    settings: ["read", "update"],
+  },
 };
 
 export function getAllPermissions(): Permission[] {

@@ -7,5 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getDashboardPath(userRole?: string | null): string {
-  return userRole === USER_ROLES.ADMIN ? "/admin/dashboard" : "/dashboard"
+  return userRole === USER_ROLES.ADMIN
+    ? "/admin/dashboard"
+    : "/dashboard"
 }

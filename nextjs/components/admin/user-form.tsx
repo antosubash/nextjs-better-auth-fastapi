@@ -81,12 +81,17 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
 
     try {
       if (isEditing) {
+        // Ensure role is one of the allowed values
+        const validRole = (role === USER_ROLES.ADMIN || role === USER_ROLES.USER)
+          ? (role as "user" | "admin")
+          : USER_ROLES.USER;
+        
         const result = await authClient.admin.updateUser({
           userId: user.id,
           data: {
             name,
             email,
-            role,
+            role: validRole,
           },
         });
 
@@ -102,11 +107,16 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           return;
         }
 
+        // Ensure role is one of the allowed values
+        const validRole = (role === USER_ROLES.ADMIN || role === USER_ROLES.USER)
+          ? (role as "user" | "admin")
+          : USER_ROLES.USER;
+        
         const result = await authClient.admin.createUser({
           email,
           password,
           name,
-          role,
+          role: validRole,
         });
 
         if (result.error) {

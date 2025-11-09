@@ -95,7 +95,10 @@ export const USER_ROLES = {
   ADMIN: "admin",
   OWNER: "owner",
   MY_CUSTOM_ROLE: "myCustomRole",
-  SUPER_ADMIN: "superAdmin",
+  MODERATOR: "moderator",
+  EDITOR: "editor",
+  VIEWER: "viewer",
+  SUPPORT: "support",
 } as const;
 
 export const ADMIN_LABELS = {
@@ -464,16 +467,22 @@ export const ROLE_DISPLAY_NAMES = {
   member: "Member",
   owner: "Owner",
   myCustomRole: "Custom Role",
-  superAdmin: "Super Admin",
+  moderator: "Moderator",
+  editor: "Editor",
+  viewer: "Viewer",
+  support: "Support",
 } as const;
 
 export const ROLE_DESCRIPTIONS = {
-  admin: "Administrator with elevated permissions",
+  admin: "Administrator with all permissions across all resources",
   user: "Standard user with basic permissions",
   member: "Organization member with limited permissions",
   owner: "Organization owner with full permissions",
   myCustomRole: "Custom role with specific permissions",
-  superAdmin: "Super administrator with all permissions across all resources",
+  moderator: "Can read, update, and delete content but cannot create new resources",
+  editor: "Can read, create, and update content but cannot delete",
+  viewer: "Read-only access to view content and resources",
+  support: "Can read and update user/organization settings with limited permissions",
 } as const;
 
 export const ROLE_MANAGEMENT_LABELS = {
