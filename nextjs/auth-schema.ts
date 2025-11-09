@@ -175,3 +175,4 @@ export const apikey = sqliteTable("apikey", {
   permissions: text("permissions"),
   metadata: text("metadata"),
 });
+

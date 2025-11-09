@@ -1,31 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
-import { USER_ROLES } from "@/lib/constants";
+import { requirePermission } from "@/lib/permission-check";
+import { PERMISSION_ERRORS } from "@/lib/constants";
 import { getAllRoles } from "@/lib/permissions-utils";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
+    const permissionError = await requirePermission(
+      _request,
+      "role",
+      "read"
+    );
 
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const currentUser = sessionData.user;
-
-    if (currentUser.role !== USER_ROLES.ADMIN) {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
+    if (permissionError) {
+      return permissionError;
     }
 
     const roles = getAllRoles();
@@ -34,7 +21,7 @@ export async function GET(_request: NextRequest) {
   } catch (error) {
     console.error("Failed to fetch roles:", error);
     return NextResponse.json(
-      { error: "Failed to fetch roles" },
+      { error: PERMISSION_ERRORS.LOAD_ROLES_FAILED },
       { status: 500 }
     );
   }

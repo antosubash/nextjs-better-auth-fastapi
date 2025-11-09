@@ -1,23 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { requirePermission } from "@/lib/permission-check";
 import { API_KEY_ERRORS } from "@/lib/constants";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
+    const permissionError = await requirePermission(
+      _request,
+      "apiKey",
+      "read"
+    );
 
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: API_KEY_ERRORS.LOAD_API_KEYS_FAILED },
-        { status: 401 }
-      );
+    if (permissionError) {
+      return permissionError;
     }
 
+    const headersList = await headers();
     const result = await auth.api.listApiKeys({
       headers: headersList,
     });
@@ -34,6 +33,16 @@ export async function GET(_request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const permissionError = await requirePermission(
+      request,
+      "apiKey",
+      "create"
+    );
+
+    if (permissionError) {
+      return permissionError;
+    }
+
     const headersList = await headers();
     const sessionData = await auth.api.getSession({
       headers: headersList,

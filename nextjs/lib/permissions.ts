@@ -1,8 +1,14 @@
 import { createAccessControl } from "better-auth/plugins/access";
 
 export const statement = {
-    project: ["create", "share", "update", "delete"],
-    organization: ["create", "update", "delete"],
+    project: ["read", "list", "view", "create", "share", "update", "delete"],
+    organization: ["read", "list", "view", "create", "update", "delete"],
+    user: ["read", "list", "view", "create", "update", "delete"],
+    apiKey: ["read", "list", "view", "create", "update", "delete"],
+    role: ["read", "list", "view", "create", "update", "delete"],
+    team: ["read", "list", "view", "create", "update", "delete", "invite", "remove"],
+    file: ["read", "list", "view", "create", "update", "delete", "upload", "download"],
+    settings: ["read", "update"],
 } as const;
 
 export const accessControl = createAccessControl(statement);
@@ -22,4 +28,16 @@ export const ownerRole = accessControl.newRole({
 export const myCustomRole = accessControl.newRole({ 
     project: ["create", "update", "delete"], 
     organization: ["update"], 
+});
+
+// Super admin role with all permissions
+export const superAdminRole = accessControl.newRole({
+    project: ["read", "list", "view", "create", "share", "update", "delete"],
+    organization: ["read", "list", "view", "create", "update", "delete"],
+    user: ["read", "list", "view", "create", "update", "delete"],
+    apiKey: ["read", "list", "view", "create", "update", "delete"],
+    role: ["read", "list", "view", "create", "update", "delete"],
+    team: ["read", "list", "view", "create", "update", "delete", "invite", "remove"],
+    file: ["read", "list", "view", "create", "update", "delete", "upload", "download"],
+    settings: ["read", "update"],
 }); 

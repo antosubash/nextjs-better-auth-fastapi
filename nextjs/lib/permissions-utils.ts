@@ -1,3 +1,4 @@
+import { statement } from "./permissions";
 
 export interface Permission {
   resource: string;
@@ -10,8 +11,18 @@ export interface RoleInfo {
   permissions: Permission[];
 }
 
-// In-memory store for role permissions (can be replaced with database later)
-const rolePermissionsStore: Record<string, Record<string, string[]>> = {
+// Helper function to get all permissions from statement
+function getAllPermissionsFromStatement(): Record<string, string[]> {
+  const allPermissions: Record<string, string[]> = {};
+  for (const [resource, actions] of Object.entries(statement)) {
+    allPermissions[resource] = [...actions];
+  }
+  return allPermissions;
+}
+
+// Map of role names to Better Auth role definitions
+// These match the roles defined in permissions.ts using accessControl.newRole()
+const roleDefinitions: Record<string, Record<string, string[]>> = {
   user: {},
   member: { project: ["create"] },
   admin: { project: ["create", "update"] },
@@ -20,14 +31,10 @@ const rolePermissionsStore: Record<string, Record<string, string[]>> = {
     project: ["create", "update", "delete"],
     organization: ["update"],
   },
+  superAdmin: getAllPermissionsFromStatement(),
 };
 
 export function getAllPermissions(): Permission[] {
-  const statement = {
-    project: ["create", "share", "update", "delete"],
-    organization: ["create", "update", "delete"],
-  } as const;
-
   const permissions: Permission[] = [];
 
   for (const [resource, actions] of Object.entries(statement)) {
@@ -44,8 +51,7 @@ export function getAllPermissions(): Permission[] {
 }
 
 export function getRolePermissions(roleName: string): Permission[] {
-  const rolePermissions = rolePermissionsStore[roleName] || {};
-
+  const rolePermissions = roleDefinitions[roleName] || {};
   const permissions: Permission[] = [];
 
   for (const [resource, actions] of Object.entries(rolePermissions)) {
@@ -63,7 +69,9 @@ export function getRolePermissions(roleName: string): Permission[] {
   return permissions;
 }
 
-export function getUserEffectivePermissions(userRole: string | null | undefined): Permission[] {
+export function getUserEffectivePermissions(
+  userRole: string | null | undefined
+): Permission[] {
   if (!userRole) {
     return [];
   }
@@ -76,7 +84,7 @@ export function formatPermissionKey(resource: string, action: string): string {
 }
 
 export function getAllRoles(): RoleInfo[] {
-  return Object.entries(rolePermissionsStore).map(([name, rolePermissions]) => {
+  return Object.entries(roleDefinitions).map(([name, rolePermissions]) => {
     const permissions: Permission[] = [];
 
     for (const [resource, actions] of Object.entries(rolePermissions)) {
@@ -102,6 +110,7 @@ export function updateRolePermissions(
   roleName: string,
   permissions: Permission[]
 ): void {
+  // Convert permissions array to role definition format
   const rolePermissions: Record<string, string[]> = {};
 
   for (const permission of permissions) {
@@ -111,10 +120,13 @@ export function updateRolePermissions(
     rolePermissions[permission.resource].push(permission.action);
   }
 
-  rolePermissionsStore[roleName] = rolePermissions;
+  // Update the role definition (in-memory only, as Better Auth roles are code-defined)
+  roleDefinitions[roleName] = rolePermissions;
 }
 
-export function getRolePermissionsFromStore(roleName: string): Record<string, string[]> {
-  return rolePermissionsStore[roleName] || {};
+export function getRolePermissionsFromStore(
+  roleName: string
+): Record<string, string[]> {
+  return roleDefinitions[roleName] || {};
 }
 

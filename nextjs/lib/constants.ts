@@ -92,6 +92,7 @@ export const LANDING_PAGE = {
 export const USER_ROLES = {
   ADMIN: "admin",
   USER: "user",
+  SUPER_ADMIN: "superAdmin",
 } as const;
 
 export const ADMIN_LABELS = {
@@ -444,6 +445,8 @@ export const PERMISSION_ERRORS = {
   UPDATE_ROLE_FAILED: "Failed to update role",
   UPDATE_ROLE_PERMISSIONS_FAILED: "Failed to update role permissions",
   ACCESS_DENIED: "Access denied. Admin privileges required.",
+  UNAUTHORIZED: "Unauthorized. Please log in to continue.",
+  INSUFFICIENT_PERMISSIONS: "Insufficient permissions to perform this action.",
 } as const;
 
 export const PERMISSION_SUCCESS = {
@@ -458,6 +461,7 @@ export const ROLE_DISPLAY_NAMES = {
   member: "Member",
   owner: "Owner",
   myCustomRole: "Custom Role",
+  superAdmin: "Super Admin",
 } as const;
 
 export const ROLE_DESCRIPTIONS = {
@@ -466,6 +470,7 @@ export const ROLE_DESCRIPTIONS = {
   member: "Organization member with limited permissions",
   owner: "Organization owner with full permissions",
   myCustomRole: "Custom role with specific permissions",
+  superAdmin: "Super administrator with all permissions across all resources",
 } as const;
 
 export const ROLE_MANAGEMENT_LABELS = {

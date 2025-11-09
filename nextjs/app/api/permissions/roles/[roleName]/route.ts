@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
-import { USER_ROLES } from "@/lib/constants";
+import { requirePermission } from "@/lib/permission-check";
+import { PERMISSION_ERRORS } from "@/lib/constants";
 import { updateRolePermissions, getAllRoles, Permission } from "@/lib/permissions-utils";
 
 export async function PUT(
@@ -9,25 +8,14 @@ export async function PUT(
   { params }: { params: Promise<{ roleName: string }> }
 ) {
   try {
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
+    const permissionError = await requirePermission(
+      request,
+      "role",
+      "update"
+    );
 
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const currentUser = sessionData.user;
-
-    if (currentUser.role !== USER_ROLES.ADMIN) {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
+    if (permissionError) {
+      return permissionError;
     }
 
     const { roleName } = await params;
@@ -56,7 +44,7 @@ export async function PUT(
   } catch (error) {
     console.error("Failed to update role permissions:", error);
     return NextResponse.json(
-      { error: "Failed to update role permissions" },
+      { error: PERMISSION_ERRORS.UPDATE_ROLE_PERMISSIONS_FAILED },
       { status: 500 }
     );
   }

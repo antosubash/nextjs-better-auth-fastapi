@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { requirePermission } from "@/lib/permission-check";
 import { API_KEY_ERRORS } from "@/lib/constants";
 
 export async function GET(
@@ -8,19 +9,18 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
+    const permissionError = await requirePermission(
+      _request,
+      "apiKey",
+      "read"
+    );
 
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: API_KEY_ERRORS.LOAD_API_KEY_FAILED },
-        { status: 401 }
-      );
+    if (permissionError) {
+      return permissionError;
     }
 
+    const { id } = await params;
+    const headersList = await headers();
     const result = await auth.api.getApiKey({
       headers: headersList,
       query: { id },
@@ -41,6 +41,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const permissionError = await requirePermission(
+      request,
+      "apiKey",
+      "update"
+    );
+
+    if (permissionError) {
+      return permissionError;
+    }
+
     const { id } = await params;
     const headersList = await headers();
     const sessionData = await auth.api.getSession({
@@ -84,19 +94,18 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
+    const permissionError = await requirePermission(
+      _request,
+      "apiKey",
+      "delete"
+    );
 
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: API_KEY_ERRORS.DELETE_FAILED },
-        { status: 401 }
-      );
+    if (permissionError) {
+      return permissionError;
     }
 
+    const { id } = await params;
+    const headersList = await headers();
     await auth.api.deleteApiKey({
       headers: headersList,
       body: {
