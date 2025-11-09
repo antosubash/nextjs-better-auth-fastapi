@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   ORGANIZATION_LABELS,
   ORGANIZATION_ERRORS,
@@ -24,6 +24,8 @@ interface Organization {
 
 export function OrganizationList() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isAdminContext = pathname?.startsWith("/admin") ?? false;
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrganizationId, setActiveOrganizationId] = useState<
     string | null
@@ -40,31 +42,45 @@ export function OrganizationList() {
     setIsLoading(true);
     setError("");
     try {
-      const [listResult, sessionResult] = await Promise.all([
-        authClient.organization.list(),
-        authClient.getSession(),
-      ]);
-
-      if (listResult.error) {
-        setError(
-          listResult.error.message ||
-            ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
-        );
-      } else if (listResult.data) {
-        const orgs = Array.isArray(listResult.data) ? listResult.data : [];
-        setOrganizations(
-          orgs.map((org) => ({
-            ...org,
-            createdAt:
-              org.createdAt instanceof Date
-                ? org.createdAt.getTime()
-                : typeof org.createdAt === "number"
-                  ? org.createdAt
-                  : Date.now(),
-          })),
-        );
+      if (isAdminContext) {
+        // Use admin API to get all organizations
+        const response = await fetch("/api/admin/organizations");
+        if (!response.ok) {
+          const errorData = await response.json();
+          setError(
+            errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
+          );
+          return;
+        }
+        const data = await response.json();
+        const orgs = data.organizations || [];
+        setOrganizations(orgs);
+      } else {
+        // Use regular API to get user's organizations
+        const listResult = await authClient.organization.list();
+        if (listResult.error) {
+          setError(
+            listResult.error.message ||
+              ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
+          );
+        } else if (listResult.data) {
+          const orgs = Array.isArray(listResult.data) ? listResult.data : [];
+          setOrganizations(
+            orgs.map((org) => ({
+              ...org,
+              createdAt:
+                org.createdAt instanceof Date
+                  ? org.createdAt.getTime()
+                  : typeof org.createdAt === "number"
+                    ? org.createdAt
+                    : Date.now(),
+            })),
+          );
+        }
       }
 
+      // Get active organization from session
+      const sessionResult = await authClient.getSession();
       if (sessionResult.data?.session?.activeOrganizationId) {
         setActiveOrganizationId(
           sessionResult.data.session.activeOrganizationId,
@@ -83,7 +99,8 @@ export function OrganizationList() {
 
   useEffect(() => {
     loadOrganizations();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdminContext]);
 
   const handleSearch = (value: string) => {
     setSearchValue(value);
