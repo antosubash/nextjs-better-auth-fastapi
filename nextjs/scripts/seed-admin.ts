@@ -124,23 +124,32 @@ async function seedUsers() {
         console.log(`✓ Deleted existing user: ${userData.email}`);
       }
 
-      // Create user with a basic role first (createUser API only accepts "user" or "admin")
-      const basicRole =
-        userData.role === USER_ROLES.ADMIN
-          ? USER_ROLES.ADMIN
-          : USER_ROLES.USER;
+      // Create user - only pass role if it's admin (allowedRoles only includes admin)
+      // For other roles, omit the role field to use defaultRole ("user"), then update via DB
+      const createUserBody: {
+        email: string;
+        password: string;
+        name: string;
+        role?: ("admin" | "myCustomRole" | "moderator" | "editor" | "viewer" | "support")[];
+      } = {
+        email: userData.email,
+        password: userData.password,
+        name: userData.name,
+      };
+
+      // Only include role if it's admin (the only role in allowedRoles)
+      if (userData.role === USER_ROLES.ADMIN) {
+        createUserBody.role = ["admin"];
+      }
 
       const newUser = await auth.api.createUser({
-        body: {
-          email: userData.email,
-          password: userData.password,
-          name: userData.name,
-        },
+        body: createUserBody,
       });
 
       if (newUser?.user && newUser.user.id) {
-        // Update role if it's different from the basic role
-        if (userData.role !== basicRole) {
+        // Update role if it's different from the default role (user) or admin
+        const defaultRole = userData.role === USER_ROLES.ADMIN ? USER_ROLES.ADMIN : USER_ROLES.USER;
+        if (userData.role !== defaultRole) {
           await db
             .update(user)
             .set({ role: userData.role })
