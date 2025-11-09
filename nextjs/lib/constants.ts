@@ -191,6 +191,7 @@ export const ADMIN_NAVIGATION = {
   DASHBOARD: "Dashboard",
   USER_MANAGEMENT: "User Management",
   ORGANIZATIONS: "Organizations",
+  PERMISSIONS: "Permissions",
   MENU_TOGGLE: "Toggle menu",
   CLOSE_MENU: "Close menu",
 } as const;
@@ -403,4 +404,56 @@ export const ORGANIZATION_SWITCHER = {
 
 export const PAGE_CONTAINER = {
   CLASS: "container mx-auto px-4 py-8 md:py-12 max-w-7xl",
+} as const;
+
+export const PERMISSION_LABELS = {
+  TITLE: "Permission Management",
+  PERMISSIONS: "Permissions",
+  ROLES: "Roles",
+  USERS: "Users",
+  RESOURCE: "Resource",
+  ACTION: "Action",
+  PERMISSION: "Permission",
+  ROLE_NAME: "Role Name",
+  USER_ROLE: "User Role",
+  EFFECTIVE_PERMISSIONS: "Effective Permissions",
+  NO_PERMISSIONS: "No permissions found",
+  NO_ROLES: "No roles found",
+  LOADING: "Loading...",
+  SEARCH_PERMISSIONS: "Search permissions...",
+  SEARCH_ROLES: "Search roles...",
+  ASSIGN_ROLE: "Assign Role",
+  UPDATE_ROLE: "Update Role",
+  CURRENT_ROLE: "Current Role",
+  SELECT_ROLE: "Select role",
+} as const;
+
+export const PERMISSION_ERRORS = {
+  LOAD_PERMISSIONS_FAILED: "Failed to load permissions",
+  LOAD_ROLES_FAILED: "Failed to load roles",
+  LOAD_USER_PERMISSIONS_FAILED: "Failed to load user permissions",
+  ASSIGN_ROLE_FAILED: "Failed to assign role",
+  UPDATE_ROLE_FAILED: "Failed to update role",
+  ACCESS_DENIED: "Access denied. Admin privileges required.",
+} as const;
+
+export const PERMISSION_SUCCESS = {
+  ROLE_ASSIGNED: "Role assigned successfully",
+  ROLE_UPDATED: "Role updated successfully",
+} as const;
+
+export const ROLE_DISPLAY_NAMES = {
+  admin: "Admin",
+  user: "User",
+  member: "Member",
+  owner: "Owner",
+  myCustomRole: "Custom Role",
+} as const;
+
+export const ROLE_DESCRIPTIONS = {
+  admin: "Administrator with elevated permissions",
+  user: "Standard user with basic permissions",
+  member: "Organization member with limited permissions",
+  owner: "Organization owner with full permissions",
+  myCustomRole: "Custom role with specific permissions",
 } as const;
