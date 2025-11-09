@@ -1,8 +1,15 @@
 "use client";
 
-import { UserList } from "@/components/admin/user-list";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminPage() {
-  return <UserList />;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/admin/dashboard");
+  }, [router]);
+
+  return null;
 }
 

@@ -5,9 +5,18 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, DASHBOARD } from "@/lib/constants";
-import { LogIn, LogOut, Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { LogIn, LogOut, Menu } from "lucide-react";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function MainNavbar() {
   const router = useRouter();
@@ -70,11 +79,11 @@ export function MainNavbar() {
 
   if (isLoading) {
     return (
-      <nav className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+      <nav className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-            <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-8 w-24" />
           </div>
         </div>
       </nav>
@@ -82,13 +91,13 @@ export function MainNavbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+    <nav className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo/Brand */}
           <Link
             href="/"
-            className="text-xl font-bold text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            className="text-xl font-bold hover:opacity-80 transition-opacity"
           >
             Better Auth
           </Link>
@@ -96,124 +105,117 @@ export function MainNavbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated && (
-              <Link
-                href="/dashboard"
-                className={cn(
-                  "px-4 py-2 rounded-lg transition-colors",
-                  pathname === "/dashboard"
-                    ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                )}
+              <Button
+                asChild
+                variant={pathname === "/dashboard" ? "default" : "ghost"}
               >
-                {DASHBOARD.TITLE}
-              </Link>
+                <Link href="/dashboard">
+                  {DASHBOARD.TITLE}
+                </Link>
+              </Button>
             )}
 
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
                 <OrganizationSwitcher />
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800">
-                  <div className="w-8 h-8 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center text-sm font-medium">
-                    {getInitials(user.name, user.email)}
-                  </div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white hidden lg:block">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback className="text-sm">
+                      {getInitials(user.name, user.email)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium hidden lg:block">
                     {user.name || user.email}
                   </span>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-                >
-                  <LogOut className="w-4 h-4" />
+                <Button onClick={handleLogout} variant="default" size="sm">
+                  <LogOut className="w-4 h-4 mr-2" />
                   <span className="hidden lg:inline">{AUTH_LABELS.LOGOUT}</span>
-                </button>
+                </Button>
               </div>
             ) : (
-              <button
-                onClick={handleLogin}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-              >
-                <LogIn className="w-4 h-4" />
+              <Button onClick={handleLogin} variant="default">
+                <LogIn className="w-4 h-4 mr-2" />
                 {AUTH_LABELS.LOGIN}
-              </button>
+              </Button>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-200 dark:border-gray-800 pt-4 space-y-3">
-            {isAuthenticated && (
-              <Link
-                href="/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "block px-4 py-2 rounded-lg transition-colors",
-                  pathname === "/dashboard"
-                    ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+          {/* Mobile Menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="w-6 h-6" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <SheetHeader>
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6 space-y-4">
+                {isAuthenticated && (
+                  <Button
+                    asChild
+                    variant={pathname === "/dashboard" ? "default" : "ghost"}
+                    className="w-full justify-start"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Link href="/dashboard">
+                      {DASHBOARD.TITLE}
+                    </Link>
+                  </Button>
                 )}
-              >
-                {DASHBOARD.TITLE}
-              </Link>
-            )}
 
-            {isAuthenticated && user ? (
-              <div className="space-y-3">
-                <div className="px-4">
-                  <OrganizationSwitcher />
-                </div>
-                <div className="flex items-center gap-3 px-4 py-2">
-                  <div className="w-10 h-10 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center text-sm font-medium">
-                    {getInitials(user.name, user.email)}
+                {isAuthenticated && user ? (
+                  <div className="space-y-4">
+                    <div>
+                      <OrganizationSwitcher />
+                    </div>
+                    <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
+                      <Avatar className="w-10 h-10">
+                        <AvatarFallback>
+                          {getInitials(user.name, user.email)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {user.name || "User"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      variant="default"
+                      className="w-full"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {AUTH_LABELS.LOGOUT}
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {user.name || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-                >
-                  <LogOut className="w-4 h-4" />
-                  {AUTH_LABELS.LOGOUT}
-                </button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      handleLogin();
+                      setMobileMenuOpen(false);
+                    }}
+                    variant="default"
+                    className="w-full"
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    {AUTH_LABELS.LOGIN}
+                  </Button>
+                )}
               </div>
-            ) : (
-              <button
-                onClick={() => {
-                  handleLogin();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-              >
-                <LogIn className="w-4 h-4" />
-                {AUTH_LABELS.LOGIN}
-              </button>
-            )}
-          </div>
-        )}
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </nav>
   );

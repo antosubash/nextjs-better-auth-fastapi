@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Building2, X, Shield, UserCog, Key } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Shield, UserCog, Key } from "lucide-react";
 import { ADMIN_NAVIGATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -22,7 +22,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       icon: LayoutDashboard,
     },
     {
-      href: "/admin",
+      href: "/admin/users",
       label: ADMIN_NAVIGATION.USER_MANAGEMENT,
       icon: Users,
     },
@@ -48,82 +48,53 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     },
   ];
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
   const handleLinkClick = () => {
     if (window.innerWidth < 1024) {
       onClose();
     }
   };
 
+  const isActive = (href: string) => {
+    if (href === "/admin/organizations") {
+      return pathname?.startsWith("/admin/organizations");
+    }
+    if (href === "/admin/permissions") {
+      return pathname?.startsWith("/admin/permissions");
+    }
+    if (href === "/admin/roles") {
+      return pathname?.startsWith("/admin/roles");
+    }
+    if (href === "/admin/api-keys") {
+      return pathname?.startsWith("/admin/api-keys");
+    }
+    if (href === "/admin/users") {
+      return pathname === "/admin/users";
+    }
+    return pathname === href;
+  };
+
   return (
     <>
-      {/* Backdrop for mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full",
-        )}
-      >
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:block lg:fixed lg:top-0 lg:left-0 lg:h-full lg:w-64 lg:border-r lg:bg-background lg:z-40">
         <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Admin Panel
-            </h2>
-            <button
-              onClick={onClose}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
-              aria-label={ADMIN_NAVIGATION.CLOSE_MENU}
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-lg font-semibold">Admin Panel</h2>
           </div>
-
-          {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const isActive =
-                item.href === "/admin/organizations"
-                  ? pathname?.startsWith("/admin/organizations")
-                  : item.href === "/admin/permissions"
-                    ? pathname?.startsWith("/admin/permissions")
-                    : item.href === "/admin/roles"
-                      ? pathname?.startsWith("/admin/roles")
-                      : item.href === "/admin/api-keys"
-                        ? pathname?.startsWith("/admin/api-keys")
-                        : pathname === item.href;
+              const active = isActive(item.href);
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={handleLinkClick}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    isActive
-                      ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-accent hover:text-accent-foreground",
                   )}
                 >
                   <Icon className="w-5 h-5" />
@@ -134,6 +105,38 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
           </nav>
         </div>
       </aside>
+
+      {/* Mobile Sidebar */}
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent side="left" className="w-64 p-0">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle>Admin Panel</SheetTitle>
+          </SheetHeader>
+          <nav className="flex-1 p-4 space-y-2">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={handleLinkClick}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-accent hover:text-accent-foreground",
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

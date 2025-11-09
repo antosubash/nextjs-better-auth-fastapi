@@ -1,16 +1,69 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
+import { getRoles } from "@/lib/permissions-api";
+import { RoleInfo } from "@/lib/permissions-utils";
 import {
   ADMIN_LABELS,
   ADMIN_ERRORS,
   ADMIN_SUCCESS,
+  ADMIN_FILTERS,
+  ADMIN_BULK_ACTIONS,
+  ADMIN_PAGINATION,
   USER_ROLES,
+  ROLE_DISPLAY_NAMES,
 } from "@/lib/constants";
 import { UserForm } from "./user-form";
 import { UserActions } from "./user-actions";
-import { Search, Plus, Users } from "lucide-react";
+import { UserDetails } from "./user-details";
+import { UserFilters } from "./user-filters";
+import { UserBulkActions } from "./user-bulk-actions";
+import {
+  Search,
+  Plus,
+  Users,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 interface User {
   id: string;
@@ -21,19 +74,45 @@ interface User {
   banReason?: string;
   banExpires?: number;
   createdAt: number;
+  emailVerified?: boolean;
 }
+
+type FilterStatus = "all" | "active" | "banned";
 
 export function UserList() {
   const [users, setUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
-  const limit = 10;
+  
+  const [filterRole, setFilterRole] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [showFilters, setShowFilters] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState<RoleInfo[]>([]);
+
+  const loadRoles = useCallback(async () => {
+    try {
+      const roles = await getRoles();
+      setAvailableRoles(roles);
+    } catch (err) {
+      console.error("Failed to load roles:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRoles();
+  }, [loadRoles]);
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -42,8 +121,8 @@ export function UserList() {
       const result = await authClient.admin.listUsers({
         query: {
           searchValue: searchValue || undefined,
-          limit: limit.toString(),
-          offset: ((currentPage - 1) * limit).toString(),
+          limit: "1000",
+          offset: "0",
           sortBy: "createdAt",
           sortDirection: "desc",
         },
@@ -53,13 +132,13 @@ export function UserList() {
         setError(result.error.message || ADMIN_ERRORS.LOAD_USERS_FAILED);
       } else if (result.data) {
         const usersData = (result.data as { users?: User[] })?.users || [];
-        setUsers(
-          usersData.map((u) => ({
-            ...u,
-            banned: u.banned ?? false,
-          })),
-        );
-        setTotalUsers(result.data.total || 0);
+        const processedUsers = usersData.map((u) => ({
+          ...u,
+          banned: u.banned ?? false,
+          emailVerified: u.emailVerified ?? false,
+        }));
+        setAllUsers(processedUsers);
+        applyFilters(processedUsers);
       }
     } catch (err) {
       const errorMessage =
@@ -70,14 +149,53 @@ export function UserList() {
     }
   };
 
+  const applyFilters = (usersToFilter: User[]) => {
+    let filtered = [...usersToFilter];
+
+    if (filterRole !== "all") {
+      filtered = filtered.filter((u) => u.role === filterRole);
+    }
+
+    if (filterStatus === "active") {
+      filtered = filtered.filter((u) => !u.banned);
+    } else if (filterStatus === "banned") {
+      filtered = filtered.filter((u) => u.banned);
+    }
+
+    if (dateFrom) {
+      const fromTimestamp = dateFrom.getTime();
+      filtered = filtered.filter((u) => u.createdAt >= fromTimestamp);
+    }
+
+    if (dateTo) {
+      const toTimestamp = dateTo.getTime() + 24 * 60 * 60 * 1000 - 1;
+      filtered = filtered.filter((u) => u.createdAt <= toTimestamp);
+    }
+
+    setUsers(filtered);
+    setTotalUsers(filtered.length);
+    setCurrentPage(1);
+  };
+
   useEffect(() => {
     loadUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchValue]);
+  }, [searchValue]);
+
+  useEffect(() => {
+    applyFilters(allUsers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterRole, filterStatus, dateFrom, dateTo]);
 
   const handleSearch = (value: string) => {
     setSearchValue(value);
-    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilterRole("all");
+    setFilterStatus("all");
+    setDateFrom(undefined);
+    setDateTo(undefined);
   };
 
   const handleUserCreated = () => {
@@ -97,6 +215,7 @@ export function UserList() {
   const handleUserDeleted = () => {
     setSuccess(ADMIN_SUCCESS.USER_DELETED);
     setTimeout(() => setSuccess(""), 3000);
+    setSelectedUserIds(new Set());
     loadUsers();
   };
 
@@ -106,174 +225,404 @@ export function UserList() {
     loadUsers();
   };
 
-  const totalPages = Math.ceil(totalUsers / limit);
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const pageStart = (currentPage - 1) * itemsPerPage;
+      const pageEnd = pageStart + itemsPerPage;
+      const pageUsers = users.slice(pageStart, pageEnd);
+      setSelectedUserIds(new Set(pageUsers.map((u) => u.id)));
+    } else {
+      setSelectedUserIds(new Set());
+    }
+  };
+
+  const handleSelectUser = (userId: string, checked: boolean) => {
+    const newSelected = new Set(selectedUserIds);
+    if (checked) {
+      newSelected.add(userId);
+    } else {
+      newSelected.delete(userId);
+    }
+    setSelectedUserIds(newSelected);
+  };
+
+  const handleBulkSuccess = (message: string) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(""), 3000);
+    setSelectedUserIds(new Set());
+    loadUsers();
+  };
+
+  const handleBulkError = (message: string) => {
+    setError(message);
+    setTimeout(() => setError(""), 5000);
+  };
+
+  const handleBulkComplete = () => {
+    loadUsers();
+  };
+
+  const formatDate = (timestamp: number): string => {
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const totalPages = Math.ceil(totalUsers / itemsPerPage);
+  const pageStart = (currentPage - 1) * itemsPerPage;
+  const pageEnd = pageStart + itemsPerPage;
+  const paginatedUsers = users.slice(pageStart, pageEnd);
+  const allPageSelected =
+    paginatedUsers.length > 0 &&
+    paginatedUsers.every((u) => selectedUserIds.has(u.id));
+
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    const maxVisible = 7;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push("ellipsis");
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push("ellipsis");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Users className="w-8 h-8 text-gray-900 dark:text-white" />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <Users className="w-8 h-8" />
+          <h1 className="text-3xl font-bold">
             {ADMIN_LABELS.TITLE}
           </h1>
         </div>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-        >
-          <Plus className="w-5 h-5" />
+        <Button onClick={() => setShowCreateForm(true)}>
+          <Plus className="w-5 h-5 mr-2" />
           {ADMIN_LABELS.CREATE_USER}
-        </button>
+        </Button>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-          {error}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {success && (
-        <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-800 dark:text-green-200">
-          {success}
-        </div>
+        <Alert className="mb-4">
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
       )}
 
-      {showCreateForm && (
-        <div className="mb-6">
+      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{ADMIN_LABELS.CREATE_USER}</DialogTitle>
+          </DialogHeader>
           <UserForm
             onSuccess={handleUserCreated}
             onCancel={() => setShowCreateForm(false)}
           />
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
-      {editingUser && (
-        <div className="mb-6">
-          <UserForm
-            user={editingUser}
-            onSuccess={handleUserUpdated}
-            onCancel={() => setEditingUser(null)}
-          />
-        </div>
-      )}
+      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{ADMIN_LABELS.EDIT_USER}</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <UserForm
+              user={editingUser}
+              onSuccess={handleUserUpdated}
+              onCancel={() => setEditingUser(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
-      <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
+      <UserDetails
+        user={selectedUser}
+        open={!!selectedUser}
+        onOpenChange={(open) => !open && setSelectedUser(null)}
+      />
+
+      <div className="mb-4 space-y-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Input
             type="text"
             placeholder={ADMIN_LABELS.SEARCH_USERS}
             value={searchValue}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
+            className="pl-10"
           />
         </div>
+
+        <UserFilters
+          filterRole={filterRole}
+          filterStatus={filterStatus}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          showFilters={showFilters}
+          availableRoles={availableRoles}
+          onFilterRoleChange={setFilterRole}
+          onFilterStatusChange={setFilterStatus}
+          onDateFromChange={setDateFrom}
+          onDateToChange={setDateTo}
+          onShowFiltersChange={setShowFilters}
+          onClearFilters={clearFilters}
+        />
+
+        <UserBulkActions
+          selectedUserIds={selectedUserIds}
+          users={allUsers}
+          availableRoles={availableRoles}
+          onSuccess={handleBulkSuccess}
+          onError={handleBulkError}
+          onComplete={handleBulkComplete}
+        />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {ADMIN_LABELS.LOADING}
-          </div>
-        ) : users.length === 0 ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {ADMIN_LABELS.NO_USERS}
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-900">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      {ADMIN_LABELS.NAME}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      {ADMIN_LABELS.EMAIL}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      {ADMIN_LABELS.ROLE}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      {ADMIN_LABELS.STATUS}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      {ADMIN_LABELS.ACTIONS}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {users.map((user) => (
-                    <tr
-                      key={user.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        {user.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                        {user.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
-                          {user.role || USER_ROLES.USER}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {user.banned ? (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200">
-                            {ADMIN_LABELS.BANNED}
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-                            {ADMIN_LABELS.ACTIVE}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <UserActions
-                          user={user}
-                          onEdit={() => setEditingUser(user)}
-                          onDelete={handleUserDeleted}
-                          onActionSuccess={handleActionSuccess}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <Skeleton className="h-8 w-48 mx-auto" />
             </div>
-
-            {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Showing {(currentPage - 1) * limit + 1} to{" "}
-                  {Math.min(currentPage * limit, totalUsers)} of {totalUsers}{" "}
-                  users
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-900"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-900"
-                  >
-                    Next
-                  </button>
-                </div>
+          ) : paginatedUsers.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              {ADMIN_LABELS.NO_USERS}
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={allPageSelected}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
+                      <TableHead>{ADMIN_LABELS.NAME}</TableHead>
+                      <TableHead>{ADMIN_LABELS.EMAIL}</TableHead>
+                      <TableHead>{ADMIN_LABELS.ROLE}</TableHead>
+                      <TableHead>{ADMIN_LABELS.STATUS}</TableHead>
+                      <TableHead>{ADMIN_LABELS.CREATED_AT}</TableHead>
+                      <TableHead>{ADMIN_LABELS.EMAIL_VERIFIED}</TableHead>
+                      <TableHead>{ADMIN_LABELS.ACTIONS}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedUsers.map((user) => (
+                      <TableRow
+                        key={user.id}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedUser(user)}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedUserIds.has(user.id)}
+                            onCheckedChange={(checked) =>
+                              handleSelectUser(user.id, checked as boolean)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {user.name}
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {ROLE_DISPLAY_NAMES[
+                              user.role as keyof typeof ROLE_DISPLAY_NAMES
+                            ] || user.role || USER_ROLES.USER}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {user.banned ? (
+                            <Badge variant="destructive">
+                              {ADMIN_LABELS.BANNED}
+                            </Badge>
+                          ) : (
+                            <Badge variant="default">
+                              {ADMIN_LABELS.ACTIVE}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>{formatDate(user.createdAt)}</TableCell>
+                        <TableCell>
+                          {user.emailVerified ? (
+                            <Badge variant="default" className="gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              {ADMIN_LABELS.EMAIL_VERIFIED}
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="gap-1">
+                              <XCircle className="w-3 h-3" />
+                              {ADMIN_LABELS.EMAIL_NOT_VERIFIED}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <UserActions
+                            user={user}
+                            onEdit={() => setEditingUser(user)}
+                            onDelete={handleUserDeleted}
+                            onActionSuccess={handleActionSuccess}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            )}
-          </>
-        )}
-      </div>
+
+              <div className="px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {ADMIN_PAGINATION.SHOWING} {pageStart + 1} {ADMIN_PAGINATION.TO}{" "}
+                    {Math.min(pageEnd, totalUsers)} {ADMIN_PAGINATION.OF} {totalUsers}{" "}
+                    {ADMIN_PAGINATION.USERS}
+                  </span>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-20 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {totalPages > 1 && (
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(1);
+                          }}
+                          className={
+                            currentPage === 1
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        >
+                          <ChevronsLeft className="w-4 h-4" />
+                        </PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage((p) => Math.max(1, p - 1));
+                          }}
+                          className={
+                            currentPage === 1
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        />
+                      </PaginationItem>
+                      {getPageNumbers().map((page, idx) => (
+                        <PaginationItem key={idx}>
+                          {page === "ellipsis" ? (
+                            <PaginationEllipsis />
+                          ) : (
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(page);
+                              }}
+                              isActive={currentPage === page}
+                            >
+                              {page}
+                            </PaginationLink>
+                          )}
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage((p) =>
+                              Math.min(totalPages, p + 1)
+                            );
+                          }}
+                          className={
+                            currentPage === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(totalPages);
+                          }}
+                          className={
+                            currentPage === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        >
+                          <ChevronsRight className="w-4 h-4" />
+                        </PaginationLink>
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

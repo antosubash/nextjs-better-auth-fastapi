@@ -2,30 +2,52 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, AUTH_PLACEHOLDERS, AUTH_ERRORS } from "@/lib/constants";
-import { cn, getDashboardPath } from "@/lib/utils";
+import { getDashboardPath } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;
 }
 
+interface LoginFormValues {
+  email: string;
+  password: string;
+}
+
 export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<LoginFormValues>({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const handleSubmit = async (values: LoginFormValues) => {
     setError("");
     setIsLoading(true);
 
     try {
       const result = await authClient.signIn.email({
-        email,
-        password,
+        email: values.email,
+        password: values.password,
       });
 
       if (result.error) {
@@ -43,62 +65,83 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-md">
-      <div className="flex flex-col gap-2">
-        <label htmlFor="email" className="text-sm font-medium">
-          {AUTH_LABELS.EMAIL}
-        </label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder={AUTH_PLACEHOLDERS.EMAIL}
-          required
-          className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label htmlFor="password" className="text-sm font-medium">
-          {AUTH_LABELS.PASSWORD}
-        </label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder={AUTH_PLACEHOLDERS.PASSWORD}
-          required
-          className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-        />
-      </div>
-
-      {error && (
-        <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
-      )}
-
-      <button
-        type="submit"
-        disabled={isLoading}
-        className={cn(
-          "px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-black dark:hover:bg-gray-200"
-        )}
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="flex flex-col gap-4 w-full max-w-md"
       >
-        {isLoading ? "Loading..." : AUTH_LABELS.LOGIN}
-      </button>
+        <FormField
+          control={form.control}
+          name="email"
+          rules={{
+            required: AUTH_ERRORS.EMAIL_REQUIRED,
+          }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{AUTH_LABELS.EMAIL}</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder={AUTH_PLACEHOLDERS.EMAIL}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <p className="text-sm text-center text-gray-600 dark:text-gray-400">
-        {AUTH_LABELS.DONT_HAVE_ACCOUNT}{" "}
-        <button
-          type="button"
-          onClick={onSwitchToSignup}
-          className="font-medium text-black hover:underline dark:text-white"
-        >
-          {AUTH_LABELS.SIGNUP}
-        </button>
-      </p>
-    </form>
+        <FormField
+          control={form.control}
+          name="password"
+          rules={{
+            required: AUTH_ERRORS.PASSWORD_REQUIRED,
+          }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{AUTH_LABELS.PASSWORD}</FormLabel>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder={AUTH_PLACEHOLDERS.PASSWORD}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Loading...
+            </>
+          ) : (
+            AUTH_LABELS.LOGIN
+          )}
+        </Button>
+
+        <p className="text-sm text-center text-muted-foreground">
+          {AUTH_LABELS.DONT_HAVE_ACCOUNT}{" "}
+          <Button
+            type="button"
+            variant="link"
+            onClick={onSwitchToSignup}
+            className="p-0 h-auto"
+          >
+            {AUTH_LABELS.SIGNUP}
+          </Button>
+        </p>
+      </form>
+    </Form>
   );
 }
 

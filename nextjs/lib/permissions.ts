@@ -3,7 +3,7 @@ import { createAccessControl } from "better-auth/plugins/access";
 export const statement = {
     project: ["read", "list", "view", "create", "share", "update", "delete"],
     organization: ["read", "list", "view", "create", "update", "delete"],
-    user: ["read", "list", "view", "create", "update", "delete"],
+    user: ["read", "list", "view", "create", "update", "delete", "ban", "unban", "set-role"],
     apiKey: ["read", "list", "view", "create", "update", "delete"],
     role: ["read", "list", "view", "create", "update", "delete"],
     team: ["read", "list", "view", "create", "update", "delete", "invite", "remove"],
@@ -20,7 +20,7 @@ export const memberRole = accessControl.newRole({
 export const adminRole = accessControl.newRole({
     project: ["read", "list", "view", "create", "share", "update", "delete"],
     organization: ["read", "list", "view", "create", "update", "delete"],
-    user: ["read", "list", "view", "create", "update", "delete"],
+    user: ["read", "list", "view", "create", "update", "delete", "ban", "unban", "set-role"],
     apiKey: ["read", "list", "view", "create", "update", "delete"],
     role: ["read", "list", "view", "create", "update", "delete"],
     team: ["read", "list", "view", "create", "update", "delete", "invite", "remove"],

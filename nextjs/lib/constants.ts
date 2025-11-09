@@ -127,6 +127,22 @@ export const ADMIN_LABELS = {
   CONFIRM_DELETE: "Are you sure you want to delete this user?",
   CONFIRM_BAN: "Are you sure you want to ban this user?",
   CONFIRM_UNBAN: "Are you sure you want to unban this user?",
+  EMAIL_VERIFIED: "Email Verified",
+  EMAIL_NOT_VERIFIED: "Email Not Verified",
+  VIEW_DETAILS: "View Details",
+  SELECT_ALL: "Select All",
+  DESELECT_ALL: "Deselect All",
+  SELECTED: "selected",
+  ITEMS_PER_PAGE: "Items per page",
+  SHOWING: "Showing",
+  TO: "to",
+  OF: "of",
+  USERS: "users",
+  FIRST_PAGE: "First page",
+  LAST_PAGE: "Last page",
+  PREVIOUS_PAGE: "Previous page",
+  NEXT_PAGE: "Next page",
+  PAGE: "Page",
 } as const;
 
 export const ADMIN_PLACEHOLDERS = {
@@ -147,6 +163,11 @@ export const ADMIN_ERRORS = {
   LOAD_USERS_FAILED: "Failed to load users",
   ACCESS_DENIED: "Access denied. Admin privileges required.",
   INVALID_ROLE: "Invalid role",
+  CANNOT_BAN_ADMIN: "Cannot ban admin users",
+  BULK_DELETE_FAILED: "Failed to delete users",
+  BULK_ROLE_SET_FAILED: "Failed to update user roles",
+  BULK_BAN_FAILED: "Failed to ban users",
+  BULK_UNBAN_FAILED: "Failed to unban users",
 } as const;
 
 export const ADMIN_SUCCESS = {
@@ -156,6 +177,10 @@ export const ADMIN_SUCCESS = {
   USER_BANNED: "User banned successfully",
   USER_UNBANNED: "User unbanned successfully",
   ROLE_SET: "User role updated successfully",
+  BULK_DELETE_SUCCESS: "Users deleted successfully",
+  BULK_ROLE_SET_SUCCESS: "User roles updated successfully",
+  BULK_BAN_SUCCESS: "Users banned successfully",
+  BULK_UNBAN_SUCCESS: "Users unbanned successfully",
 } as const;
 
 export const DASHBOARD = {
@@ -595,4 +620,64 @@ export const API_KEY_SUCCESS = {
 
 export const API_KEY_CONFIG = {
   DEFAULT_EXPIRATION_DAYS: 30,
+} as const;
+
+export const ADMIN_FILTERS = {
+  FILTER_BY_ROLE: "Filter by role",
+  FILTER_BY_STATUS: "Filter by status",
+  FILTER_BY_DATE: "Filter by date",
+  ALL_ROLES: "All Roles",
+  ALL_STATUSES: "All Statuses",
+  DATE_FROM: "Date From",
+  DATE_TO: "Date To",
+  CLEAR_FILTERS: "Clear Filters",
+  APPLY_FILTERS: "Apply Filters",
+} as const;
+
+export const ADMIN_BULK_ACTIONS = {
+  BULK_ACTIONS: "Bulk Actions",
+  DELETE_SELECTED: "Delete Selected",
+  CHANGE_ROLE: "Change Role",
+  BAN_SELECTED: "Ban Selected",
+  UNBAN_SELECTED: "Unban Selected",
+  NO_SELECTION: "No users selected",
+  SELECTED_COUNT: "users selected",
+  CONFIRM_BULK_DELETE: "Are you sure you want to delete the selected users?",
+  CONFIRM_BULK_BAN: "Are you sure you want to ban the selected users?",
+  CONFIRM_BULK_UNBAN: "Are you sure you want to unban the selected users?",
+  CONFIRM_BULK_ROLE: "Are you sure you want to change the role of the selected users?",
+  PROCESSING: "Processing...",
+} as const;
+
+export const ADMIN_USER_DETAILS = {
+  USER_DETAILS: "User Details",
+  USER_ID: "User ID",
+  FULL_NAME: "Full Name",
+  EMAIL_ADDRESS: "Email Address",
+  ROLE: "Role",
+  STATUS: "Status",
+  CREATED_DATE: "Created Date",
+  EMAIL_VERIFICATION: "Email Verification",
+  VERIFIED: "Verified",
+  NOT_VERIFIED: "Not Verified",
+  BAN_INFORMATION: "Ban Information",
+  BAN_REASON: "Ban Reason",
+  BAN_EXPIRATION: "Ban Expiration",
+  NO_BAN_REASON: "No reason provided",
+  NO_EXPIRATION: "No expiration",
+  EXPIRED: "Expired",
+  CLOSE: "Close",
+} as const;
+
+export const ADMIN_PAGINATION = {
+  ITEMS_PER_PAGE: "Items per page",
+  SHOWING: "Showing",
+  TO: "to",
+  OF: "of",
+  USERS: "users",
+  FIRST_PAGE: "First page",
+  LAST_PAGE: "Last page",
+  PREVIOUS_PAGE: "Previous page",
+  NEXT_PAGE: "Next page",
+  PAGE: "Page",
 } as const;

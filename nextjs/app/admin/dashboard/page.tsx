@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { ADMIN_DASHBOARD } from "@/lib/constants";
-import { StatsCard } from "@/components/dashboard/stats-card";
-import { ActivityFeed } from "@/components/dashboard/activity-feed";
-import { MetricsGrid } from "@/components/dashboard/metrics-grid";
-import { Users, Activity, Ban, UserPlus, Link as LinkIcon } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Users, Activity, Ban, UserPlus, Link as LinkIcon, Clock } from "lucide-react";
 import Link from "next/link";
 
 interface AdminStats {
@@ -87,6 +90,37 @@ function formatActivityItems(
   return activities
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 10);
+}
+
+function formatTimestamp(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return "Just now";
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+  });
 }
 
 export default function AdminDashboardPage() {
@@ -171,29 +205,90 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
-        <MetricsGrid className="mb-8">
-          <StatsCard
-            title={ADMIN_DASHBOARD.TOTAL_USERS}
-            value={stats.totalUsers}
-            icon={Users}
-          />
-          <StatsCard
-            title={ADMIN_DASHBOARD.ACTIVE_SESSIONS}
-            value={stats.activeSessions}
-            icon={Activity}
-          />
-          <StatsCard
-            title={ADMIN_DASHBOARD.BANNED_USERS}
-            value={stats.bannedUsers}
-            icon={Ban}
-          />
-          <StatsCard
-            title={ADMIN_DASHBOARD.RECENT_REGISTRATIONS}
-            value={stats.recentRegistrations}
-            subtitle={ADMIN_DASHBOARD.RECENT_REGISTRATIONS_SUBTITLE}
-            icon={UserPlus}
-          />
-        </MetricsGrid>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  {ADMIN_DASHBOARD.TOTAL_USERS}
+                </h3>
+                <div className="p-2 rounded-lg bg-muted">
+                  <Users className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline">
+                <p className="text-3xl font-bold">
+                  {stats.totalUsers}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  {ADMIN_DASHBOARD.ACTIVE_SESSIONS}
+                </h3>
+                <div className="p-2 rounded-lg bg-muted">
+                  <Activity className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline">
+                <p className="text-3xl font-bold">
+                  {stats.activeSessions}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  {ADMIN_DASHBOARD.BANNED_USERS}
+                </h3>
+                <div className="p-2 rounded-lg bg-muted">
+                  <Ban className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline">
+                <p className="text-3xl font-bold">
+                  {stats.bannedUsers}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  {ADMIN_DASHBOARD.RECENT_REGISTRATIONS}
+                </h3>
+                <div className="p-2 rounded-lg bg-muted">
+                  <UserPlus className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline">
+                <p className="text-3xl font-bold">
+                  {stats.recentRegistrations}
+                </p>
+                <p className="ml-2 text-sm text-muted-foreground">
+                  {ADMIN_DASHBOARD.RECENT_REGISTRATIONS_SUBTITLE}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -279,10 +374,60 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        <ActivityFeed
-          activities={formatActivityItems(stats.recentUsers, stats.recentSessions)}
-          emptyMessage={ADMIN_DASHBOARD.NO_SESSIONS}
-        />
+        {(() => {
+          const activities = formatActivityItems(stats.recentUsers, stats.recentSessions);
+          return activities.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">
+                  {ADMIN_DASHBOARD.NO_SESSIONS}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {activities.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border"
+                  >
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">
+                        {activity.message}
+                      </p>
+                      {activity.details && (
+                        <div className="mt-1 space-y-1">
+                          {activity.details.ipAddress && (
+                            <p className="text-xs text-muted-foreground">
+                              IP: {activity.details.ipAddress}
+                            </p>
+                          )}
+                          {activity.details.userAgent && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {activity.details.userAgent}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {formatTimestamp(activity.timestamp)}
+                      </p>
+                    </div>
+                  </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
     </>
   );
 }
