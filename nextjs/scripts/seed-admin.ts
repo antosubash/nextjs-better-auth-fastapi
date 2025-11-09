@@ -2,7 +2,7 @@ import "dotenv/config";
 import { USER_ROLES } from "../lib/constants";
 import { auth } from "../lib/auth";
 import { db } from "../lib/database";
-import { user } from "../lib/auth-schema";
+import { user } from "../auth-schema";
 import { eq } from "drizzle-orm";
 
 const SEED_USERS = [

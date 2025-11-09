@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { USER_ROLES } from "@/lib/constants";
 import { getAllPermissions } from "@/lib/permissions-utils";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
     const headersList = await headers();

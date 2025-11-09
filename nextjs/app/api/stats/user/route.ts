@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/database";
-import { session, user } from "@/lib/auth-schema";
+import { session, user } from "@/auth-schema";
 import { eq, and, gt, desc, sql } from "drizzle-orm";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
     // Use Next.js headers() to ensure cookies are included

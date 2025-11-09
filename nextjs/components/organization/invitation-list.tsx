@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
 import {
   INVITATION_LABELS,
@@ -32,7 +32,7 @@ export function InvitationList({ organizationId }: InvitationListProps) {
   const [searchValue, setSearchValue] = useState("");
   const [showInviteForm, setShowInviteForm] = useState(false);
 
-  const loadInvitations = async () => {
+  const loadInvitations = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
@@ -103,11 +103,11 @@ export function InvitationList({ organizationId }: InvitationListProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [organizationId]);
 
   useEffect(() => {
     loadInvitations();
-  }, [organizationId]);
+  }, [loadInvitations]);
 
   const handleInvitationSent = () => {
     setShowInviteForm(false);

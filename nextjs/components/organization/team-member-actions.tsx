@@ -16,14 +16,12 @@ interface TeamMember {
 
 interface TeamMemberActionsProps {
   member: TeamMember;
-  organizationId: string;
   teamId: string;
   onMemberRemoved: () => void;
 }
 
 export function TeamMemberActions({
   member,
-  organizationId,
   teamId,
   onMemberRemoved,
 }: TeamMemberActionsProps) {

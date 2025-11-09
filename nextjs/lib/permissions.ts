@@ -1,6 +1,6 @@
 import { createAccessControl } from "better-auth/plugins/access";
 
-const statement = {
+export const statement = {
     project: ["create", "share", "update", "delete"],
     organization: ["create", "update", "delete"],
 } as const;

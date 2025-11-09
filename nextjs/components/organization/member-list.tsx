@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
 import {
   MEMBER_LABELS,
@@ -41,7 +41,7 @@ export function MemberList({ organizationId }: MemberListProps) {
   );
   const [isAdding, setIsAdding] = useState(false);
 
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
@@ -97,11 +97,11 @@ export function MemberList({ organizationId }: MemberListProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [organizationId]);
 
   useEffect(() => {
     loadMembers();
-  }, [organizationId]);
+  }, [loadMembers]);
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();

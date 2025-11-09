@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
 import { TEAM_LABELS, TEAM_ERRORS, MEMBER_PLACEHOLDERS } from "@/lib/constants";
 import { TeamMemberActions } from "./team-member-actions";
@@ -16,12 +16,10 @@ interface TeamMember {
 }
 
 interface TeamMemberListProps {
-  organizationId: string;
   teamId: string;
 }
 
 export function TeamMemberList({
-  organizationId,
   teamId,
 }: TeamMemberListProps) {
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -31,7 +29,7 @@ export function TeamMemberList({
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
@@ -57,11 +55,11 @@ export function TeamMemberList({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [teamId]);
 
   useEffect(() => {
     loadMembers();
-  }, [organizationId, teamId]);
+  }, [loadMembers]);
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +186,6 @@ export function TeamMemberList({
                   <td className="px-4 py-2 whitespace-nowrap text-sm">
                     <TeamMemberActions
                       member={member}
-                      organizationId={organizationId}
                       teamId={teamId}
                       onMemberRemoved={handleMemberRemoved}
                     />

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/database";
-import { user } from "@/lib/auth-schema";
+import { user } from "@/auth-schema";
 import { eq } from "drizzle-orm";
 import { USER_ROLES } from "@/lib/constants";
 import { getUserEffectivePermissions } from "@/lib/permissions-utils";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { authClient } from "@/lib/auth-client";
 import { TEAM_LABELS, TEAM_ERRORS, TEAM_SUCCESS } from "@/lib/constants";
 import { TeamForm } from "./team-form";
@@ -20,7 +20,7 @@ interface TeamListProps {
 
 export function TeamList({ organizationId }: TeamListProps) {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
+  const [activeTeamId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -29,7 +29,7 @@ export function TeamList({ organizationId }: TeamListProps) {
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
 
-  const loadTeams = async () => {
+  const loadTeams = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
@@ -55,11 +55,11 @@ export function TeamList({ organizationId }: TeamListProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [organizationId]);
 
   useEffect(() => {
     loadTeams();
-  }, [organizationId]);
+  }, [loadTeams]);
 
   const handleTeamCreated = () => {
     setShowCreateForm(false);
@@ -243,7 +243,6 @@ export function TeamList({ organizationId }: TeamListProps) {
                             className="px-6 py-4 bg-gray-50 dark:bg-gray-900"
                           >
                             <TeamMemberList
-                              organizationId={organizationId}
                               teamId={team.id}
                             />
                           </td>

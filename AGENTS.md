@@ -65,7 +65,7 @@ This is a full-stack authentication system combining:
    - Utilities in `nextjs/lib/`
 
 3. **Database**:
-   - Schema defined in `nextjs/lib/auth-schema.ts`
+   - Schema defined in `nextjs/auth-schema.ts`
    - Connection in `nextjs/lib/database.ts`
    - Migrations in `nextjs/drizzle/`
    - **IMPORTANT**: Do NOT query the database directly for auth, organization, team, or permission data. Always use Better Auth APIs.
@@ -108,7 +108,7 @@ This is a full-stack authentication system combining:
 ### Frontend
 - `nextjs/lib/auth.ts` - Better Auth configuration
 - `nextjs/lib/constants.ts` - All UI strings and constants
-- `nextjs/lib/auth-schema.ts` - Database schema definitions
+- `nextjs/auth-schema.ts` - Database schema definitions
 - `nextjs/lib/database.ts` - Database connection
 - `nextjs/app/api/auth/` - Better Auth API routes
 - `nextjs/app/api/proxy/` - Proxy routes to backend
