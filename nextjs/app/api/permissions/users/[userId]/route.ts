@@ -30,19 +30,11 @@ export async function GET(
 
     if (!sessionData?.user?.id) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: PERMISSION_ERRORS.UNAUTHORIZED },
         { status: 401 }
       );
     }
 
-    // Use Better Auth API to get user data
-    // Note: Better Auth getUser returns current user, so we need to use listUsers or check organization members
-    // For now, we'll get the user role from the session or use Better Auth's admin API if available
-    // Since Better Auth doesn't have a direct getUser by ID API, we'll need to use organization members API
-    // or check if the user is in the same organization
-    
-    // For simplicity, if userId matches current user, use session data
-    // Otherwise, we'd need to check organization membership via Better Auth APIs
     const targetUserId = userId;
     const currentUser = sessionData.user;
     
@@ -61,12 +53,52 @@ export async function GET(
       });
     }
 
-    // For other users, we'd need to use Better Auth organization/member APIs
-    // This is a simplified version - in production, you'd check organization membership
-    return NextResponse.json(
-      { error: "User not found or access denied" },
-      { status: 404 }
-    );
+    // For other users, use Better Auth admin API to fetch user data
+    // This requires admin permissions which are checked by requirePermission above
+    try {
+      const userListResult = await auth.api.listUsers({
+        headers: headersList,
+        query: {
+          limit: "1000",
+          offset: "0",
+        },
+      });
+
+      if (userListResult.error) {
+        return NextResponse.json(
+          { error: PERMISSION_ERRORS.LOAD_USER_PERMISSIONS_FAILED },
+          { status: 500 }
+        );
+      }
+
+      const users = (userListResult.data as { users?: Array<{ id: string; name: string; email: string; role?: string | null }> })?.users || [];
+      const targetUser = users.find((u) => u.id === targetUserId);
+
+      if (!targetUser) {
+        return NextResponse.json(
+          { error: "User not found" },
+          { status: 404 }
+        );
+      }
+
+      const permissions = getUserEffectivePermissions(targetUser.role || null);
+
+      return NextResponse.json({
+        user: {
+          id: targetUser.id,
+          name: targetUser.name,
+          email: targetUser.email,
+          role: targetUser.role || null,
+        },
+        permissions,
+      });
+    } catch (apiError) {
+      console.error("Failed to fetch user via admin API:", apiError);
+      return NextResponse.json(
+        { error: PERMISSION_ERRORS.LOAD_USER_PERMISSIONS_FAILED },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Failed to fetch user permissions:", error);
     return NextResponse.json(

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
-import { getUserPermissions } from "@/lib/permissions-api";
-import { Permission } from "@/lib/permissions-utils";
+import { getUserPermissions, getRoles } from "@/lib/permissions-api";
+import { Permission, RoleInfo } from "@/lib/permissions-utils";
 import {
   PERMISSION_LABELS,
   PERMISSION_ERRORS,
@@ -38,12 +38,21 @@ export function UserRoleManager() {
     newRole: string;
   } | null>(null);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
-
-  const availableRoles: ("user" | "admin")[] = ["user", "admin"];
+  const [availableRoles, setAvailableRoles] = useState<RoleInfo[]>([]);
 
   useEffect(() => {
+    loadRoles();
     loadUsers();
   }, []);
+
+  const loadRoles = async () => {
+    try {
+      const roles = await getRoles();
+      setAvailableRoles(roles);
+    } catch (err) {
+      console.error("Failed to load roles:", err);
+    }
+  };
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -103,10 +112,14 @@ export function UserRoleManager() {
   };
 
   const handleStartEditRole = (userId: string, currentRole: string | null | undefined) => {
-    const role = (currentRole === "admin" || currentRole === "user") ? currentRole : "user";
+    // Validate current role against available roles, default to first available role or "user"
+    const validRole = availableRoles.find((r) => r.name === currentRole)?.name || 
+                      availableRoles.find((r) => r.name === "user")?.name || 
+                      availableRoles[0]?.name || 
+                      "user";
     setEditingRole({
       userId,
-      newRole: role,
+      newRole: validRole,
     });
   };
 
@@ -122,7 +135,7 @@ export function UserRoleManager() {
     try {
       const result = await authClient.admin.setRole({
         userId: editingRole.userId,
-        role: editingRole.newRole as "user" | "admin",
+        role: editingRole.newRole as string,
       });
 
       if (result.error) {
@@ -241,9 +254,9 @@ export function UserRoleManager() {
                             className="mt-1 px-3 py-1 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
                             disabled={isUpdatingRole}
                           >
-                            {availableRoles.map((role) => (
-                              <option key={role} value={role}>
-                                {ROLE_DISPLAY_NAMES[role] || role}
+                            {availableRoles.map((roleInfo) => (
+                              <option key={roleInfo.name} value={roleInfo.name}>
+                                {ROLE_DISPLAY_NAMES[roleInfo.name as keyof typeof ROLE_DISPLAY_NAMES] || roleInfo.name}
                               </option>
                             ))}
                           </select>

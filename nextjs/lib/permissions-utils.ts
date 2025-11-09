@@ -25,8 +25,8 @@ function getAllPermissionsFromStatement(): Record<string, string[]> {
 const roleDefinitions: Record<string, Record<string, string[]>> = {
   user: {},
   member: { project: ["create"] },
-  admin: { project: ["create", "update"] },
-  owner: { project: ["create", "update", "delete"] },
+  admin: { project: ["create", "update"], role: ["read"] },
+  owner: { project: ["create", "update", "delete"], role: ["read"] },
   myCustomRole: {
     project: ["create", "update", "delete"],
     organization: ["update"],

@@ -7,10 +7,34 @@ import { eq } from "drizzle-orm";
 
 const SEED_USERS = [
   {
+    email: "superadmin@example.com",
+    password: "admin123",
+    name: "Super Admin",
+    role: USER_ROLES.SUPER_ADMIN,
+  },
+  {
     email: "admin@example.com",
     password: "admin123",
     name: "Admin User",
     role: USER_ROLES.ADMIN,
+  },
+  {
+    email: "owner@example.com",
+    password: "user1234",
+    name: "Owner User",
+    role: USER_ROLES.OWNER,
+  },
+  {
+    email: "member@example.com",
+    password: "user1234",
+    name: "Member User",
+    role: USER_ROLES.MEMBER,
+  },
+  {
+    email: "customrole@example.com",
+    password: "user1234",
+    name: "Custom Role User",
+    role: USER_ROLES.MY_CUSTOM_ROLE,
   },
   {
     email: "user1@example.com",
@@ -106,22 +130,36 @@ async function seedUsers() {
         console.log(`✓ Deleted existing user: ${userData.email}`);
       }
 
-      const result = await auth.api.signUpEmail({
+      // Create user with a basic role first (createUser API only accepts "user" or "admin")
+      const basicRole =
+        userData.role === USER_ROLES.ADMIN || userData.role === USER_ROLES.SUPER_ADMIN
+          ? USER_ROLES.ADMIN
+          : USER_ROLES.USER;
+
+      const newUser = await auth.api.createUser({
         body: {
-          name: userData.name,
           email: userData.email,
           password: userData.password,
+          name: userData.name,
+          role: basicRole,
         },
       });
 
-      if (result.user?.id && userData.role) {
-        await db
-          .update(user)
-          .set({ role: userData.role })
-          .where(eq(user.id, result.user.id));
+      if (newUser?.user && newUser.user.id) {
+        // Update role if it's different from the basic role
+        if (userData.role !== basicRole) {
+          await db
+            .update(user)
+            .set({ role: userData.role })
+            .where(eq(user.id, newUser.user.id));
+        }
+        console.log(`✓ Created user: ${userData.email} (${userData.role})`);
+      } else {
+        console.error(
+          `✗ Failed to create user ${userData.email}:`,
+          "Unknown error"
+        );
       }
-
-      console.log(`✓ Created user: ${userData.email} (${userData.role})`);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";

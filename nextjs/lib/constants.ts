@@ -90,8 +90,11 @@ export const LANDING_PAGE = {
 } as const;
 
 export const USER_ROLES = {
-  ADMIN: "admin",
   USER: "user",
+  MEMBER: "member",
+  ADMIN: "admin",
+  OWNER: "owner",
+  MY_CUSTOM_ROLE: "myCustomRole",
   SUPER_ADMIN: "superAdmin",
 } as const;
 

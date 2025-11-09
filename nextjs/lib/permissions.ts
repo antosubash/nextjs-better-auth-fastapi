@@ -18,11 +18,13 @@ export const memberRole = accessControl.newRole({
 }); 
 
 export const adminRole = accessControl.newRole({ 
-    project: ["create", "update"], 
+    project: ["create", "update"],
+    role: ["read"],
 }); 
 
 export const ownerRole = accessControl.newRole({ 
-    project: ["create", "update", "delete"], 
+    project: ["create", "update", "delete"],
+    role: ["read"],
 }); 
 
 export const myCustomRole = accessControl.newRole({ 

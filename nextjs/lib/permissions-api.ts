@@ -1,4 +1,5 @@
 import { Permission, RoleInfo } from "./permissions-utils";
+import { PERMISSION_ERRORS } from "./constants";
 
 export interface UserPermissionsResponse {
   user: {
@@ -14,7 +15,8 @@ export async function getPermissions(): Promise<Permission[]> {
   const response = await fetch("/api/permissions");
   
   if (!response.ok) {
-    throw new Error("Failed to fetch permissions");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || PERMISSION_ERRORS.LOAD_PERMISSIONS_FAILED);
   }
 
   const data = await response.json();
@@ -25,7 +27,8 @@ export async function getRoles(): Promise<RoleInfo[]> {
   const response = await fetch("/api/permissions/roles");
   
   if (!response.ok) {
-    throw new Error("Failed to fetch roles");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || PERMISSION_ERRORS.LOAD_ROLES_FAILED);
   }
 
   const data = await response.json();
@@ -36,7 +39,8 @@ export async function getUserPermissions(userId: string): Promise<UserPermission
   const response = await fetch(`/api/permissions/users/${userId}`);
   
   if (!response.ok) {
-    throw new Error("Failed to fetch user permissions");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || PERMISSION_ERRORS.LOAD_USER_PERMISSIONS_FAILED);
   }
 
   return response.json();
@@ -55,8 +59,8 @@ export async function updateRolePermissions(
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to update role permissions");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || PERMISSION_ERRORS.UPDATE_ROLE_PERMISSIONS_FAILED);
   }
 
   const data = await response.json();
