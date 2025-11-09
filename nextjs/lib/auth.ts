@@ -1,9 +1,9 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { bearer, jwt, admin, organization } from "better-auth/plugins";
+import { bearer, jwt, admin, organization, apiKey } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "./database";
-import * as schema from "./auth-schema";
+import * as schema from "../auth-schema"
 import { BETTER_AUTH_CONFIG, USER_ROLES } from "./constants";
 import { accessControl, memberRole, adminRole, ownerRole, myCustomRole } from "./permissions";
 
@@ -42,6 +42,7 @@ export const auth = betterAuth({
         enabled: true,
       },
     }),
+    apiKey(),
     nextCookies(),
   ],
 });

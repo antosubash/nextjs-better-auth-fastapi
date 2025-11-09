@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/react";
-import { jwtClient, adminClient, organizationClient } from "better-auth/client/plugins";
+import { jwtClient, adminClient, organizationClient, apiKeyClient } from "better-auth/client/plugins";
 import { BETTER_AUTH_CONFIG } from "./constants";
 
 export const authClient = createAuthClient({
@@ -7,6 +7,7 @@ export const authClient = createAuthClient({
   plugins: [
     jwtClient(),
     adminClient(),
+    apiKeyClient(),
     organizationClient() 
   ],
 });
