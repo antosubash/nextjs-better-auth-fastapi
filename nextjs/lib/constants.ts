@@ -845,6 +845,8 @@ export const PERMISSION_RESOURCES = {
   API_KEY: "apiKey",
   ROLE: "role",
   TEAM: "team",
+  MEMBER: "member",
+  INVITATION: "invitation",
   FILE: "file",
   SETTINGS: "settings",
   SESSION: "session",
@@ -869,4 +871,5 @@ export const PERMISSION_ACTIONS = {
   REVOKE: "revoke",
   UPLOAD: "upload",
   DOWNLOAD: "download",
+  CANCEL: "cancel",
 } as const;

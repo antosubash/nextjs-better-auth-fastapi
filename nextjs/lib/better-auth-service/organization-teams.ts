@@ -163,7 +163,8 @@ export const organizationTeamService = {
     return withErrorHandling(
       "addTeamMember",
       async () => {
-        await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.INVITE);
+        // await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.INVITE);
+        console.log("addTeamMember params", params);
         const headersList = await getHeaders();
         return await auth.api.addTeamMember({
           headers: headersList,

@@ -109,20 +109,20 @@ export const organizationMemberService = {
    */
   async addMember(params: {
     userId: string;
-    role: string | string[] | ("member" | "owner")[];
+    role: "member" | "owner" | ("member" | "owner")[];
     organizationId?: string;
     teamId?: string;
   }) {
     return withErrorHandling(
       "addMember",
       async () => {
-        await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.INVITE);
+        await requirePermission(PERMISSION_RESOURCES.ORGANIZATION, PERMISSION_ACTIONS.INVITE);
         const headersList = await getHeaders();
         return await auth.api.addMember({
           headers: headersList,
           body: {
             userId: params.userId,
-            role: params.role as ("member" | "owner")[],
+            role: params.role,
             organizationId: params.organizationId,
             teamId: params.teamId,
           },

@@ -4,7 +4,6 @@ import {
   TEAM_ERRORS,
   PERMISSION_RESOURCES,
   PERMISSION_ACTIONS,
-  ORGANIZATION_ROLES,
 } from "@/lib/constants";
 import { requirePermission } from "@/lib/permission-check-server";
 
@@ -13,8 +12,8 @@ export async function POST(request: NextRequest) {
     console.log("[add-team-member] Starting request");
     
     const permissionError = await requirePermission(
-      PERMISSION_RESOURCES.TEAM,
-      PERMISSION_ACTIONS.INVITE
+      PERMISSION_RESOURCES.MEMBER,
+      PERMISSION_ACTIONS.UPDATE
     );
 
     if (permissionError) {
@@ -22,12 +21,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { teamId, userId, organizationId } = body;
+    const { teamId, userId } = body;
 
     console.log("[add-team-member] Request body:", {
       teamId,
       userId,
-      organizationId,
     });
 
     if (!teamId || !userId) {
@@ -38,58 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!organizationId) {
-      console.log("[add-team-member] Validation failed: Missing organizationId");
-      return NextResponse.json(
-        { error: TEAM_ERRORS.ADD_MEMBER_FAILED },
-        { status: 400 }
-      );
-    }
-
-    // Strategy: Ensure user is an organization member first, then add to team
-    // Step 1: Try to add user to organization (if not already a member)
-    try {
-      console.log(
-        `[add-team-member] Ensuring user ${userId} is a member of organization ${organizationId}`
-      );
-      await betterAuthService.organization.addMember({
-        userId,
-        role: ORGANIZATION_ROLES.MEMBER,
-        organizationId,
-      });
-      console.log(
-        `[add-team-member] User ${userId} is now a member of organization ${organizationId}`
-      );
-    } catch (addOrgMemberError: unknown) {
-      const addOrgMemberErrorObj = addOrgMemberError as {
-        message?: string;
-        body?: { message?: string };
-        statusCode?: number;
-      };
-      const addOrgMemberErrorMessage =
-        addOrgMemberErrorObj?.message ||
-        addOrgMemberErrorObj?.body?.message ||
-        String(addOrgMemberError);
-
-      // If user is already a member, that's fine - continue to add to team
-      if (
-        addOrgMemberErrorMessage.includes("already a member") ||
-        addOrgMemberErrorMessage.includes("already exists")
-      ) {
-        console.log(
-          `[add-team-member] User ${userId} is already a member of organization ${organizationId}`
-        );
-      } else {
-        // If it's a different error, log and re-throw
-        console.log(`[add-team-member] Failed to add user to organization:`, {
-          message: addOrgMemberErrorMessage,
-          statusCode: addOrgMemberErrorObj?.statusCode,
-        });
-        throw addOrgMemberError;
-      }
-    }
-
-    // Step 2: Add user to team (now that we know they're an org member)
+    // Add user to team (user must already be a member of the organization)
     console.log(`[add-team-member] Adding user ${userId} to team ${teamId}`);
     const data = await betterAuthService.organization.addTeamMember({
       teamId,
