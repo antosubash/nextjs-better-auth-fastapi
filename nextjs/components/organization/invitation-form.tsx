@@ -7,6 +7,7 @@ import {
   INVITATION_PLACEHOLDERS,
   INVITATION_ERRORS,
   ORGANIZATION_ROLES,
+  COMMON_LABELS,
 } from "@/lib/constants";
 import { MemberRoleSelector } from "./member-role-selector";
 
@@ -93,7 +94,7 @@ export function InvitationForm({
             disabled={isLoading}
             className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Sending..." : INVITATION_LABELS.SEND_INVITATION}
+            {isLoading ? INVITATION_LABELS.SENDING : INVITATION_LABELS.SEND_INVITATION}
           </button>
           <button
             type="button"
@@ -101,7 +102,7 @@ export function InvitationForm({
             disabled={isLoading}
             className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {COMMON_LABELS.CANCEL}
           </button>
         </div>
       </form>

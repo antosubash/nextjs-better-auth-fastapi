@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
-import { TEAM_LABELS, TEAM_ERRORS, MEMBER_PLACEHOLDERS } from "@/lib/constants";
+import { TEAM_LABELS, TEAM_ERRORS, MEMBER_PLACEHOLDERS, TEAM_MEMBER_LABELS, MEMBER_LABELS, COMMON_LABELS } from "@/lib/constants";
 import { TeamMemberActions } from "./team-member-actions";
 import { Plus } from "lucide-react";
 import {
@@ -13,6 +13,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import {
+  normalizeMembers,
+  extractMembers,
+} from "@/lib/utils/organization-data";
+import type { NormalizedMember } from "@/lib/utils/organization-types";
 
 interface TeamMember {
   id: string;
@@ -25,16 +38,20 @@ interface TeamMember {
 
 interface TeamMemberListProps {
   teamId: string;
+  organizationId?: string;
 }
 
 export function TeamMemberList({
   teamId,
+  organizationId,
 }: TeamMemberListProps) {
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [organizationMembers, setOrganizationMembers] = useState<NormalizedMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingOrgMembers, setIsLoadingOrgMembers] = useState(false);
   const [error, setError] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [isAdding, setIsAdding] = useState(false);
 
   const loadMembers = useCallback(async () => {
@@ -65,27 +82,73 @@ export function TeamMemberList({
     }
   }, [teamId]);
 
+  const loadOrganizationMembers = useCallback(async () => {
+    if (!organizationId) return;
+    
+    setIsLoadingOrgMembers(true);
+    try {
+      const result = await authClient.organization.listMembers({
+        query: {
+          organizationId,
+        },
+      });
+
+      if (result.error) {
+        console.error("Failed to load organization members:", result.error);
+      } else if (result.data) {
+        const normalizedMembers = normalizeMembers(
+          extractMembers(result.data),
+        );
+        // Filter out members already in the team
+        const teamMemberIds = new Set(members.map(m => m.userId));
+        const availableMembers = normalizedMembers.filter(
+          m => !teamMemberIds.has(m.userId)
+        );
+        setOrganizationMembers(availableMembers);
+      }
+    } catch (err) {
+      console.error("Error loading organization members:", err);
+    } finally {
+      setIsLoadingOrgMembers(false);
+    }
+  }, [organizationId, members]);
+
   useEffect(() => {
     loadMembers();
   }, [loadMembers]);
 
+  useEffect(() => {
+    if (showAddForm && organizationId) {
+      loadOrganizationMembers();
+    }
+  }, [showAddForm, organizationId, loadOrganizationMembers]);
+
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedUserId) {
+      setError("Please select a member");
+      return;
+    }
+
     setIsAdding(true);
     setError("");
     try {
       // @ts-expect-error - better-auth organization client API method
       const result = await authClient.organization.addTeamMember({
         teamId,
-        userId: newMemberEmail, // Note: This should be a user ID, not email. You may need to look up the user first.
+        userId: selectedUserId,
       });
 
       if (result.error) {
         setError(result.error.message || TEAM_ERRORS.ADD_MEMBER_FAILED);
       } else {
-        setNewMemberEmail("");
+        setSelectedUserId("");
         setShowAddForm(false);
-        loadMembers();
+        await loadMembers();
+        // Reload organization members to update the dropdown
+        if (organizationId) {
+          await loadOrganizationMembers();
+        }
       }
     } catch (err) {
       const errorMessage =
@@ -106,13 +169,13 @@ export function TeamMemberList({
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           {TEAM_LABELS.MEMBERS}
         </h3>
-        <button
+        <Button
           onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+          size="sm"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 mr-2" />
           {TEAM_LABELS.ADD_MEMBER}
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -126,36 +189,64 @@ export function TeamMemberList({
           <form onSubmit={handleAddMember} className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email
+                {organizationId ? TEAM_MEMBER_LABELS.SELECT_MEMBER || "Select Member" : TEAM_MEMBER_LABELS.EMAIL}
               </label>
-              <input
-                type="email"
-                value={newMemberEmail}
-                onChange={(e) => setNewMemberEmail(e.target.value)}
-                placeholder={MEMBER_PLACEHOLDERS.EMAIL}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white text-sm"
-              />
+              {organizationId && organizationMembers.length > 0 ? (
+                <Select
+                  value={selectedUserId}
+                  onValueChange={setSelectedUserId}
+                  disabled={isAdding || isLoadingOrgMembers}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={MEMBER_PLACEHOLDERS.SELECT_MEMBER || "Select a member"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {organizationMembers.map((member) => (
+                      <SelectItem key={member.userId} value={member.userId}>
+                        {member.user?.email || member.userId}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : organizationId ? (
+                <input
+                  type="text"
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  placeholder={MEMBER_PLACEHOLDERS.EMAIL}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white text-sm"
+                />
+              ) : (
+                <input
+                  type="email"
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  placeholder={MEMBER_PLACEHOLDERS.EMAIL}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white text-sm"
+                />
+              )}
             </div>
             <div className="flex gap-2">
-              <button
+              <Button
                 type="submit"
-                disabled={isAdding}
-                className="flex-1 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                disabled={isAdding || !selectedUserId}
+                className="flex-1"
               >
-                {isAdding ? "Adding..." : TEAM_LABELS.ADD_MEMBER}
-              </button>
-              <button
+                {isAdding ? MEMBER_LABELS.ADDING : TEAM_LABELS.ADD_MEMBER}
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => {
                   setShowAddForm(false);
-                  setNewMemberEmail("");
+                  setSelectedUserId("");
                 }}
                 disabled={isAdding}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
-                Cancel
-              </button>
+                {COMMON_LABELS.CANCEL}
+              </Button>
             </div>
           </form>
         </div>
@@ -163,21 +254,21 @@ export function TeamMemberList({
 
       {isLoading ? (
         <div className="p-4 text-center text-gray-600 dark:text-gray-400 text-sm">
-          Loading...
+          {TEAM_MEMBER_LABELS.LOADING}
         </div>
       ) : members.length === 0 ? (
         <div className="p-4 text-center text-gray-600 dark:text-gray-400 text-sm">
-          No team members
+          {TEAM_MEMBER_LABELS.NO_MEMBERS}
         </div>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Email
+                {TEAM_MEMBER_LABELS.EMAIL}
               </TableHead>
               <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Actions
+                {TEAM_MEMBER_LABELS.ACTIONS}
               </TableHead>
             </TableRow>
           </TableHeader>

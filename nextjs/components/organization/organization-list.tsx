@@ -10,72 +10,70 @@ import {
 } from "@/lib/constants";
 import { OrganizationForm } from "./organization-form";
 import { OrganizationActions } from "./organization-actions";
-import { Search, Plus, Building2 } from "lucide-react";
-import { formatDate, normalizeDate } from "@/lib/utils/date";
-
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  metadata?: {
-    description?: string;
-  };
-  createdAt: number;
-}
+import { Plus, Building2 } from "lucide-react";
+import { formatDate } from "@/lib/utils/date";
+import { useSearch } from "@/hooks/organization/use-search";
+import { useSuccessMessage } from "@/hooks/organization/use-success-message";
+import { useErrorMessage } from "@/hooks/organization/use-error-message";
+import { SearchInput } from "./shared/search-input";
+import { SuccessMessage } from "./shared/success-message";
+import { ErrorMessage } from "./shared/error-message";
+import { LoadingState } from "./shared/loading-state";
+import { EmptyState } from "./shared/empty-state";
+import {
+  normalizeOrganizations,
+  extractOrganizations,
+} from "@/lib/utils/organization-data";
+import type { NormalizedOrganization } from "@/lib/utils/organization-types";
 
 export function OrganizationList() {
   const router = useRouter();
   const pathname = usePathname();
   const isAdminContext = pathname?.startsWith("/admin") ?? false;
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [organizations, setOrganizations] = useState<NormalizedOrganization[]>([]);
   const [activeOrganizationId, setActiveOrganizationId] = useState<
     string | null
   >(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [searchValue, setSearchValue] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingOrganization, setEditingOrganization] =
-    useState<Organization | null>(null);
+    useState<NormalizedOrganization | null>(null);
+
+  const { searchValue, handleSearch } = useSearch();
+  const { success, showSuccess, clearSuccess } = useSuccessMessage();
+  const { error, showError, clearError } = useErrorMessage();
 
   const loadOrganizations = async () => {
     setIsLoading(true);
-    setError("");
+    clearError();
     try {
       if (isAdminContext) {
-        // Use admin API to get all organizations
         const response = await fetch("/api/admin/organizations");
         if (!response.ok) {
           const errorData = await response.json();
-          setError(
+          showError(
             errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
           );
           return;
         }
         const data = await response.json();
         const orgs = data.organizations || [];
-        setOrganizations(orgs);
+        setOrganizations(normalizeOrganizations(orgs));
       } else {
-        // Use regular API to get user's organizations
         const listResult = await authClient.organization.list();
         if (listResult.error) {
-          setError(
+          showError(
             listResult.error.message ||
               ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
           );
         } else if (listResult.data) {
-          const orgs = Array.isArray(listResult.data) ? listResult.data : [];
-          setOrganizations(
-            orgs.map((org) => ({
-              ...org,
-              createdAt: normalizeDate(org.createdAt),
-            })),
+          const normalizedOrgs = normalizeOrganizations(
+            extractOrganizations(listResult.data),
           );
+          setOrganizations(normalizedOrgs);
         }
       }
 
-      // Get active organization from session
       const sessionResult = await authClient.getSession();
       if (sessionResult.data?.session?.activeOrganizationId) {
         setActiveOrganizationId(
@@ -87,7 +85,7 @@ export function OrganizationList() {
         err instanceof Error
           ? err.message
           : ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED;
-      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -98,33 +96,25 @@ export function OrganizationList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdminContext]);
 
-  const handleSearch = (value: string) => {
-    setSearchValue(value);
-  };
-
   const handleOrganizationCreated = () => {
     setShowCreateForm(false);
-    setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_CREATED);
-    setTimeout(() => setSuccess(""), 3000);
+    showSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_CREATED);
     loadOrganizations();
   };
 
   const handleOrganizationUpdated = () => {
     setEditingOrganization(null);
-    setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_UPDATED);
-    setTimeout(() => setSuccess(""), 3000);
+    showSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_UPDATED);
     loadOrganizations();
   };
 
   const handleOrganizationDeleted = () => {
-    setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_DELETED);
-    setTimeout(() => setSuccess(""), 3000);
+    showSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_DELETED);
     loadOrganizations();
   };
 
   const handleActionSuccess = (message: string) => {
-    setSuccess(message);
-    setTimeout(() => setSuccess(""), 3000);
+    showSuccess(message);
     loadOrganizations();
   };
 
@@ -133,7 +123,6 @@ export function OrganizationList() {
       org.name.toLowerCase().includes(searchValue.toLowerCase()) ||
       org.slug.toLowerCase().includes(searchValue.toLowerCase()),
   );
-
 
   return (
     <div>
@@ -153,17 +142,8 @@ export function OrganizationList() {
         </button>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-800 dark:text-green-200">
-          {success}
-        </div>
-      )}
+      <ErrorMessage message={error} onDismiss={clearError} className="mb-4" />
+      <SuccessMessage message={success} onDismiss={clearSuccess} className="mb-4" />
 
       {showCreateForm && (
         <div className="mb-6">
@@ -185,27 +165,18 @@ export function OrganizationList() {
       )}
 
       <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder={ORGANIZATION_LABELS.SEARCH_ORGANIZATIONS}
-            value={searchValue}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
-          />
-        </div>
+        <SearchInput
+          placeholder={ORGANIZATION_LABELS.SEARCH_ORGANIZATIONS}
+          value={searchValue}
+          onChange={handleSearch}
+        />
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {ORGANIZATION_LABELS.LOADING}
-          </div>
+          <LoadingState message={ORGANIZATION_LABELS.LOADING} />
         ) : filteredOrganizations.length === 0 ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {ORGANIZATION_LABELS.NO_ORGANIZATIONS}
-          </div>
+          <EmptyState message={ORGANIZATION_LABELS.NO_ORGANIZATIONS} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">

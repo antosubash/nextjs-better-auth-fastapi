@@ -365,6 +365,7 @@ export const MEMBER_LABELS = {
   CONFIRM_LEAVE: "Are you sure you want to leave this organization?",
   CANCEL: "Cancel",
   SAVING: "Saving...",
+  ADDING: "Adding...",
 } as const;
 
 export const MEMBER_PLACEHOLDERS = {
@@ -404,12 +405,14 @@ export const INVITATION_LABELS = {
   ACTIONS: "Actions",
   NO_INVITATIONS: "No invitations found",
   LOADING: "Loading invitations...",
+  SEARCH_INVITATIONS: "Search invitations...",
   PENDING: "Pending",
   ACCEPTED: "Accepted",
   REJECTED: "Rejected",
   EXPIRED: "Expired",
   CONFIRM_CANCEL: "Are you sure you want to cancel this invitation?",
   CONFIRM_REJECT: "Are you sure you want to reject this invitation?",
+  SENDING: "Sending...",
 } as const;
 
 export const INVITATION_PLACEHOLDERS = {
@@ -453,7 +456,10 @@ export const TEAM_LABELS = {
   ACTIONS: "Actions",
   NO_TEAMS: "No teams found",
   LOADING: "Loading teams...",
+  SEARCH_TEAMS: "Search teams...",
   MEMBERS: "Team Members",
+  VIEW_MEMBERS: "View Members",
+  HIDE: "Hide",
   ADD_MEMBER: "Add Team Member",
   REMOVE_MEMBER: "Remove Team Member",
   CONFIRM_DELETE: "Are you sure you want to delete this team?",
@@ -461,6 +467,13 @@ export const TEAM_LABELS = {
   SAVE: "Save",
   CANCEL: "Cancel",
   STATUS: "Status",
+} as const;
+
+export const TEAM_MEMBER_LABELS = {
+  EMAIL: "Email",
+  ACTIONS: "Actions",
+  NO_MEMBERS: "No team members",
+  LOADING: "Loading...",
 } as const;
 
 export const TEAM_PLACEHOLDERS = {
@@ -781,6 +794,15 @@ export const PROXY_ERRORS = {
 
 export const STATS_LABELS = {
   SESSION_CREATED: "Session created",
+} as const;
+
+export const COMMON_LABELS = {
+  CANCEL: "Cancel",
+  ADDING: "Adding...",
+  VIEW_MEMBERS: "View Members",
+  HIDE: "Hide",
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
 } as const;
 
 export const PERMISSION_RESOURCES = {

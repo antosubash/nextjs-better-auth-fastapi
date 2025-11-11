@@ -6,10 +6,11 @@ import {
   MEMBER_LABELS,
   MEMBER_ERRORS,
   MEMBER_SUCCESS,
+  MEMBER_PLACEHOLDERS,
   ORGANIZATION_ROLES,
 } from "@/lib/constants";
 import { MemberActions } from "./member-actions";
-import { Plus, Users, Search } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { MemberRoleSelector } from "./member-role-selector";
 import { formatDate } from "@/lib/utils/date";
 import { Button } from "@/components/ui/button";
@@ -23,29 +24,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface Member {
-  id: string;
-  userId: string;
-  role: string;
-  createdAt: number;
-  user?: {
-    email: string;
-    name?: string;
-  };
-}
-
-interface MemberListProps {
-  organizationId: string;
-}
+import { useSearch } from "@/hooks/organization/use-search";
+import { useSuccessMessage } from "@/hooks/organization/use-success-message";
+import { useErrorMessage } from "@/hooks/organization/use-error-message";
+import { SearchInput } from "./shared/search-input";
+import { SuccessMessage } from "./shared/success-message";
+import { ErrorMessage } from "./shared/error-message";
+import { LoadingState } from "./shared/loading-state";
+import { EmptyState } from "./shared/empty-state";
+import {
+  normalizeMembers,
+  extractMembers,
+} from "@/lib/utils/organization-data";
+import type { NormalizedMember, MemberListProps } from "@/lib/utils/organization-types";
 
 export function MemberList({ organizationId }: MemberListProps) {
-  const [members, setMembers] = useState<Member[]>([]);
+  const [members, setMembers] = useState<NormalizedMember[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [searchValue, setSearchValue] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [newMemberRole, setNewMemberRole] = useState<string>(
@@ -53,9 +49,13 @@ export function MemberList({ organizationId }: MemberListProps) {
   );
   const [isAdding, setIsAdding] = useState(false);
 
+  const { searchValue, handleSearch } = useSearch();
+  const { success, showSuccess, clearSuccess } = useSuccessMessage();
+  const { error, showError, clearError } = useErrorMessage();
+
   const loadMembers = useCallback(async () => {
     setIsLoading(true);
-    setError("");
+    clearError();
     try {
       const [membersResult, sessionResult] = await Promise.all([
         authClient.organization.listMembers({
@@ -67,36 +67,14 @@ export function MemberList({ organizationId }: MemberListProps) {
       ]);
 
       if (membersResult.error) {
-        setError(
+        showError(
           membersResult.error.message || MEMBER_ERRORS.LOAD_MEMBERS_FAILED,
         );
       } else if (membersResult.data) {
-        const membersData = Array.isArray(membersResult.data)
-          ? (membersResult.data as Array<Record<string, unknown>>)
-          : (
-              membersResult.data as unknown as {
-                members?: Array<Record<string, unknown>>;
-              }
-            )?.members || [];
-        setMembers(
-          membersData.map((m: Record<string, unknown>) => {
-            const createdAt = m.createdAt as number | Date | string | undefined;
-            return {
-              id: m.id as string,
-              userId: m.userId as string,
-              role: m.role as string,
-              createdAt:
-                typeof createdAt === "number"
-                  ? createdAt
-                  : createdAt instanceof Date
-                    ? createdAt.getTime()
-                    : createdAt
-                      ? new Date(createdAt as string).getTime()
-                      : Date.now(),
-              user: m.user as Member["user"],
-            };
-          }),
+        const normalizedMembers = normalizeMembers(
+          extractMembers(membersResult.data),
         );
+        setMembers(normalizedMembers);
       }
 
       if (sessionResult.data?.user?.id) {
@@ -105,11 +83,11 @@ export function MemberList({ organizationId }: MemberListProps) {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : MEMBER_ERRORS.LOAD_MEMBERS_FAILED;
-      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [organizationId]);
+  }, [organizationId, clearError, showError]);
 
   useEffect(() => {
     loadMembers();
@@ -118,20 +96,18 @@ export function MemberList({ organizationId }: MemberListProps) {
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsAdding(true);
-    setError("");
+    clearError();
     try {
-      // @ts-expect-error - better-auth organization client API method
       const result = await authClient.organization.addMember({
         organizationId,
-        userId: newMemberEmail, // Better Auth will look up user by email if userId is an email
+        userId: newMemberEmail,
         role: newMemberRole,
       });
 
       if (result.error) {
-        setError(result.error.message || MEMBER_ERRORS.ADD_FAILED);
+        showError(result.error.message || MEMBER_ERRORS.ADD_FAILED);
       } else {
-        setSuccess(MEMBER_SUCCESS.MEMBER_ADDED);
-        setTimeout(() => setSuccess(""), 3000);
+        showSuccess(MEMBER_SUCCESS.MEMBER_ADDED);
         setNewMemberEmail("");
         setNewMemberRole(ORGANIZATION_ROLES.MEMBER);
         setShowAddForm(false);
@@ -140,21 +116,19 @@ export function MemberList({ organizationId }: MemberListProps) {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : MEMBER_ERRORS.ADD_FAILED;
-      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsAdding(false);
     }
   };
 
   const handleActionSuccess = (message: string) => {
-    setSuccess(message);
-    setTimeout(() => setSuccess(""), 3000);
+    showSuccess(message);
     loadMembers();
   };
 
   const handleMemberRemoved = () => {
-    setSuccess(MEMBER_SUCCESS.MEMBER_REMOVED);
-    setTimeout(() => setSuccess(""), 3000);
+    showSuccess(MEMBER_SUCCESS.MEMBER_REMOVED);
     loadMembers();
   };
 
@@ -163,7 +137,6 @@ export function MemberList({ organizationId }: MemberListProps) {
       member.user?.email?.toLowerCase().includes(searchValue.toLowerCase()) ||
       member.user?.name?.toLowerCase().includes(searchValue.toLowerCase()),
   );
-
 
   return (
     <div className="w-full">
@@ -180,17 +153,8 @@ export function MemberList({ organizationId }: MemberListProps) {
         </Button>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-800 dark:text-green-200">
-          {success}
-        </div>
-      )}
+      <ErrorMessage message={error} onDismiss={clearError} className="mb-4" />
+      <SuccessMessage message={success} onDismiss={clearSuccess} className="mb-4" />
 
       {showAddForm && (
         <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -206,7 +170,7 @@ export function MemberList({ organizationId }: MemberListProps) {
                 type="email"
                 value={newMemberEmail}
                 onChange={(e) => setNewMemberEmail(e.target.value)}
-                placeholder="Enter member email"
+                placeholder={MEMBER_PLACEHOLDERS.EMAIL}
                 required
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
               />
@@ -227,7 +191,7 @@ export function MemberList({ organizationId }: MemberListProps) {
                 disabled={isAdding}
                 className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isAdding ? "Adding..." : MEMBER_LABELS.ADD_MEMBER}
+                {isAdding ? MEMBER_LABELS.ADDING : MEMBER_LABELS.ADD_MEMBER}
               </button>
               <button
                 type="button"
@@ -238,7 +202,7 @@ export function MemberList({ organizationId }: MemberListProps) {
                 disabled={isAdding}
                 className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Cancel
+                {MEMBER_LABELS.CANCEL}
               </button>
             </div>
           </form>
@@ -246,28 +210,19 @@ export function MemberList({ organizationId }: MemberListProps) {
       )}
 
       <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder={MEMBER_LABELS.SEARCH_MEMBERS}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
-          />
-        </div>
+        <SearchInput
+          placeholder={MEMBER_LABELS.SEARCH_MEMBERS}
+          value={searchValue}
+          onChange={handleSearch}
+        />
       </div>
 
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">
-              {MEMBER_LABELS.LOADING}
-            </div>
+            <LoadingState message={MEMBER_LABELS.LOADING} />
           ) : filteredMembers.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              {MEMBER_LABELS.NO_MEMBERS}
-            </div>
+            <EmptyState message={MEMBER_LABELS.NO_MEMBERS} />
           ) : (
             <Table>
               <TableHeader>

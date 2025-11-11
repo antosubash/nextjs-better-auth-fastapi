@@ -9,7 +9,7 @@ import {
 } from "@/lib/constants";
 import { InvitationForm } from "./invitation-form";
 import { InvitationActions } from "./invitation-actions";
-import { Plus, Mail, Search } from "lucide-react";
+import { Plus, Mail } from "lucide-react";
 import { formatDate } from "@/lib/utils/date";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,31 +22,32 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface Invitation {
-  id: string;
-  email: string;
-  role: string;
-  status: string;
-  createdAt: number;
-  expiresAt?: number;
-}
-
-interface InvitationListProps {
-  organizationId: string;
-}
+import { useSearch } from "@/hooks/organization/use-search";
+import { useSuccessMessage } from "@/hooks/organization/use-success-message";
+import { useErrorMessage } from "@/hooks/organization/use-error-message";
+import { SearchInput } from "./shared/search-input";
+import { SuccessMessage } from "./shared/success-message";
+import { ErrorMessage } from "./shared/error-message";
+import { LoadingState } from "./shared/loading-state";
+import { EmptyState } from "./shared/empty-state";
+import {
+  normalizeInvitations,
+  extractInvitations,
+} from "@/lib/utils/organization-data";
+import type { NormalizedInvitation, InvitationListProps } from "@/lib/utils/organization-types";
 
 export function InvitationList({ organizationId }: InvitationListProps) {
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [invitations, setInvitations] = useState<NormalizedInvitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [searchValue, setSearchValue] = useState("");
   const [showInviteForm, setShowInviteForm] = useState(false);
+
+  const { searchValue, handleSearch } = useSearch();
+  const { success, showSuccess, clearSuccess } = useSuccessMessage();
+  const { error, showError, clearError } = useErrorMessage();
 
   const loadInvitations = useCallback(async () => {
     setIsLoading(true);
-    setError("");
+    clearError();
     try {
       const result = await authClient.organization.listInvitations({
         query: {
@@ -55,67 +56,25 @@ export function InvitationList({ organizationId }: InvitationListProps) {
       });
 
       if (result.error) {
-        setError(
+        showError(
           result.error.message || INVITATION_ERRORS.LOAD_INVITATIONS_FAILED,
         );
       } else if (result.data) {
-        const invitationsData = Array.isArray(result.data)
-          ? (result.data as Array<Record<string, unknown>>)
-          : (
-              result.data as unknown as {
-                invitations?: Array<Record<string, unknown>>;
-              }
-            )?.invitations || [];
-        setInvitations(
-          invitationsData.map((inv: Record<string, unknown>) => {
-            const createdAt = inv.createdAt as
-              | number
-              | Date
-              | string
-              | undefined;
-            const expiresAt = inv.expiresAt as
-              | number
-              | Date
-              | string
-              | undefined;
-            return {
-              id: inv.id as string,
-              email: inv.email as string,
-              role: inv.role as string,
-              status:
-                typeof inv.status === "string"
-                  ? inv.status
-                  : String(inv.status),
-              createdAt:
-                typeof createdAt === "number"
-                  ? createdAt
-                  : createdAt instanceof Date
-                    ? createdAt.getTime()
-                    : createdAt
-                      ? new Date(createdAt as string).getTime()
-                      : Date.now(),
-              expiresAt:
-                typeof expiresAt === "number"
-                  ? expiresAt
-                  : expiresAt instanceof Date
-                    ? expiresAt.getTime()
-                    : expiresAt
-                      ? new Date(expiresAt as string).getTime()
-                      : undefined,
-            };
-          }),
+        const normalizedInvitations = normalizeInvitations(
+          extractInvitations(result.data),
         );
+        setInvitations(normalizedInvitations);
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error
           ? err.message
           : INVITATION_ERRORS.LOAD_INVITATIONS_FAILED;
-      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [organizationId]);
+  }, [organizationId, clearError, showError]);
 
   useEffect(() => {
     loadInvitations();
@@ -123,14 +82,12 @@ export function InvitationList({ organizationId }: InvitationListProps) {
 
   const handleInvitationSent = () => {
     setShowInviteForm(false);
-    setSuccess(INVITATION_SUCCESS.INVITATION_SENT);
-    setTimeout(() => setSuccess(""), 3000);
+    showSuccess(INVITATION_SUCCESS.INVITATION_SENT);
     loadInvitations();
   };
 
   const handleActionSuccess = (message: string) => {
-    setSuccess(message);
-    setTimeout(() => setSuccess(""), 3000);
+    showSuccess(message);
     loadInvitations();
   };
 
@@ -192,17 +149,8 @@ export function InvitationList({ organizationId }: InvitationListProps) {
         </Button>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-800 dark:text-green-200">
-          {success}
-        </div>
-      )}
+      <ErrorMessage message={error} onDismiss={clearError} className="mb-4" />
+      <SuccessMessage message={success} onDismiss={clearSuccess} className="mb-4" />
 
       {showInviteForm && (
         <div className="mb-6">
@@ -215,28 +163,19 @@ export function InvitationList({ organizationId }: InvitationListProps) {
       )}
 
       <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search invitations..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
-          />
-        </div>
+        <SearchInput
+          placeholder={INVITATION_LABELS.SEARCH_INVITATIONS}
+          value={searchValue}
+          onChange={handleSearch}
+        />
       </div>
 
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">
-              {INVITATION_LABELS.LOADING}
-            </div>
+            <LoadingState message={INVITATION_LABELS.LOADING} />
           ) : filteredInvitations.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              {INVITATION_LABELS.NO_INVITATIONS}
-            </div>
+            <EmptyState message={INVITATION_LABELS.NO_INVITATIONS} />
           ) : (
             <Table>
               <TableHeader>

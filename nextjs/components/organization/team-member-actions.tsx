@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { TEAM_LABELS, TEAM_ERRORS } from "@/lib/constants";
+import { TEAM_LABELS, TEAM_ERRORS, COMMON_LABELS } from "@/lib/constants";
 import { MoreVertical, UserMinus } from "lucide-react";
 import { ErrorToast } from "@/components/ui/error-toast";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TeamMember {
   id: string;
@@ -26,12 +33,11 @@ export function TeamMemberActions({
   teamId,
   onMemberRemoved,
 }: TeamMemberActionsProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleRemove = async () => {
-    if (!confirm("Are you sure you want to remove this team member?")) {
+    if (!confirm(COMMON_LABELS.CONFIRM_REMOVE)) {
       return;
     }
 
@@ -54,7 +60,6 @@ export function TeamMemberActions({
       setError(errorMessage);
     } finally {
       setIsLoading(false);
-      setIsOpen(false);
     }
   };
 
@@ -67,34 +72,23 @@ export function TeamMemberActions({
           duration={5000}
         />
       )}
-      <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={isLoading}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-      >
-        <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-      </button>
-
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
-            <button
-              onClick={handleRemove}
-              disabled={isLoading}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <UserMinus className="w-4 h-4" />
-              {TEAM_LABELS.REMOVE_MEMBER}
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" disabled={isLoading}>
+            <MoreVertical className="w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={handleRemove}
+            disabled={isLoading}
+            variant="destructive"
+          >
+            <UserMinus className="w-4 h-4 mr-2" />
+            {TEAM_LABELS.REMOVE_MEMBER}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </>
   );
 }
