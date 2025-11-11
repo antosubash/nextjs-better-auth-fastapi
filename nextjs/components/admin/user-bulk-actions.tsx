@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { RoleInfo } from "@/lib/permissions-utils";
+import { getValidAssignableRole, canBanRole } from "@/lib/utils/role-validation";
 import {
   ADMIN_BULK_ACTIONS,
   ADMIN_LABELS,
@@ -100,14 +101,17 @@ export function UserBulkActions({
     setIsProcessingBulk(true);
     try {
       const userIds = Array.from(selectedUserIds);
-      const validRole =
-        bulkRole === USER_ROLES.ADMIN || bulkRole === USER_ROLES.USER
-          ? (bulkRole as "user" | "admin")
-          : USER_ROLES.USER;
+      // Ensure only assignable roles are used
+      const validRole = getValidAssignableRole(bulkRole, availableRoles[0]?.name || USER_ROLES.USER);
 
+      // Better Auth client types don't include custom roles, but they are supported at runtime
       const results = await Promise.allSettled(
         userIds.map((userId) =>
-          authClient.admin.setRole({ userId, role: validRole })
+          authClient.admin.setRole({ 
+            userId, 
+            // @ts-expect-error - Better Auth types only include "user" | "admin" but custom roles are supported
+            role: validRole 
+          })
         )
       );
 
@@ -135,12 +139,12 @@ export function UserBulkActions({
       // Filter out admin users
       const adminUserIds = userIds.filter((userId) => {
         const user = users.find((u) => u.id === userId);
-        return user?.role === USER_ROLES.ADMIN;
+        return !canBanRole(user?.role);
       });
       
       const nonAdminUserIds = userIds.filter((userId) => {
         const user = users.find((u) => u.id === userId);
-        return user?.role !== USER_ROLES.ADMIN;
+        return canBanRole(user?.role);
       });
 
       if (nonAdminUserIds.length === 0) {

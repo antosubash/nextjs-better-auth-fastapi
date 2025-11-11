@@ -2,8 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
-import { getRoles } from "@/lib/permissions-api";
+import { getAssignableUserRoles } from "@/lib/permissions-api";
 import { RoleInfo } from "@/lib/permissions-utils";
+import { getValidAssignableRole, canBanRole, isAssignableUserRole } from "@/lib/utils/role-validation";
+import { useToast } from "@/lib/hooks/use-toast";
 import {
   ADMIN_LABELS,
   ADMIN_ERRORS,
@@ -18,6 +20,10 @@ import {
   Trash2,
   Edit,
   Shield,
+  Key,
+  Monitor,
+  UserCog,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,6 +58,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserPasswordDialog } from "./user-password-dialog";
+import { UserSessionsDialog } from "./user-sessions-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
 
@@ -76,10 +84,13 @@ export function UserActions({
   onDelete,
   onActionSuccess,
 }: UserActionsProps) {
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showSessionsDialog, setShowSessionsDialog] = useState(false);
   const [banReason, setBanReason] = useState("");
   const [newRole, setNewRole] = useState<string>(user.role || USER_ROLES.USER);
   const [availableRoles, setAvailableRoles] = useState<RoleInfo[]>([]);
@@ -88,11 +99,14 @@ export function UserActions({
   const loadRoles = useCallback(async () => {
     setIsLoadingRoles(true);
     try {
-      const roles = await getRoles();
+      const roles = await getAssignableUserRoles();
       setAvailableRoles(roles);
       if (user.role) {
-        const validRole =
-          roles.find((r) => r.name === user.role)?.name || USER_ROLES.USER;
+        // If user has a non-assignable role, use first assignable role
+        // Otherwise use the user's role if it's assignable
+        const validRole = isAssignableUserRole(user.role)
+          ? user.role
+          : roles[0]?.name || USER_ROLES.USER;
         setNewRole(validRole);
       }
     } catch (err) {
@@ -103,8 +117,8 @@ export function UserActions({
   }, [user.role]);
 
   const handleBan = async () => {
-    if (user.role === USER_ROLES.ADMIN) {
-      alert(ADMIN_ERRORS.CANNOT_BAN_ADMIN);
+    if (!canBanRole(user.role)) {
+      toast.error(ADMIN_ERRORS.CANNOT_BAN_ADMIN);
       setShowBanDialog(false);
       setBanReason("");
       return;
@@ -124,11 +138,12 @@ export function UserActions({
       if (result.error) {
         const errorMessage = result.error.message || ADMIN_ERRORS.BAN_FAILED;
         console.error("Ban user error:", result.error);
-        alert(errorMessage);
+        toast.error(errorMessage);
         return;
       }
 
       // Success - Better Auth returns success when there's no error
+      toast.success(ADMIN_SUCCESS.USER_BANNED);
       onActionSuccess(ADMIN_SUCCESS.USER_BANNED);
       setShowBanDialog(false);
       setBanReason("");
@@ -136,7 +151,7 @@ export function UserActions({
       console.error("Ban user exception:", err);
       const errorMessage =
         err instanceof Error ? err.message : ADMIN_ERRORS.BAN_FAILED;
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -150,14 +165,15 @@ export function UserActions({
       });
 
       if (result.error) {
-        alert(result.error.message || ADMIN_ERRORS.UNBAN_FAILED);
+        toast.error(result.error.message || ADMIN_ERRORS.UNBAN_FAILED);
       } else {
+        toast.success(ADMIN_SUCCESS.USER_UNBANNED);
         onActionSuccess(ADMIN_SUCCESS.USER_UNBANNED);
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : ADMIN_ERRORS.UNBAN_FAILED;
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -166,26 +182,27 @@ export function UserActions({
   const handleSetRole = async () => {
     setIsLoading(true);
     try {
-      const validRole =
-        newRole === USER_ROLES.ADMIN || newRole === USER_ROLES.USER
-          ? (newRole as "user" | "admin")
-          : USER_ROLES.USER;
+      // Ensure only assignable roles are used
+      const validRole = getValidAssignableRole(newRole, availableRoles[0]?.name || USER_ROLES.USER);
 
+      // Better Auth client types don't include custom roles, but they are supported at runtime
       const result = await authClient.admin.setRole({
         userId: user.id,
+        // @ts-expect-error - Better Auth types only include "user" | "admin" but custom roles are supported
         role: validRole,
       });
 
       if (result.error) {
-        alert(result.error.message || ADMIN_ERRORS.SET_ROLE_FAILED);
+        toast.error(result.error.message || ADMIN_ERRORS.SET_ROLE_FAILED);
       } else {
+        toast.success(ADMIN_SUCCESS.ROLE_SET);
         onActionSuccess(ADMIN_SUCCESS.ROLE_SET);
         setShowRoleDialog(false);
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : ADMIN_ERRORS.SET_ROLE_FAILED;
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -199,17 +216,58 @@ export function UserActions({
       });
 
       if (result.error) {
-        alert(result.error.message || ADMIN_ERRORS.DELETE_FAILED);
+        toast.error(result.error.message || ADMIN_ERRORS.DELETE_FAILED);
       } else {
+        toast.success(ADMIN_SUCCESS.USER_DELETED);
         onDelete();
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : ADMIN_ERRORS.DELETE_FAILED;
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
       setShowDeleteDialog(false);
+    }
+  };
+
+  const handleImpersonate = async () => {
+    setIsLoading(true);
+    try {
+      const result = await authClient.admin.impersonateUser({ userId: user.id });
+
+      if (result.error) {
+        toast.error(result.error.message || ADMIN_ERRORS.IMPERSONATION_FAILED);
+      } else {
+        toast.success(ADMIN_SUCCESS.IMPERSONATION_STARTED);
+        // Reload the page to start impersonation session
+        window.location.href = "/";
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : ADMIN_ERRORS.IMPERSONATION_FAILED;
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerificationEmail = async () => {
+    setIsLoading(true);
+    try {
+      // Note: This might need to be implemented via Better Auth API
+      // For now, we'll show a placeholder
+      toast.info("Verification email functionality needs to be implemented");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : ADMIN_ERRORS.EMAIL_VERIFICATION_FAILED;
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -232,7 +290,7 @@ export function UserActions({
               <UserCheck className="w-4 h-4 mr-2" />
               {ADMIN_LABELS.UNBAN_USER}
             </DropdownMenuItem>
-          ) : user.role !== USER_ROLES.ADMIN ? (
+          ) : canBanRole(user.role) ? (
             <DropdownMenuItem onClick={() => setShowBanDialog(true)}>
               <Ban className="w-4 h-4 mr-2" />
               {ADMIN_LABELS.BAN_USER}
@@ -247,6 +305,29 @@ export function UserActions({
           >
             <Shield className="w-4 h-4 mr-2" />
             {ADMIN_LABELS.SET_ROLE}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => setShowPasswordDialog(true)}>
+            <Key className="w-4 h-4 mr-2" />
+            {ADMIN_LABELS.RESET_PASSWORD}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => setShowSessionsDialog(true)}>
+            <Monitor className="w-4 h-4 mr-2" />
+            {ADMIN_LABELS.MANAGE_SESSIONS}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={handleImpersonate} disabled={isLoading}>
+            <UserCog className="w-4 h-4 mr-2" />
+            {ADMIN_LABELS.IMPERSONATE_USER}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={handleResendVerificationEmail}
+            disabled={isLoading}
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            {ADMIN_LABELS.RESEND_VERIFICATION_EMAIL}
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -401,6 +482,20 @@ export function UserActions({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <UserPasswordDialog
+        userId={user.id}
+        open={showPasswordDialog}
+        onOpenChange={setShowPasswordDialog}
+        onSuccess={() => onActionSuccess(ADMIN_SUCCESS.PASSWORD_RESET)}
+      />
+
+      <UserSessionsDialog
+        userId={user.id}
+        open={showSessionsDialog}
+        onOpenChange={setShowSessionsDialog}
+        onSuccess={() => onActionSuccess(ADMIN_SUCCESS.SESSION_REVOKED)}
+      />
     </>
   );
 }

@@ -6,6 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { ADMIN_ERRORS, ADMIN_LAYOUT, USER_ROLES, PAGE_CONTAINER } from "@/lib/constants";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminHeader } from "@/components/admin/admin-header";
+import { ImpersonationIndicator } from "@/components/admin/impersonation-indicator";
 
 /**
  * Admin Layout Component
@@ -83,6 +84,7 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-black dark:to-gray-900">
+      <ImpersonationIndicator />
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="lg:pl-64">
         <AdminHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />

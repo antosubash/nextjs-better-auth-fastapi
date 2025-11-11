@@ -1,5 +1,6 @@
 import { Permission, RoleInfo } from "./permissions-utils";
 import { PERMISSION_ERRORS, ROLE_MANAGEMENT_ERRORS } from "./constants";
+import { getAssignableUserRoles as getAssignableRoles } from "./utils/role-validation";
 
 export interface UserPermissionsResponse {
   user: {
@@ -33,6 +34,17 @@ export async function getRoles(): Promise<RoleInfo[]> {
 
   const data = await response.json();
   return data.roles || [];
+}
+
+/**
+ * Get only assignable user roles (filters out organization roles and default role)
+ * Use this for user management interfaces
+ */
+export async function getAssignableUserRoles(): Promise<RoleInfo[]> {
+  const allRoles = await getRoles();
+  const assignableRoles = getAssignableRoles();
+  const assignableRoleNames = new Set(assignableRoles.map((r) => r.name));
+  return allRoles.filter((role) => assignableRoleNames.has(role.name));
 }
 
 export async function getRole(roleName: string): Promise<RoleInfo> {

@@ -3,7 +3,7 @@ import { db } from "@/lib/database";
 import { session, user } from "@/auth-schema";
 import { eq, gt, desc, sql } from "drizzle-orm";
 import { STATS_ERRORS } from "@/lib/constants";
-import { requireAdmin } from "@/lib/permission-check";
+import { requireAdmin } from "@/lib/permission-check-server";
 
  
 export async function GET() {

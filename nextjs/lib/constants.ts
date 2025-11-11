@@ -143,6 +143,30 @@ export const ADMIN_LABELS = {
   PREVIOUS_PAGE: "Previous page",
   NEXT_PAGE: "Next page",
   PAGE: "Page",
+  RESET_PASSWORD: "Reset Password",
+  CHANGE_PASSWORD: "Change Password",
+  NEW_PASSWORD: "New Password",
+  CONFIRM_PASSWORD: "Confirm Password",
+  MANAGE_SESSIONS: "Manage Sessions",
+  ACTIVE_SESSIONS: "Active Sessions",
+  REVOKE_SESSION: "Revoke Session",
+  REVOKE_ALL_SESSIONS: "Revoke All Sessions",
+  CONFIRM_REVOKE_SESSION: "Are you sure you want to revoke this session?",
+  CONFIRM_REVOKE_ALL_SESSIONS: "Are you sure you want to revoke all sessions?",
+  SESSION_IP: "IP Address",
+  SESSION_USER_AGENT: "User Agent",
+  SESSION_CREATED_AT: "Created At",
+  SESSION_EXPIRES_AT: "Expires At",
+  NO_SESSIONS: "No active sessions",
+  IMPERSONATE_USER: "Impersonate User",
+  STOP_IMPERSONATING: "Stop Impersonating",
+  IMPERSONATING: "Impersonating",
+  RESEND_VERIFICATION_EMAIL: "Resend Verification Email",
+  MARK_EMAIL_VERIFIED: "Mark Email as Verified",
+  EXPORT_USERS: "Export Users",
+  EXPORT_FORMAT: "Export Format",
+  EXPORT_CSV: "CSV",
+  EXPORT_JSON: "JSON",
 } as const;
 
 export const ADMIN_PLACEHOLDERS = {
@@ -151,6 +175,8 @@ export const ADMIN_PLACEHOLDERS = {
   NAME: "Enter name",
   ROLE: "Select role",
   BAN_REASON: "Enter ban reason (optional)",
+  NEW_PASSWORD: "Enter new password",
+  CONFIRM_PASSWORD: "Confirm new password",
 } as const;
 
 export const ADMIN_ERRORS = {
@@ -168,6 +194,15 @@ export const ADMIN_ERRORS = {
   BULK_ROLE_SET_FAILED: "Failed to update user roles",
   BULK_BAN_FAILED: "Failed to ban users",
   BULK_UNBAN_FAILED: "Failed to unban users",
+  PASSWORD_RESET_FAILED: "Failed to reset password",
+  LOAD_SESSIONS_FAILED: "Failed to load sessions",
+  REVOKE_SESSION_FAILED: "Failed to revoke session",
+  REVOKE_SESSIONS_FAILED: "Failed to revoke sessions",
+  EMAIL_VERIFICATION_FAILED: "Failed to send verification email",
+  MARK_VERIFIED_FAILED: "Failed to mark email as verified",
+  IMPERSONATION_FAILED: "Failed to start impersonation",
+  STOP_IMPERSONATION_FAILED: "Failed to stop impersonation",
+  EXPORT_FAILED: "Failed to export users",
 } as const;
 
 export const ADMIN_SUCCESS = {
@@ -181,6 +216,13 @@ export const ADMIN_SUCCESS = {
   BULK_ROLE_SET_SUCCESS: "User roles updated successfully",
   BULK_BAN_SUCCESS: "Users banned successfully",
   BULK_UNBAN_SUCCESS: "Users unbanned successfully",
+  PASSWORD_RESET: "Password reset successfully",
+  SESSION_REVOKED: "Session revoked successfully",
+  SESSIONS_REVOKED: "All sessions revoked successfully",
+  EMAIL_VERIFICATION_SENT: "Verification email sent successfully",
+  EMAIL_VERIFIED: "Email verified successfully",
+  IMPERSONATION_STARTED: "Impersonation started successfully",
+  IMPERSONATION_STOPPED: "Impersonation stopped successfully",
 } as const;
 
 export const DASHBOARD = {

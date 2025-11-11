@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
-import { getRoles } from "@/lib/permissions-api";
+import { getAssignableUserRoles } from "@/lib/permissions-api";
 import { RoleInfo } from "@/lib/permissions-utils";
+import { getValidAssignableRole, isAssignableUserRole } from "@/lib/utils/role-validation";
 import {
   ADMIN_LABELS,
   ADMIN_PLACEHOLDERS,
@@ -75,13 +76,11 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   const loadRoles = useCallback(async () => {
     setIsLoadingRoles(true);
     try {
-      const roles = await getRoles();
+      const roles = await getAssignableUserRoles();
       setAvailableRoles(roles);
       if (!user && roles.length > 0) {
-        const defaultRole =
-          roles.find((r) => r.name === USER_ROLES.USER)?.name ||
-          roles[0]?.name ||
-          USER_ROLES.USER;
+        // Default to first assignable role (user role is not assignable, it's the default)
+        const defaultRole = roles[0]?.name || USER_ROLES.USER;
         form.setValue("role", defaultRole);
       }
     } catch (err) {
@@ -98,11 +97,11 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
 
   useEffect(() => {
     if (user && availableRoles.length > 0) {
-      const validRole =
-        availableRoles.find((r) => r.name === user.role)?.name ||
-        availableRoles.find((r) => r.name === USER_ROLES.USER)?.name ||
-        availableRoles[0]?.name ||
-        USER_ROLES.USER;
+      // If user has a non-assignable role (like "user"), use first assignable role
+      // Otherwise use the user's role if it's assignable
+      const validRole = isAssignableUserRole(user.role)
+        ? user.role!
+        : availableRoles[0]?.name || USER_ROLES.USER;
       form.reset({
         name: user.name,
         email: user.email,
@@ -119,10 +118,8 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
 
     try {
       if (isEditing) {
-        const validRole =
-          values.role === USER_ROLES.ADMIN || values.role === USER_ROLES.USER
-            ? (values.role as "user" | "admin")
-            : USER_ROLES.USER;
+        // Ensure only assignable roles are used
+        const validRole = getValidAssignableRole(values.role, availableRoles[0]?.name || USER_ROLES.USER);
 
         const result = await authClient.admin.updateUser({
           userId: user!.id,
@@ -145,15 +142,15 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           return;
         }
 
-        const validRole =
-          values.role === USER_ROLES.ADMIN || values.role === USER_ROLES.USER
-            ? (values.role as "user" | "admin")
-            : USER_ROLES.USER;
+        // Ensure only assignable roles are used
+        const validRole = getValidAssignableRole(values.role, availableRoles[0]?.name || USER_ROLES.USER);
 
+        // Better Auth client types don't include custom roles, but they are supported at runtime
         const result = await authClient.admin.createUser({
           email: values.email,
           password: values.password,
           name: values.name,
+          // @ts-expect-error - Better Auth types only include "user" | "admin" but custom roles are supported
           role: validRole,
         });
 

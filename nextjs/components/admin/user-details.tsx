@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { ADMIN_USER_DETAILS, ROLE_DISPLAY_NAMES, ADMIN_LABELS } from "@/lib/constants";
+import { UserPasswordDialog } from "./user-password-dialog";
+import { UserSessionsDialog } from "./user-sessions-dialog";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Calendar, Shield, Mail, User, Ban } from "lucide-react";
+import { CheckCircle2, XCircle, Calendar, Shield, Mail, User, Ban, Key } from "lucide-react";
 
 interface User {
   id: string;
@@ -43,6 +45,8 @@ function formatDate(timestamp: number): string {
 
 export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showSessionsDialog, setShowSessionsDialog] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,6 +54,24 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const loadSessionCount = async () => {
+    if (!user) return;
+    try {
+      // TODO: Create API route for fetching user sessions if needed
+      // For now, this is just for logging and not critical
+      console.log("Session count loading not implemented in client component");
+    } catch (err) {
+      console.error("Failed to load session count:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (open && user) {
+      loadSessionCount();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user]);
 
   if (!user) return null;
 
@@ -217,13 +239,40 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
             </div>
           </div>
 
-          <div className="flex justify-end pt-4">
+          <Separator />
+
+          <div className="flex gap-2 justify-end pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowPasswordDialog(true)}
+            >
+              <Key className="w-4 h-4 mr-2" />
+              {ADMIN_LABELS.RESET_PASSWORD}
+            </Button>
             <Button onClick={() => onOpenChange(false)}>
               {ADMIN_USER_DETAILS.CLOSE}
             </Button>
           </div>
         </div>
       </DialogContent>
+
+      <UserPasswordDialog
+        userId={user.id}
+        open={showPasswordDialog}
+        onOpenChange={setShowPasswordDialog}
+        onSuccess={() => {
+          setShowPasswordDialog(false);
+        }}
+      />
+
+      <UserSessionsDialog
+        userId={user.id}
+        open={showSessionsDialog}
+        onOpenChange={setShowSessionsDialog}
+        onSuccess={() => {
+          loadSessionCount();
+        }}
+      />
     </Dialog>
   );
 }

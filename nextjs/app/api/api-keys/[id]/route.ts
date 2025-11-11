@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { betterAuthService } from "@/lib/better-auth-service/index";
-import { requirePermission } from "@/lib/permission-check";
+import { requirePermission } from "@/lib/permission-check-server";
 import { API_KEY_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
 
 export async function GET(

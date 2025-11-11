@@ -4,7 +4,7 @@ import { db } from "@/lib/database";
 import { session, user } from "@/auth-schema";
 import { eq, and, gt, desc, sql } from "drizzle-orm";
 import { STATS_ERRORS, STATS_LABELS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
-import { requirePermission } from "@/lib/permission-check";
+import { requirePermission } from "@/lib/permission-check-server";
 
  
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

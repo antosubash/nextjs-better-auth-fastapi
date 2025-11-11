@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
-import { getRoles } from "@/lib/permissions-api";
+import { getAssignableUserRoles } from "@/lib/permissions-api";
 import { RoleInfo } from "@/lib/permissions-utils";
 import {
   ADMIN_LABELS,
@@ -23,6 +23,7 @@ import {
   Users,
   ChevronsLeft,
   ChevronsRight,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,11 +40,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { exportUsers } from "@/lib/utils/user-export";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -77,6 +81,16 @@ interface User {
 
 type FilterStatus = "all" | "active" | "banned";
 
+function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function UserList() {
   const [users, setUsers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -98,10 +112,12 @@ export function UserList() {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<RoleInfo[]>([]);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportFormat, setExportFormat] = useState<"csv" | "json">("csv");
 
   const loadRoles = useCallback(async () => {
     try {
-      const roles = await getRoles();
+      const roles = await getAssignableUserRoles();
       setAvailableRoles(roles);
     } catch (err) {
       console.error("Failed to load roles:", err);
@@ -260,12 +276,9 @@ export function UserList() {
     loadUsers();
   };
 
-  const formatDate = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  const handleExport = () => {
+    exportUsers(users, exportFormat);
+    setShowExportDialog(false);
   };
 
   const totalPages = Math.ceil(totalUsers / itemsPerPage);
@@ -320,10 +333,19 @@ export function UserList() {
             {ADMIN_LABELS.TITLE}
           </h1>
         </div>
-        <Button onClick={() => setShowCreateForm(true)}>
-          <Plus className="w-5 h-5 mr-2" />
-          {ADMIN_LABELS.CREATE_USER}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowExportDialog(true)}
+          >
+            <Download className="w-5 h-5 mr-2" />
+            {ADMIN_LABELS.EXPORT_USERS}
+          </Button>
+          <Button onClick={() => setShowCreateForm(true)}>
+            <Plus className="w-5 h-5 mr-2" />
+            {ADMIN_LABELS.CREATE_USER}
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -621,6 +643,46 @@ export function UserList() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{ADMIN_LABELS.EXPORT_USERS}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{ADMIN_LABELS.EXPORT_FORMAT}</Label>
+              <Select
+                value={exportFormat}
+                onValueChange={(value) => setExportFormat(value as "csv" | "json")}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="csv">{ADMIN_LABELS.EXPORT_CSV}</SelectItem>
+                  <SelectItem value="json">{ADMIN_LABELS.EXPORT_JSON}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Exporting {users.length} user(s) with current filters applied.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowExportDialog(false)}
+            >
+              {ADMIN_LABELS.CANCEL}
+            </Button>
+            <Button onClick={handleExport}>
+              <Download className="w-4 h-4 mr-2" />
+              {ADMIN_LABELS.EXPORT_USERS}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

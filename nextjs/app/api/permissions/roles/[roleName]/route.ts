@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePermission } from "@/lib/permission-check";
+import { requirePermission } from "@/lib/permission-check-server";
 import {
   PERMISSION_RESOURCES,
   PERMISSION_ACTIONS,

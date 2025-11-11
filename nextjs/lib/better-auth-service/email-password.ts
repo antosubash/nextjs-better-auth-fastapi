@@ -1,4 +1,5 @@
-import { withErrorHandling, getHeaders } from "./utils";
+import { withErrorHandling } from "./utils";
+import { getHeaders } from "./server-utils";
 import { auth } from "../auth";
 
 /**
@@ -34,17 +35,19 @@ export const emailPasswordService = {
 
   /**
    * Sign in with email and password
+   * @param headers - Optional headers. If not provided, will use server headers (server-only)
    */
   async signInEmail(params: {
     email: string;
     password: string;
     rememberMe?: boolean;
     callbackURL?: string;
+    headers?: Headers;
   }) {
     return withErrorHandling(
       "signInEmail",
       async () => {
-        const headersList = await getHeaders();
+        const headersList = params.headers || await getHeaders();
         return await auth.api.signInEmail({
           headers: headersList,
           body: {
@@ -61,25 +64,28 @@ export const emailPasswordService = {
 
   /**
    * Sign out the current user
+   * @param headers - Optional headers. If not provided, will use server headers (server-only)
    */
-  async signOut() {
+  async signOut(headers?: Headers) {
     return withErrorHandling("signOut", async () => {
-      const headersList = await getHeaders();
+      const headersList = headers || await getHeaders();
       return await auth.api.signOut({ headers: headersList });
     });
   },
 
   /**
    * Send email verification link
+   * @param headers - Optional headers. If not provided, will use server headers (server-only)
    */
   async sendVerificationEmail(params: {
     email: string;
     callbackURL?: string;
+    headers?: Headers;
   }) {
     return withErrorHandling(
       "sendVerificationEmail",
       async () => {
-        const headersList = await getHeaders();
+        const headersList = params.headers || await getHeaders();
         return await auth.api.sendVerificationEmail({
           headers: headersList,
           body: {
@@ -136,16 +142,18 @@ export const emailPasswordService = {
 
   /**
    * Change password (requires current password)
+   * @param headers - Optional headers. If not provided, will use server headers (server-only)
    */
   async changePassword(params: {
     newPassword: string;
     currentPassword: string;
     revokeOtherSessions?: boolean;
+    headers?: Headers;
   }) {
     return withErrorHandling(
       "changePassword",
       async () => {
-        const headersList = await getHeaders();
+        const headersList = params.headers || await getHeaders();
         return await auth.api.changePassword({
           headers: headersList,
           body: {

@@ -1,4 +1,5 @@
-import { withErrorHandling, getHeaders, requirePermission } from "./utils";
+import { withErrorHandling } from "./utils";
+import { getHeaders, requirePermission } from "./server-utils";
 import { auth } from "../auth";
 import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "../constants";
 
