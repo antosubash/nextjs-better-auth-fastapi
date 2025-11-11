@@ -13,6 +13,7 @@ import {
   USER_ROLES,
   ROLE_DISPLAY_NAMES,
   AUTH_ERRORS,
+  MEMBER_ERRORS,
 } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +33,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
 
@@ -66,10 +66,10 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
 
   const form = useForm<UserFormValues>({
     defaultValues: {
-      name: user?.name || "",
-      email: user?.email || "",
+      name: "",
+      email: "",
       password: "",
-      role: user?.role || USER_ROLES.USER,
+      role: USER_ROLES.USER,
     },
   });
 
@@ -107,6 +107,15 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         email: user.email,
         password: "",
         role: validRole,
+      });
+    } else if (!user && availableRoles.length > 0) {
+      // Reset form for create mode
+      const defaultRole = availableRoles[0]?.name || USER_ROLES.USER;
+      form.reset({
+        name: "",
+        email: "",
+        password: "",
+        role: defaultRole,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -174,25 +183,19 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {isEditing ? ADMIN_LABELS.EDIT_USER : ADMIN_LABELS.CREATE_USER}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+    <div className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
-              rules={{ required: "Name is required" }}
+              rules={{ required: AUTH_ERRORS.NAME_REQUIRED }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{ADMIN_LABELS.NAME}</FormLabel>
@@ -200,6 +203,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
                     <Input
                       placeholder={ADMIN_PLACEHOLDERS.NAME}
                       {...field}
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -210,7 +214,13 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
             <FormField
               control={form.control}
               name="email"
-              rules={{ required: "Email is required" }}
+              rules={{
+                required: AUTH_ERRORS.EMAIL_REQUIRED,
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: MEMBER_ERRORS.INVALID_EMAIL,
+                },
+              }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{ADMIN_LABELS.EMAIL}</FormLabel>
@@ -219,6 +229,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
                       type="email"
                       placeholder={ADMIN_PLACEHOLDERS.EMAIL}
                       {...field}
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -230,15 +241,16 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
               <FormField
                 control={form.control}
                 name="password"
-                rules={{ required: "Password is required" }}
+                rules={{ required: AUTH_ERRORS.PASSWORD_REQUIRED }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{ADMIN_PLACEHOLDERS.PASSWORD}</FormLabel>
+                    <FormLabel>{ADMIN_LABELS.PASSWORD}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
                         placeholder={ADMIN_PLACEHOLDERS.PASSWORD}
                         {...field}
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -259,8 +271,8 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
                     disabled={isLoadingRoles}
                   >
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
+                      <SelectTrigger disabled={isLoading || isLoadingRoles}>
+                        <SelectValue placeholder={ADMIN_PLACEHOLDERS.ROLE} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -285,11 +297,11 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
             />
 
             <div className="flex gap-3 pt-4">
-              <Button type="submit" disabled={isLoading} className="flex-1">
+              <Button type="submit" disabled={isLoading || isLoadingRoles} className="flex-1">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    {ADMIN_LABELS.SAVING}
                   </>
                 ) : (
                   ADMIN_LABELS.SAVE
@@ -304,9 +316,8 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
                 {ADMIN_LABELS.CANCEL}
               </Button>
             </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+        </form>
+      </Form>
+    </div>
   );
 }

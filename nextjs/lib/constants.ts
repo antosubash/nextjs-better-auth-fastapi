@@ -119,6 +119,7 @@ export const ADMIN_LABELS = {
   ACTIVE: "Active",
   EMAIL: "Email",
   NAME: "Name",
+  PASSWORD: "Password",
   CREATED_AT: "Created At",
   BAN_REASON: "Ban Reason",
   BAN_EXPIRES: "Ban Expires",
@@ -167,6 +168,7 @@ export const ADMIN_LABELS = {
   EXPORT_FORMAT: "Export Format",
   EXPORT_CSV: "CSV",
   EXPORT_JSON: "JSON",
+  SAVING: "Saving...",
 } as const;
 
 export const ADMIN_PLACEHOLDERS = {
