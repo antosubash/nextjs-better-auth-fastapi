@@ -381,6 +381,9 @@ export const MEMBER_ERRORS = {
   LOAD_MEMBERS_FAILED: "Failed to load members",
   INVALID_EMAIL: "Invalid email address",
   INVALID_ROLE: "Invalid role",
+  USER_ALREADY_MEMBER: "This user is already a member of this organization",
+  USER_NOT_SELECTED: "Please select a user or enter an email address",
+  SEARCH_FAILED: "Failed to search users",
 } as const;
 
 export const MEMBER_SUCCESS = {
@@ -388,6 +391,30 @@ export const MEMBER_SUCCESS = {
   MEMBER_REMOVED: "Member removed successfully",
   ROLE_UPDATED: "Member role updated successfully",
   LEFT_ORGANIZATION: "Left organization successfully",
+} as const;
+
+export const USER_SEARCH_LABELS = {
+  SEARCH_USERS: "Search users...",
+  SELECT_USER: "Select a user",
+  NO_USERS_FOUND: "No users found",
+  LOADING_USERS: "Loading users...",
+  USER_ALREADY_MEMBER: "This user is already a member",
+  USER_NOT_FOUND: "User not found",
+  ADD_EXISTING_USER: "Add existing user",
+  INVITE_NEW_USER: "Invite new user by email",
+} as const;
+
+export const USER_SEARCH_PLACEHOLDERS = {
+  SEARCH: "Search by email or name...",
+  EMAIL: "Enter email address",
+} as const;
+
+export const ADD_MEMBER_DIALOG_LABELS = {
+  TITLE: "Add Member",
+  DESCRIPTION: "Search for an existing user or invite a new user by email",
+  ADD_BUTTON: "Add Member",
+  INVITE_BUTTON: "Send Invitation",
+  CANCEL: "Cancel",
 } as const;
 
 export const INVITATION_LABELS = {
