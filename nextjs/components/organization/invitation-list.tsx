@@ -34,7 +34,12 @@ import {
   normalizeInvitations,
   extractInvitations,
 } from "@/lib/utils/organization-data";
-import type { NormalizedInvitation, InvitationListProps } from "@/lib/utils/organization-types";
+import type {
+  NormalizedInvitation,
+  InvitationListProps,
+  Invitation,
+  InvitationListResponse,
+} from "@/lib/utils/organization-types";
 
 export function InvitationList({ organizationId }: InvitationListProps) {
   const [invitations, setInvitations] = useState<NormalizedInvitation[]>([]);
@@ -61,7 +66,7 @@ export function InvitationList({ organizationId }: InvitationListProps) {
         );
       } else if (result.data) {
         const normalizedInvitations = normalizeInvitations(
-          extractInvitations(result.data),
+          extractInvitations(result.data as InvitationListResponse | Invitation[]),
         );
         setInvitations(normalizedInvitations);
       }

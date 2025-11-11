@@ -20,6 +20,7 @@ export function checkUserPermission(
   resource: string,
   action: string
 ): PermissionCheckResult {
+  
   if (!userId || !userRole) {
     return {
       hasPermission: false,

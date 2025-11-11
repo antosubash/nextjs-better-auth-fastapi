@@ -49,6 +49,7 @@ export function TeamList({ organizationId }: TeamListProps) {
     setIsLoading(true);
     clearError();
     try {
+      // @ts-expect-error - better-auth organization client API method
       const listResult = await authClient.organization.listTeams({
         query: {
           organizationId,
@@ -65,6 +66,7 @@ export function TeamList({ organizationId }: TeamListProps) {
       }
 
       const sessionResult = await authClient.getSession();
+      // @ts-expect-error - activeTeamId may exist on session but not in types
       const sessionActiveTeamId = sessionResult.data?.session?.activeTeamId ?? null;
       setActiveTeamId(sessionActiveTeamId);
     } catch (err) {

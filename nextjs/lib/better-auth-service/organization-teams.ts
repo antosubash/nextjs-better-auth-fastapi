@@ -163,7 +163,7 @@ export const organizationTeamService = {
     return withErrorHandling(
       "addTeamMember",
       async () => {
-        await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.UPDATE);
+        await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.INVITE);
         const headersList = await getHeaders();
         return await auth.api.addTeamMember({
           headers: headersList,
@@ -187,7 +187,7 @@ export const organizationTeamService = {
     return withErrorHandling(
       "removeTeamMember",
       async () => {
-        await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.REMOVE);
+        await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.UPDATE);
         const headersList = await getHeaders();
         return await auth.api.removeTeamMember({
           headers: headersList,

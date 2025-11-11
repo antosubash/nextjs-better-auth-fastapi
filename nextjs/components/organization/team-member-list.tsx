@@ -133,14 +133,22 @@ export function TeamMemberList({
     setIsAdding(true);
     setError("");
     try {
-      // @ts-expect-error - better-auth organization client API method
-      const result = await authClient.organization.addTeamMember({
-        teamId,
-        userId: selectedUserId,
+      const response = await fetch("/api/auth/organization/add-team-member", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          teamId,
+          userId: selectedUserId,
+          organizationId,
+        }),
       });
 
-      if (result.error) {
-        setError(result.error.message || TEAM_ERRORS.ADD_MEMBER_FAILED);
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        setError(result.error || TEAM_ERRORS.ADD_MEMBER_FAILED);
       } else {
         setSelectedUserId("");
         setShowAddForm(false);

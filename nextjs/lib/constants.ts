@@ -371,6 +371,7 @@ export const MEMBER_LABELS = {
 export const MEMBER_PLACEHOLDERS = {
   EMAIL: "Enter member email",
   ROLE: "Select role",
+  SELECT_MEMBER: "Select a member",
 } as const;
 
 export const MEMBER_ERRORS = {
@@ -415,6 +416,8 @@ export const ADD_MEMBER_DIALOG_LABELS = {
   ADD_BUTTON: "Add Member",
   INVITE_BUTTON: "Send Invitation",
   CANCEL: "Cancel",
+  ADD_EXISTING_USER: "Add existing user",
+  INVITE_NEW_USER: "Invite new user by email",
 } as const;
 
 export const INVITATION_LABELS = {
@@ -501,6 +504,7 @@ export const TEAM_MEMBER_LABELS = {
   ACTIONS: "Actions",
   NO_MEMBERS: "No team members",
   LOADING: "Loading...",
+  SELECT_MEMBER: "Select Member",
 } as const;
 
 export const TEAM_PLACEHOLDERS = {
@@ -517,6 +521,7 @@ export const TEAM_ERRORS = {
   LOAD_TEAMS_FAILED: "Failed to load teams",
   LOAD_TEAM_FAILED: "Failed to load team",
   INVALID_NAME: "Invalid team name",
+  MEMBER_ALREADY_IN_TEAM: "User is already a member of this team",
 } as const;
 
 export const TEAM_SUCCESS = {
@@ -830,6 +835,7 @@ export const COMMON_LABELS = {
   HIDE: "Hide",
   ACTIVE: "Active",
   INACTIVE: "Inactive",
+  CONFIRM_REMOVE: "Are you sure you want to remove this member?",
 } as const;
 
 export const PERMISSION_RESOURCES = {

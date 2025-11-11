@@ -47,6 +47,7 @@ export function normalizeOrganization(
 ): NormalizedOrganization {
   return {
     ...org,
+    logo: org.logo ?? undefined, // Convert null to undefined
     createdAt: normalizeDate(org.createdAt),
   };
 }
@@ -183,6 +184,10 @@ export function extractTeams(
 /**
  * Extract invitations from API response
  */
+/**
+ * Extract invitations from API response
+ * Handles cases where createdAt might be missing
+ */
 export function extractInvitations(
   response: InvitationListResponse | Invitation[] | null | undefined,
 ): Invitation[] {
@@ -190,15 +195,25 @@ export function extractInvitations(
     return [];
   }
   if (Array.isArray(response)) {
-    return response;
+    // Ensure all invitations have createdAt
+    return response.map((inv) => ({
+      ...inv,
+      createdAt: (inv as Invitation).createdAt ?? new Date(),
+    })) as Invitation[];
   }
   if ("invitations" in response && Array.isArray(response.invitations)) {
-    return response.invitations;
+    return response.invitations.map((inv) => ({
+      ...inv,
+      createdAt: (inv as Invitation).createdAt ?? new Date(),
+    })) as Invitation[];
   }
   if ("data" in response) {
     const data = response.data;
     if (Array.isArray(data)) {
-      return data;
+      return data.map((inv) => ({
+        ...inv,
+        createdAt: (inv as Partial<Invitation>).createdAt ?? new Date(),
+      })) as Invitation[];
     }
     if (
       data &&
@@ -206,7 +221,10 @@ export function extractInvitations(
       "invitations" in data &&
       Array.isArray((data as { invitations?: Invitation[] }).invitations)
     ) {
-      return (data as { invitations: Invitation[] }).invitations;
+      return (data as { invitations: Invitation[] }).invitations.map((inv) => ({
+        ...inv,
+        createdAt: (inv as Partial<Invitation>).createdAt ?? new Date(),
+      })) as Invitation[];
     }
   }
   return [];

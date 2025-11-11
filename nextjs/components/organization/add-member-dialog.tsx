@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { UserSearch } from "./user-search";
 import { MemberRoleSelector } from "./member-role-selector";
 import {
@@ -86,14 +87,22 @@ export function AddMemberDialog({
     setError("");
 
     try {
-      const result = await authClient.organization.addMember({
-        organizationId,
-        userId: selectedUser.id,
-        role,
+      const response = await fetch("/api/auth/organization/add-member", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          organizationId,
+          userId: selectedUser.id,
+          role,
+        }),
       });
 
-      if (result.error) {
-        setError(result.error.message || MEMBER_ERRORS.ADD_FAILED);
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        setError(result.error || MEMBER_ERRORS.ADD_FAILED);
       } else {
         onSuccess();
         onOpenChange(false);
@@ -177,7 +186,12 @@ export function AddMemberDialog({
                 setEmailInput("");
                 setError("");
               }}
-              className="flex-1"
+              className={cn(
+                "flex-1",
+                !useEmailInput 
+                  ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" 
+                  : "text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
+              )}
             >
               {ADD_MEMBER_DIALOG_LABELS.ADD_EXISTING_USER}
             </Button>
@@ -189,7 +203,12 @@ export function AddMemberDialog({
                 setSelectedUser(null);
                 setError("");
               }}
-              className="flex-1"
+              className={cn(
+                "flex-1",
+                useEmailInput 
+                  ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" 
+                  : "text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
+              )}
             >
               {ADD_MEMBER_DIALOG_LABELS.INVITE_NEW_USER}
             </Button>
