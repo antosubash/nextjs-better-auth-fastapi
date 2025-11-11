@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission } from "@/lib/permission-check";
-import { PERMISSION_ERRORS } from "@/lib/constants";
+import { PERMISSION_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
 import { getAllPermissions } from "@/lib/permissions-utils";
 
 export async function GET(_request: NextRequest) {
   try {
     const permissionError = await requirePermission(
-      _request,
-      "role",
-      "read"
+      PERMISSION_RESOURCES.ROLE,
+      PERMISSION_ACTIONS.READ
     );
 
     if (permissionError) {

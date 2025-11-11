@@ -1,6 +1,6 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { betterAuthService } from "@/lib/better-auth-service";
 import { NextRequest, NextResponse } from "next/server";
+import { PROXY_ERRORS } from "@/lib/constants";
 
 export async function GET(
   request: NextRequest,
@@ -48,22 +48,20 @@ async function handleProxyRequest(
   method: string,
 ) {
   try {
-    const headersList = await headers();
-    const session = await auth.api.getSession({
-      headers: headersList,
-    });
+    const session = await betterAuthService.session.getSession();
 
     if (!session?.session) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json(
+        { error: PROXY_ERRORS.NOT_AUTHENTICATED },
+        { status: 401 }
+      );
     }
 
-    const tokenResponse = await auth.api.getToken({
-      headers: headersList,
-    });
+    const tokenResponse = await betterAuthService.session.getToken();
 
     if (!tokenResponse?.token) {
       return NextResponse.json(
-        { error: "Failed to generate token" },
+        { error: PROXY_ERRORS.FAILED_TO_GENERATE_TOKEN },
         { status: 500 },
       );
     }
@@ -116,21 +114,18 @@ async function handleProxyRequest(
 
       if (fullError.includes("ECONNREFUSED")) {
         return NextResponse.json(
-          {
-            error:
-              "Backend service unavailable. Please ensure FastAPI is running.",
-          },
+          { error: PROXY_ERRORS.BACKEND_UNAVAILABLE },
           { status: 503 },
         );
       }
       return NextResponse.json(
-        { error: `Proxy request failed: ${errorMessage}` },
+        { error: `${PROXY_ERRORS.PROXY_REQUEST_FAILED}: ${errorMessage}` },
         { status: 500 },
       );
     }
 
     return NextResponse.json(
-      { error: "Failed to proxy request" },
+      { error: PROXY_ERRORS.FAILED_TO_PROXY_REQUEST },
       { status: 500 },
     );
   }

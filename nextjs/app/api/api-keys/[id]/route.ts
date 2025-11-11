@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { betterAuthService } from "@/lib/better-auth-service";
 import { requirePermission } from "@/lib/permission-check";
-import { API_KEY_ERRORS } from "@/lib/constants";
+import { API_KEY_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
 
 export async function GET(
   _request: NextRequest,
@@ -10,9 +9,8 @@ export async function GET(
 ) {
   try {
     const permissionError = await requirePermission(
-      _request,
-      "apiKey",
-      "read"
+      PERMISSION_RESOURCES.API_KEY,
+      PERMISSION_ACTIONS.READ
     );
 
     if (permissionError) {
@@ -20,11 +18,7 @@ export async function GET(
     }
 
     const { id } = await params;
-    const headersList = await headers();
-    const result = await auth.api.getApiKey({
-      headers: headersList,
-      query: { id },
-    });
+    const result = await betterAuthService.apiKey.getApiKey(id);
 
     return NextResponse.json({ data: result });
   } catch (error) {
@@ -42,9 +36,8 @@ export async function PATCH(
 ) {
   try {
     const permissionError = await requirePermission(
-      request,
-      "apiKey",
-      "update"
+      PERMISSION_RESOURCES.API_KEY,
+      PERMISSION_ACTIONS.UPDATE
     );
 
     if (permissionError) {
@@ -52,31 +45,16 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
-
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: API_KEY_ERRORS.UPDATE_FAILED },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
     const { name, expiresIn, metadata, permissions, enabled } = body;
 
-    const result = await auth.api.updateApiKey({
-      headers: headersList,
-      body: {
-        keyId: id,
-        name,
-        expiresIn,
-        metadata,
-        permissions,
-        enabled,
-      },
+    const result = await betterAuthService.apiKey.updateApiKey({
+      keyId: id,
+      name,
+      expiresIn,
+      metadata,
+      permissions,
+      enabled,
     });
 
     return NextResponse.json({ data: result });
@@ -95,9 +73,8 @@ export async function DELETE(
 ) {
   try {
     const permissionError = await requirePermission(
-      _request,
-      "apiKey",
-      "delete"
+      PERMISSION_RESOURCES.API_KEY,
+      PERMISSION_ACTIONS.DELETE
     );
 
     if (permissionError) {
@@ -105,13 +82,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const headersList = await headers();
-    await auth.api.deleteApiKey({
-      headers: headersList,
-      body: {
-        keyId: id,
-      },
-    });
+    await betterAuthService.apiKey.deleteApiKey(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

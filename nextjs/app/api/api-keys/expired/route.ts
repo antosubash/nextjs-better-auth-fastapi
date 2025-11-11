@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
-import { API_KEY_ERRORS } from "@/lib/constants";
+import { betterAuthService } from "@/lib/better-auth-service";
+import { API_KEY_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
+import { requirePermission } from "@/lib/permission-check";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export async function DELETE(_request: NextRequest) {
   try {
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
+    const permissionError = await requirePermission(
+      PERMISSION_RESOURCES.API_KEY,
+      PERMISSION_ACTIONS.DELETE
+    );
 
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: API_KEY_ERRORS.DELETE_EXPIRED_FAILED },
-        { status: 401 }
-      );
+    if (permissionError) {
+      return permissionError;
     }
 
-    await auth.api.deleteAllExpiredApiKeys();
+    await betterAuthService.apiKey.deleteAllExpiredApiKeys();
 
     return NextResponse.json({ success: true });
   } catch (error) {

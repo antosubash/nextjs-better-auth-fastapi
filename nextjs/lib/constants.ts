@@ -382,6 +382,8 @@ export const INVITATION_ERRORS = {
   LOAD_INVITATIONS_FAILED: "Failed to load invitations",
   INVALID_TOKEN: "Invalid invitation token",
   EXPIRED_TOKEN: "Invitation token has expired",
+  MISSING_FIELDS: "Missing required fields: organizationId, email, role",
+  INTERNAL_SERVER_ERROR: "Internal server error",
 } as const;
 
 export const INVITATION_SUCCESS = {
@@ -538,6 +540,8 @@ export const ROLE_MANAGEMENT_LABELS = {
 export const ROLE_MANAGEMENT_ERRORS = {
   LOAD_ROLES_FAILED: "Failed to load roles",
   UPDATE_ROLE_PERMISSIONS_FAILED: "Failed to update role permissions",
+  INVALID_REQUEST_BODY: "Invalid request body. Permissions array is required.",
+  ROLE_NOT_FOUND: "Role not found",
 } as const;
 
 export const API_KEY_LABELS = {
@@ -607,6 +611,7 @@ export const API_KEY_PLACEHOLDERS = {
   REFILL_INTERVAL: "Enter refill interval in milliseconds",
   RATE_LIMIT_TIME_WINDOW: "Enter time window in milliseconds",
   RATE_LIMIT_MAX: "Enter maximum requests",
+  ACTION_NAME: "Enter action name",
 } as const;
 
 export const API_KEY_ERRORS = {
@@ -693,4 +698,50 @@ export const ADMIN_PAGINATION = {
   PREVIOUS_PAGE: "Previous page",
   NEXT_PAGE: "Next page",
   PAGE: "Page",
+} as const;
+
+export const STATS_ERRORS = {
+  LOAD_ADMIN_STATS_FAILED: "Failed to fetch admin statistics",
+  LOAD_USER_STATS_FAILED: "Failed to fetch user statistics",
+  USER_NOT_FOUND: "User not found",
+} as const;
+
+export const PROXY_ERRORS = {
+  NOT_AUTHENTICATED: "Not authenticated",
+  FAILED_TO_GENERATE_TOKEN: "Failed to generate token",
+  BACKEND_UNAVAILABLE: "Backend service unavailable. Please ensure FastAPI is running.",
+  PROXY_REQUEST_FAILED: "Proxy request failed",
+  FAILED_TO_PROXY_REQUEST: "Failed to proxy request",
+} as const;
+
+export const STATS_LABELS = {
+  SESSION_CREATED: "Session created",
+} as const;
+
+export const PERMISSION_RESOURCES = {
+  PROJECT: "project",
+  ORGANIZATION: "organization",
+  USER: "user",
+  API_KEY: "apiKey",
+  ROLE: "role",
+  TEAM: "team",
+  FILE: "file",
+  SETTINGS: "settings",
+} as const;
+
+export const PERMISSION_ACTIONS = {
+  READ: "read",
+  LIST: "list",
+  VIEW: "view",
+  CREATE: "create",
+  SHARE: "share",
+  UPDATE: "update",
+  DELETE: "delete",
+  BAN: "ban",
+  UNBAN: "unban",
+  SET_ROLE: "set-role",
+  INVITE: "invite",
+  REMOVE: "remove",
+  UPLOAD: "upload",
+  DOWNLOAD: "download",
 } as const;

@@ -70,7 +70,7 @@ export function PermissionsEditor({
   };
 
   const addCustomAction = (resource: string) => {
-    const newAction = prompt("Enter action name:");
+    const newAction = prompt(API_KEY_PLACEHOLDERS.ACTION_NAME);
     if (newAction && newAction.trim()) {
       const action = newAction.trim().toLowerCase();
       const currentActions = value[resource] || [];

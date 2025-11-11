@@ -67,7 +67,6 @@ export function MemberActions({
       } else {
         onActionSuccess(MEMBER_SUCCESS.ROLE_UPDATED);
         setShowRoleModal(false);
-        setIsOpen(false);
       }
     } catch (err) {
       const errorMessage =

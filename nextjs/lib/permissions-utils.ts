@@ -1,4 +1,5 @@
 import { statement } from "./permissions";
+import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "./constants";
 
 export interface Permission {
   resource: string;
@@ -24,41 +25,146 @@ function getAllPermissionsFromStatement(): Record<string, string[]> {
 // These match the roles defined in permissions.ts using accessControl.newRole()
 const roleDefinitions: Record<string, Record<string, string[]>> = {
   user: {},
-  member: { project: ["create"] },
+  member: { [PERMISSION_RESOURCES.PROJECT]: [PERMISSION_ACTIONS.CREATE] },
   admin: getAllPermissionsFromStatement(),
-  owner: { project: ["create", "update", "delete"], role: ["read"] },
+  owner: {
+    [PERMISSION_RESOURCES.PROJECT]: [
+      PERMISSION_ACTIONS.CREATE,
+      PERMISSION_ACTIONS.UPDATE,
+      PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.ROLE]: [PERMISSION_ACTIONS.READ],
+  },
   myCustomRole: {
-    project: ["create", "update", "delete"],
-    organization: ["update"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+      PERMISSION_ACTIONS.CREATE,
+      PERMISSION_ACTIONS.UPDATE,
+      PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [PERMISSION_ACTIONS.UPDATE],
   },
   moderator: {
-    project: ["read", "list", "view", "update", "delete"],
-    organization: ["read", "list", "view", "update"],
-    user: ["read", "list", "view", "update"],
-    team: ["read", "list", "view", "update", "remove"],
-    file: ["read", "list", "view", "update", "delete", "download"],
-    settings: ["read"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.UPDATE,
+      PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.USER]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.UPDATE,
+      PERMISSION_ACTIONS.REMOVE,
+    ],
+    [PERMISSION_RESOURCES.FILE]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.UPDATE,
+      PERMISSION_ACTIONS.DELETE,
+      PERMISSION_ACTIONS.DOWNLOAD,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [PERMISSION_ACTIONS.READ],
   },
   editor: {
-    project: ["read", "list", "view", "create", "share", "update"],
-    organization: ["read", "list", "view", "update"],
-    team: ["read", "list", "view", "create", "update", "invite"],
-    file: ["read", "list", "view", "create", "update", "upload", "download"],
-    settings: ["read"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.CREATE,
+      PERMISSION_ACTIONS.SHARE,
+      PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.CREATE,
+      PERMISSION_ACTIONS.UPDATE,
+      PERMISSION_ACTIONS.INVITE,
+    ],
+    [PERMISSION_RESOURCES.FILE]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.CREATE,
+      PERMISSION_ACTIONS.UPDATE,
+      PERMISSION_ACTIONS.UPLOAD,
+      PERMISSION_ACTIONS.DOWNLOAD,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [PERMISSION_ACTIONS.READ],
   },
   viewer: {
-    project: ["read", "list", "view"],
-    organization: ["read", "list", "view"],
-    user: ["read", "list", "view"],
-    team: ["read", "list", "view"],
-    file: ["read", "list", "view", "download"],
-    settings: ["read"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.USER]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.FILE]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.DOWNLOAD,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [PERMISSION_ACTIONS.READ],
   },
   support: {
-    user: ["read", "list", "view", "update"],
-    organization: ["read", "list", "view", "update"],
-    team: ["read", "list", "view"],
-    settings: ["read", "update"],
+    [PERMISSION_RESOURCES.USER]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+      PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.LIST,
+      PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [
+      PERMISSION_ACTIONS.READ,
+      PERMISSION_ACTIONS.UPDATE,
+    ],
   },
 };
 

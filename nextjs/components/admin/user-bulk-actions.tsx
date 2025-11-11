@@ -88,7 +88,7 @@ export function UserBulkActions({
       }
       setShowBulkDeleteDialog(false);
       onComplete();
-    } catch (err) {
+    } catch {
       onError(ADMIN_ERRORS.BULK_DELETE_FAILED);
     } finally {
       setIsProcessingBulk(false);
@@ -120,7 +120,7 @@ export function UserBulkActions({
       setBulkRole("");
       setShowBulkRoleDialog(false);
       onComplete();
-    } catch (err) {
+    } catch {
       onError(ADMIN_ERRORS.BULK_ROLE_SET_FAILED);
     } finally {
       setIsProcessingBulk(false);
@@ -192,7 +192,7 @@ export function UserBulkActions({
       setBulkBanReason("");
       setShowBulkBanDialog(false);
       onComplete();
-    } catch (err) {
+    } catch {
       onError(ADMIN_ERRORS.BULK_BAN_FAILED);
     } finally {
       setIsProcessingBulk(false);
@@ -215,7 +215,7 @@ export function UserBulkActions({
       }
       setShowBulkUnbanDialog(false);
       onComplete();
-    } catch (err) {
+    } catch {
       onError(ADMIN_ERRORS.BULK_UNBAN_FAILED);
     } finally {
       setIsProcessingBulk(false);

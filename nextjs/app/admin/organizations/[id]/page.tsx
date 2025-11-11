@@ -123,6 +123,7 @@ export default function OrganizationDetailPage() {
   };
 
   const handleDelete = async () => {
+    if (!organization) return;
     setIsDeleting(true);
     try {
       const result = await authClient.organization.delete({

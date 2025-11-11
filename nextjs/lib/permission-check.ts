@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { auth } from "./auth";
+import { betterAuthService } from "./better-auth-service";
 import { getUserEffectivePermissions, formatPermissionKey } from "./permissions-utils";
-import { PERMISSION_ERRORS, USER_ROLES } from "./constants";
+import { PERMISSION_ERRORS, USER_ROLES, ADMIN_ERRORS } from "./constants";
 
 export interface PermissionCheckResult {
   hasPermission: boolean;
@@ -91,15 +91,11 @@ export function checkPermission(
  * Returns a NextResponse with error if permission is missing, or null if allowed
  */
 export async function requirePermission(
-  request: NextRequest,
   resource: string,
   action: string,
   apiKeyPermissions?: Record<string, string[]> | null
 ): Promise<NextResponse | null> {
-  const headersList = await headers();
-  const sessionData = await auth.api.getSession({
-    headers: headersList,
-  });
+  const sessionData = await betterAuthService.session.getSession();
 
   const userId = sessionData?.user?.id;
   const userRole = sessionData?.user?.role;
@@ -134,14 +130,10 @@ export async function requirePermission(
  * Require any of the specified permissions for an API route
  */
 export async function requireAnyPermission(
-  request: NextRequest,
   permissions: Array<{ resource: string; action: string }>,
   apiKeyPermissions?: Record<string, string[]> | null
 ): Promise<NextResponse | null> {
-  const headersList = await headers();
-  const sessionData = await auth.api.getSession({
-    headers: headersList,
-  });
+  const sessionData = await betterAuthService.session.getSession();
 
   const userId = sessionData?.user?.id;
   const userRole = sessionData?.user?.role;
@@ -180,14 +172,10 @@ export async function requireAnyPermission(
  * Require all of the specified permissions for an API route
  */
 export async function requireAllPermissions(
-  request: NextRequest,
   permissions: Array<{ resource: string; action: string }>,
   apiKeyPermissions?: Record<string, string[]> | null
 ): Promise<NextResponse | null> {
-  const headersList = await headers();
-  const sessionData = await auth.api.getSession({
-    headers: headersList,
-  });
+  const sessionData = await betterAuthService.session.getSession();
 
   const userId = sessionData?.user?.id;
   const userRole = sessionData?.user?.role;
@@ -219,5 +207,48 @@ export async function requireAllPermissions(
   }
 
   return null; // All permissions granted
+}
+
+/**
+ * Require admin role for an API route
+ * Returns a NextResponse with error if not admin, or session data and headers if allowed
+ */
+export async function requireAdmin(): Promise<NextResponse | { session: Awaited<ReturnType<typeof betterAuthService.session.getSession>>; headers: Headers }> {
+  const headersList = await headers();
+  const sessionData = await betterAuthService.session.getSession();
+
+  if (!sessionData?.user?.id) {
+    return NextResponse.json(
+      { error: ADMIN_ERRORS.ACCESS_DENIED },
+      { status: 401 }
+    );
+  }
+
+  if (sessionData.user.role !== USER_ROLES.ADMIN) {
+    return NextResponse.json(
+      { error: ADMIN_ERRORS.ACCESS_DENIED },
+      { status: 403 }
+    );
+  }
+
+  return { session: sessionData, headers: headersList };
+}
+
+/**
+ * Require authentication for an API route
+ * Returns a NextResponse with error if not authenticated, or session data and headers if allowed
+ */
+export async function requireAuth(): Promise<NextResponse | { session: Awaited<ReturnType<typeof betterAuthService.session.getSession>>; headers: Headers }> {
+  const headersList = await headers();
+  const sessionData = await betterAuthService.session.getSession();
+
+  if (!sessionData?.user?.id) {
+    return NextResponse.json(
+      { error: PERMISSION_ERRORS.UNAUTHORIZED },
+      { status: 401 }
+    );
+  }
+
+  return { session: sessionData, headers: headersList };
 }
 

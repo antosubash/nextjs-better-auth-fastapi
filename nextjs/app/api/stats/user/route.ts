@@ -1,27 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { betterAuthService } from "@/lib/better-auth-service";
 import { db } from "@/lib/database";
 import { session, user } from "@/auth-schema";
 import { eq, and, gt, desc, sql } from "drizzle-orm";
+import { STATS_ERRORS, STATS_LABELS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
+import { requirePermission } from "@/lib/permission-check";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export async function GET(_request: NextRequest) {
   try {
-    // Use Next.js headers() to ensure cookies are included
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
+    const permissionError = await requirePermission(
+      PERMISSION_RESOURCES.USER,
+      PERMISSION_ACTIONS.READ
+    );
 
-    if (!sessionData?.user?.id) {
+    if (permissionError) {
+      return permissionError;
+    }
+
+    const sessionData = await betterAuthService.session.getSession();
+
+    const userId = sessionData?.user?.id;
+    
+    if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: STATS_ERRORS.USER_NOT_FOUND },
+        { status: 404 }
       );
     }
 
-    const userId = sessionData.user.id;
     const now = new Date();
 
     // Get user info first
@@ -33,7 +40,7 @@ export async function GET(_request: NextRequest) {
 
     if (userData.length === 0) {
       return NextResponse.json(
-        { error: "User not found" },
+        { error: STATS_ERRORS.USER_NOT_FOUND },
         { status: 404 }
       );
     }
@@ -97,7 +104,7 @@ export async function GET(_request: NextRequest) {
       .filter((s) => s.createdAt !== null)
       .map((s) => ({
         type: "session",
-        message: "Session created",
+        message: STATS_LABELS.SESSION_CREATED,
         timestamp: s.createdAt!,
         details: {
           ipAddress: s.ipAddress || undefined,
@@ -113,10 +120,8 @@ export async function GET(_request: NextRequest) {
     });
   } catch (error) {
     console.error("Failed to fetch user stats:", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Failed to fetch user statistics";
     return NextResponse.json(
-      { error: errorMessage },
+      { error: STATS_ERRORS.LOAD_USER_STATS_FAILED },
       { status: 500 }
     );
   }

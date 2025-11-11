@@ -1,38 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
-import { ADMIN_ERRORS, ORGANIZATION_ERRORS, USER_ROLES } from "@/lib/constants";
+import { NextResponse } from "next/server";
+import { betterAuthService } from "@/lib/better-auth-service";
+import { ORGANIZATION_ERRORS } from "@/lib/constants";
+import { requireAdmin } from "@/lib/permission-check";
 import { normalizeDate } from "@/lib/utils/date";
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
-
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: ADMIN_ERRORS.ACCESS_DENIED },
-        { status: 401 }
-      );
-    }
-
-    const currentUser = sessionData.user;
-
-    if (currentUser.role !== USER_ROLES.ADMIN) {
-      return NextResponse.json(
-        { error: ADMIN_ERRORS.ACCESS_DENIED },
-        { status: 403 }
-      );
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) {
+      return adminCheck;
     }
 
     // Use Better Auth API to list organizations
     // For admin users, this should return all organizations
     try {
-      const organizations = await auth.api.listOrganizations({
-        headers: headersList,
-      });
+      const organizations = await betterAuthService.organization.listOrganizations();
 
       return NextResponse.json({
         organizations: organizations.map((org) => ({

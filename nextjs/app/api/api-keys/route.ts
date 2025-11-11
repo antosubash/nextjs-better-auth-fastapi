@@ -1,25 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { betterAuthService } from "@/lib/better-auth-service";
 import { requirePermission } from "@/lib/permission-check";
-import { API_KEY_ERRORS } from "@/lib/constants";
+import { API_KEY_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
 
 export async function GET(_request: NextRequest) {
   try {
     const permissionError = await requirePermission(
-      _request,
-      "apiKey",
-      "read"
+      PERMISSION_RESOURCES.API_KEY,
+      PERMISSION_ACTIONS.READ
     );
 
     if (permissionError) {
       return permissionError;
     }
 
-    const headersList = await headers();
-    const result = await auth.api.listApiKeys({
-      headers: headersList,
-    });
+    const result = await betterAuthService.apiKey.listApiKeys();
 
     return NextResponse.json({ data: result || [] });
   } catch (error) {
@@ -34,39 +29,26 @@ export async function GET(_request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const permissionError = await requirePermission(
-      request,
-      "apiKey",
-      "create"
+      PERMISSION_RESOURCES.API_KEY,
+      PERMISSION_ACTIONS.CREATE
     );
 
     if (permissionError) {
       return permissionError;
     }
 
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
-
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: API_KEY_ERRORS.CREATE_FAILED },
-        { status: 401 }
-      );
-    }
+    const sessionData = await betterAuthService.session.getSession();
 
     const body = await request.json();
     const { name, prefix, expiresIn, metadata, permissions } = body;
 
-    const result = await auth.api.createApiKey({
-      body: {
-        name,
-        prefix,
-        expiresIn,
-        metadata,
-        permissions,
-        userId: sessionData.user.id,
-      },
+    const result = await betterAuthService.apiKey.createApiKey({
+      name,
+      prefix,
+      expiresIn,
+      metadata,
+      permissions,
+      userId: sessionData?.user?.id || "",
     });
 
     return NextResponse.json({ data: result });

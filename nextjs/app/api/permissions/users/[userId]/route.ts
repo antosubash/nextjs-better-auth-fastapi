@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
 import { requirePermission } from "@/lib/permission-check";
-import { auth } from "@/lib/auth";
-import { PERMISSION_ERRORS } from "@/lib/constants";
+import { betterAuthService } from "@/lib/better-auth-service";
+import { PERMISSION_ERRORS, STATS_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
 import { getUserEffectivePermissions } from "@/lib/permissions-utils";
 
 export async function GET(
@@ -11,9 +10,8 @@ export async function GET(
 ) {
   try {
     const permissionError = await requirePermission(
-      _request,
-      "user",
-      "read"
+      PERMISSION_RESOURCES.USER,
+      PERMISSION_ACTIONS.READ
     );
 
     if (permissionError) {
@@ -21,25 +19,15 @@ export async function GET(
     }
 
     const { userId } = await params;
-    const headersList = await headers();
 
     // Get current session to verify permissions
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
-
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: PERMISSION_ERRORS.UNAUTHORIZED },
-        { status: 401 }
-      );
-    }
+    const sessionData = await betterAuthService.session.getSession();
 
     const targetUserId = userId;
-    const currentUser = sessionData.user;
+    const currentUser = sessionData?.user;
     
     // If requesting own permissions, use session data
-    if (targetUserId === currentUser.id) {
+    if (currentUser && targetUserId === currentUser.id) {
       const permissions = getUserEffectivePermissions(currentUser.role || null);
       
       return NextResponse.json({
@@ -56,12 +44,9 @@ export async function GET(
     // For other users, use Better Auth admin API to fetch user data
     // This requires admin permissions which are checked by requirePermission above
     try {
-      const userListResult = await auth.api.listUsers({
-        headers: headersList,
-        query: {
-          limit: "1000",
-          offset: "0",
-        },
+      const userListResult = await betterAuthService.admin.listUsers({
+        limit: "1000",
+        offset: "0",
       });
 
       // Handle the result - it can be either success or error format
@@ -80,7 +65,7 @@ export async function GET(
 
       if (!targetUser) {
         return NextResponse.json(
-          { error: "User not found" },
+          { error: STATS_ERRORS.USER_NOT_FOUND },
           { status: 404 }
         );
       }

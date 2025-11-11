@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
-import { ADMIN_ERRORS, ORGANIZATION_ERRORS, USER_ROLES } from "@/lib/constants";
+import { betterAuthService } from "@/lib/better-auth-service";
+import { ORGANIZATION_ERRORS } from "@/lib/constants";
+import { requireAdmin } from "@/lib/permission-check";
 import { normalizeDate } from "@/lib/utils/date";
 
 export async function GET(
@@ -9,25 +9,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
-
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: ADMIN_ERRORS.ACCESS_DENIED },
-        { status: 401 },
-      );
-    }
-
-    const currentUser = sessionData.user;
-
-    if (currentUser.role !== USER_ROLES.ADMIN) {
-      return NextResponse.json(
-        { error: ADMIN_ERRORS.ACCESS_DENIED },
-        { status: 403 },
-      );
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) {
+      return adminCheck;
     }
 
     const { id: organizationId } = await params;
@@ -41,9 +25,7 @@ export async function GET(
 
     // Use Better Auth API to list organizations and find the one by ID
     try {
-      const organizations = await auth.api.listOrganizations({
-        headers: headersList,
-      });
+      const organizations = await betterAuthService.organization.listOrganizations();
 
       const organization = organizations.find((org) => org.id === organizationId);
 

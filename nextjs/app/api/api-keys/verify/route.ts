@@ -1,31 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
-import { API_KEY_ERRORS } from "@/lib/constants";
+import { betterAuthService } from "@/lib/better-auth-service";
+import { API_KEY_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
+import { requirePermission } from "@/lib/permission-check";
 
 export async function POST(request: NextRequest) {
   try {
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
+    const permissionError = await requirePermission(
+      PERMISSION_RESOURCES.API_KEY,
+      PERMISSION_ACTIONS.READ
+    );
 
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: API_KEY_ERRORS.VERIFY_FAILED },
-        { status: 401 }
-      );
+    if (permissionError) {
+      return permissionError;
     }
 
     const body = await request.json();
     const { key, permissions } = body;
 
-    const result = await auth.api.verifyApiKey({
-      headers: headersList,
-      body: {
-        key,
-        permissions,
-      },
+    const result = await betterAuthService.apiKey.verifyApiKey({
+      key,
+      permissions,
     });
 
     return NextResponse.json({ data: result });

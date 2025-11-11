@@ -1,35 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { betterAuthService } from "@/lib/better-auth-service";
+import { INVITATION_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
+import { requirePermission } from "@/lib/permission-check";
 
 export async function POST(request: NextRequest) {
   try {
+    const permissionError = await requirePermission(
+      PERMISSION_RESOURCES.TEAM,
+      PERMISSION_ACTIONS.INVITE
+    );
+
+    if (permissionError) {
+      return permissionError;
+    }
+
     const body = await request.json();
     const { organizationId, email, role } = body;
 
     if (!organizationId || !email || !role) {
       return NextResponse.json(
-        { error: "Missing required fields: organizationId, email, role" },
+        { error: INVITATION_ERRORS.MISSING_FIELDS },
         { status: 400 }
       );
     }
 
     // Use better-auth's createInvitation API
-    const headersList = await headers();
-    const data = await auth.api.createInvitation({
-      body: {
-        email,
-        role,
-        organizationId,
-      },
-      headers: headersList,
+    const data = await betterAuthService.organization.createInvitation({
+      email,
+      role,
+      organizationId,
     });
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error("Error creating invitation:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: INVITATION_ERRORS.INTERNAL_SERVER_ERROR },
       { status: 500 }
     );
   }

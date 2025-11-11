@@ -1,72 +1,295 @@
 import { createAccessControl } from "better-auth/plugins/access";
+import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "./constants";
 
 export const statement = {
-    project: ["read", "list", "view", "create", "share", "update", "delete"],
-    organization: ["read", "list", "view", "create", "update", "delete"],
-    user: ["read", "list", "view", "create", "update", "delete", "ban", "unban", "set-role"],
-    apiKey: ["read", "list", "view", "create", "update", "delete"],
-    role: ["read", "list", "view", "create", "update", "delete"],
-    team: ["read", "list", "view", "create", "update", "delete", "invite", "remove"],
-    file: ["read", "list", "view", "create", "update", "delete", "upload", "download"],
-    settings: ["read", "update"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.SHARE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.USER]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+        PERMISSION_ACTIONS.BAN,
+        PERMISSION_ACTIONS.UNBAN,
+        PERMISSION_ACTIONS.SET_ROLE,
+    ],
+    [PERMISSION_RESOURCES.API_KEY]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.ROLE]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+        PERMISSION_ACTIONS.INVITE,
+        PERMISSION_ACTIONS.REMOVE,
+    ],
+    [PERMISSION_RESOURCES.FILE]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+        PERMISSION_ACTIONS.UPLOAD,
+        PERMISSION_ACTIONS.DOWNLOAD,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.UPDATE,
+    ],
 } as const;
 
 export const accessControl = createAccessControl(statement);
 
 export const memberRole = accessControl.newRole({ 
-    project: ["create"], 
+    [PERMISSION_RESOURCES.PROJECT]: [PERMISSION_ACTIONS.CREATE], 
 }); 
 
 export const adminRole = accessControl.newRole({
-    project: ["read", "list", "view", "create", "share", "update", "delete"],
-    organization: ["read", "list", "view", "create", "update", "delete"],
-    user: ["read", "list", "view", "create", "update", "delete", "ban", "unban", "set-role"],
-    apiKey: ["read", "list", "view", "create", "update", "delete"],
-    role: ["read", "list", "view", "create", "update", "delete"],
-    team: ["read", "list", "view", "create", "update", "delete", "invite", "remove"],
-    file: ["read", "list", "view", "create", "update", "delete", "upload", "download"],
-    settings: ["read", "update"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.SHARE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.USER]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+        PERMISSION_ACTIONS.BAN,
+        PERMISSION_ACTIONS.UNBAN,
+        PERMISSION_ACTIONS.SET_ROLE,
+    ],
+    [PERMISSION_RESOURCES.API_KEY]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.ROLE]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+        PERMISSION_ACTIONS.INVITE,
+        PERMISSION_ACTIONS.REMOVE,
+    ],
+    [PERMISSION_RESOURCES.FILE]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+        PERMISSION_ACTIONS.UPLOAD,
+        PERMISSION_ACTIONS.DOWNLOAD,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.UPDATE,
+    ],
 }); 
 
 export const ownerRole = accessControl.newRole({ 
-    project: ["create", "update", "delete"],
-    role: ["read"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.ROLE]: [PERMISSION_ACTIONS.READ],
 }); 
 
 export const myCustomRole = accessControl.newRole({ 
-    project: ["create", "update", "delete"], 
-    organization: ["update"], 
+    [PERMISSION_RESOURCES.PROJECT]: [
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ], 
+    [PERMISSION_RESOURCES.ORGANIZATION]: [PERMISSION_ACTIONS.UPDATE], 
 });
 
 export const moderatorRole = accessControl.newRole({
-    project: ["read", "list", "view", "update", "delete"],
-    organization: ["read", "list", "view", "update"],
-    user: ["read", "list", "view", "update"],
-    team: ["read", "list", "view", "update", "remove"],
-    file: ["read", "list", "view", "update", "delete", "download"],
-    settings: ["read"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.USER]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.REMOVE,
+    ],
+    [PERMISSION_RESOURCES.FILE]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.DELETE,
+        PERMISSION_ACTIONS.DOWNLOAD,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [PERMISSION_ACTIONS.READ],
 });
 
 export const editorRole = accessControl.newRole({
-    project: ["read", "list", "view", "create", "share", "update"],
-    organization: ["read", "list", "view", "update"],
-    team: ["read", "list", "view", "create", "update", "invite"],
-    file: ["read", "list", "view", "create", "update", "upload", "download"],
-    settings: ["read"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.SHARE,
+        PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.INVITE,
+    ],
+    [PERMISSION_RESOURCES.FILE]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.CREATE,
+        PERMISSION_ACTIONS.UPDATE,
+        PERMISSION_ACTIONS.UPLOAD,
+        PERMISSION_ACTIONS.DOWNLOAD,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [PERMISSION_ACTIONS.READ],
 });
 
 export const viewerRole = accessControl.newRole({
-    project: ["read", "list", "view"],
-    organization: ["read", "list", "view"],
-    user: ["read", "list", "view"],
-    team: ["read", "list", "view"],
-    file: ["read", "list", "view", "download"],
-    settings: ["read"],
+    [PERMISSION_RESOURCES.PROJECT]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.USER]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.FILE]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.DOWNLOAD,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [PERMISSION_ACTIONS.READ],
 });
 
 export const supportRole = accessControl.newRole({
-    user: ["read", "list", "view", "update"],
-    organization: ["read", "list", "view", "update"],
-    team: ["read", "list", "view"],
-    settings: ["read", "update"],
+    [PERMISSION_RESOURCES.USER]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.ORGANIZATION]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.UPDATE,
+    ],
+    [PERMISSION_RESOURCES.TEAM]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.LIST,
+        PERMISSION_ACTIONS.VIEW,
+    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [
+        PERMISSION_ACTIONS.READ,
+        PERMISSION_ACTIONS.UPDATE,
+    ],
 }); 

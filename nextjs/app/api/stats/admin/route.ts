@@ -1,33 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/database";
 import { session, user } from "@/auth-schema";
 import { eq, gt, desc, sql } from "drizzle-orm";
+import { STATS_ERRORS } from "@/lib/constants";
+import { requireAdmin } from "@/lib/permission-check";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(_request: NextRequest) {
+ 
+export async function GET() {
   try {
-    // Use Next.js headers() to ensure cookies are included
-    const headersList = await headers();
-    const sessionData = await auth.api.getSession({
-      headers: headersList,
-    });
-
-    if (!sessionData?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const currentUser = sessionData.user;
-
-    if (currentUser.role !== "admin") {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
+    const adminCheck = await requireAdmin();
+    if (adminCheck instanceof NextResponse) {
+      return adminCheck;
     }
 
     const now = new Date();
@@ -122,7 +105,7 @@ export async function GET(_request: NextRequest) {
   } catch (error) {
     console.error("Failed to fetch admin stats:", error);
     return NextResponse.json(
-      { error: "Failed to fetch admin statistics" },
+      { error: STATS_ERRORS.LOAD_ADMIN_STATS_FAILED },
       { status: 500 }
     );
   }
