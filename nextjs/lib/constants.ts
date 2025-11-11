@@ -535,6 +535,14 @@ export const ROLE_MANAGEMENT_LABELS = {
   PERMISSIONS: "Permissions",
   NO_PERMISSIONS: "No permissions assigned",
   BACK_TO_ROLES: "Back to Roles",
+  CREATE_ROLE: "Create Role",
+  DELETE_ROLE: "Delete Role",
+  ROLE_NAME: "Role Name",
+  ROLE_NAME_PLACEHOLDER: "Enter role name",
+  CONFIRM_DELETE: "Are you sure you want to delete this role?",
+  SYSTEM_ROLE: "System Role",
+  CUSTOM_ROLE: "Custom Role",
+  PERMISSION_COUNT: "permissions",
 } as const;
 
 export const ROLE_MANAGEMENT_ERRORS = {
@@ -542,6 +550,19 @@ export const ROLE_MANAGEMENT_ERRORS = {
   UPDATE_ROLE_PERMISSIONS_FAILED: "Failed to update role permissions",
   INVALID_REQUEST_BODY: "Invalid request body. Permissions array is required.",
   ROLE_NOT_FOUND: "Role not found",
+  CREATE_ROLE_FAILED: "Failed to create role",
+  DELETE_ROLE_FAILED: "Failed to delete role",
+  ROLE_ALREADY_EXISTS: "Role already exists",
+  ROLE_NAME_INVALID: "Invalid role name",
+  INVALID_PERMISSIONS: "Invalid permissions",
+  ROLE_NOT_EDITABLE: "Role is not editable",
+  ROLE_NOT_DELETABLE: "Role cannot be deleted",
+} as const;
+
+export const ROLE_MANAGEMENT_SUCCESS = {
+  ROLE_CREATED: "Role created successfully",
+  ROLE_UPDATED: "Role updated successfully",
+  ROLE_DELETED: "Role deleted successfully",
 } as const;
 
 export const API_KEY_LABELS = {
@@ -727,6 +748,7 @@ export const PERMISSION_RESOURCES = {
   TEAM: "team",
   FILE: "file",
   SETTINGS: "settings",
+  SESSION: "session",
 } as const;
 
 export const PERMISSION_ACTIONS = {
@@ -740,8 +762,12 @@ export const PERMISSION_ACTIONS = {
   BAN: "ban",
   UNBAN: "unban",
   SET_ROLE: "set-role",
+  SET_PASSWORD: "set-password",
+  IMPERSONATE: "impersonate",
+  GET: "get",
   INVITE: "invite",
   REMOVE: "remove",
+  REVOKE: "revoke",
   UPLOAD: "upload",
   DOWNLOAD: "download",
 } as const;

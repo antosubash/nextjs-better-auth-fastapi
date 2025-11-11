@@ -1,4 +1,4 @@
-import { betterAuthService } from "@/lib/better-auth-service";
+import { betterAuthService } from "@/lib/better-auth-service/index";
 import { NextRequest, NextResponse } from "next/server";
 import { PROXY_ERRORS } from "@/lib/constants";
 

@@ -1,5 +1,5 @@
 import { statement } from "./permissions";
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "./constants";
+import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, ROLE_DISPLAY_NAMES, ROLE_DESCRIPTIONS } from "./constants";
 
 export interface Permission {
   resource: string;
@@ -10,6 +10,75 @@ export interface Permission {
 export interface RoleInfo {
   name: string;
   permissions: Permission[];
+  displayName?: string;
+  description?: string;
+  isSystemRole?: boolean;
+  isDeletable?: boolean;
+  isEditable?: boolean;
+}
+
+/**
+ * System roles that are built-in and cannot be deleted
+ */
+const SYSTEM_ROLES = new Set([
+  "user",
+  "admin",
+  "member",
+  "owner",
+]);
+
+/**
+ * Format permission key from resource and action
+ */
+export function formatPermissionKey(resource: string, action: string): string {
+  return `${resource}:${action}`;
+}
+
+/**
+ * Convert role definition to permissions array
+ */
+function roleDefinitionToPermissions(
+  rolePermissions: Record<string, readonly string[]>
+): Permission[] {
+  const permissions: Permission[] = [];
+
+  for (const [resource, actions] of Object.entries(rolePermissions)) {
+    if (Array.isArray(actions)) {
+      for (const action of actions) {
+        permissions.push({
+          resource,
+          action,
+          key: formatPermissionKey(resource, action),
+        });
+      }
+    }
+  }
+
+  return permissions;
+}
+
+/**
+ * Check if a role is a system role
+ */
+function isSystemRole(roleName: string): boolean {
+  return SYSTEM_ROLES.has(roleName.toLowerCase());
+}
+
+/**
+ * Check if a role can be deleted
+ */
+function isRoleDeletable(roleName: string): boolean {
+  return !isSystemRole(roleName);
+}
+
+/**
+ * Check if a role can be edited
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function isRoleEditable(_roleName: string): boolean {
+  // System roles can be edited, but with caution
+  // For now, allow editing all roles
+  return true;
 }
 
 // Helper function to get all permissions from statement
@@ -169,38 +238,12 @@ const roleDefinitions: Record<string, Record<string, string[]>> = {
 };
 
 export function getAllPermissions(): Permission[] {
-  const permissions: Permission[] = [];
-
-  for (const [resource, actions] of Object.entries(statement)) {
-    for (const action of actions) {
-      permissions.push({
-        resource,
-        action,
-        key: formatPermissionKey(resource, action),
-      });
-    }
-  }
-
-  return permissions;
+  return roleDefinitionToPermissions(statement);
 }
 
 export function getRolePermissions(roleName: string): Permission[] {
   const rolePermissions = roleDefinitions[roleName] || {};
-  const permissions: Permission[] = [];
-
-  for (const [resource, actions] of Object.entries(rolePermissions)) {
-    if (Array.isArray(actions)) {
-      for (const action of actions) {
-        permissions.push({
-          resource,
-          action,
-          key: formatPermissionKey(resource, action),
-        });
-      }
-    }
-  }
-
-  return permissions;
+  return roleDefinitionToPermissions(rolePermissions);
 }
 
 export function getUserEffectivePermissions(
@@ -213,54 +256,53 @@ export function getUserEffectivePermissions(
   return getRolePermissions(userRole);
 }
 
-export function formatPermissionKey(resource: string, action: string): string {
-  return `${resource}:${action}`;
-}
-
 export function getAllRoles(): RoleInfo[] {
   return Object.entries(roleDefinitions).map(([name, rolePermissions]) => {
-    const permissions: Permission[] = [];
-
-    for (const [resource, actions] of Object.entries(rolePermissions)) {
-      if (Array.isArray(actions)) {
-        for (const action of actions) {
-          permissions.push({
-            resource,
-            action,
-            key: formatPermissionKey(resource, action),
-          });
-        }
-      }
-    }
+    const permissions = roleDefinitionToPermissions(rolePermissions);
+    const displayName = ROLE_DISPLAY_NAMES[name as keyof typeof ROLE_DISPLAY_NAMES];
+    const description = ROLE_DESCRIPTIONS[name as keyof typeof ROLE_DESCRIPTIONS];
 
     return {
       name,
       permissions,
+      displayName,
+      description,
+      isSystemRole: isSystemRole(name),
+      isDeletable: isRoleDeletable(name),
+      isEditable: isRoleEditable(name),
     };
   });
 }
 
-export function updateRolePermissions(
-  roleName: string,
-  permissions: Permission[]
-): void {
-  // Convert permissions array to role definition format
-  const rolePermissions: Record<string, string[]> = {};
-
-  for (const permission of permissions) {
-    if (!rolePermissions[permission.resource]) {
-      rolePermissions[permission.resource] = [];
-    }
-    rolePermissions[permission.resource].push(permission.action);
+export function getRole(roleName: string): RoleInfo | null {
+  const rolePermissions = roleDefinitions[roleName];
+  if (!rolePermissions) {
+    return null;
   }
 
-  // Update the role definition (in-memory only, as Better Auth roles are code-defined)
-  roleDefinitions[roleName] = rolePermissions;
+  const permissions = roleDefinitionToPermissions(rolePermissions);
+  const displayName = ROLE_DISPLAY_NAMES[roleName as keyof typeof ROLE_DISPLAY_NAMES];
+  const description = ROLE_DESCRIPTIONS[roleName as keyof typeof ROLE_DESCRIPTIONS];
+
+  return {
+    name: roleName,
+    permissions,
+    displayName,
+    description,
+    isSystemRole: isSystemRole(roleName),
+    isDeletable: isRoleDeletable(roleName),
+    isEditable: isRoleEditable(roleName),
+  };
 }
+
 
 export function getRolePermissionsFromStore(
   roleName: string
 ): Record<string, string[]> {
   return roleDefinitions[roleName] || {};
+}
+
+export function roleExists(roleName: string): boolean {
+  return roleName in roleDefinitions;
 }
 

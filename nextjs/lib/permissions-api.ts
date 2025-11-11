@@ -1,5 +1,5 @@
 import { Permission, RoleInfo } from "./permissions-utils";
-import { PERMISSION_ERRORS } from "./constants";
+import { PERMISSION_ERRORS, ROLE_MANAGEMENT_ERRORS } from "./constants";
 
 export interface UserPermissionsResponse {
   user: {
@@ -35,6 +35,18 @@ export async function getRoles(): Promise<RoleInfo[]> {
   return data.roles || [];
 }
 
+export async function getRole(roleName: string): Promise<RoleInfo> {
+  const response = await fetch(`/api/permissions/roles/${roleName}`);
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || ROLE_MANAGEMENT_ERRORS.ROLE_NOT_FOUND);
+  }
+
+  const data = await response.json();
+  return data.role;
+}
+
 export async function getUserPermissions(userId: string): Promise<UserPermissionsResponse> {
   const response = await fetch(`/api/permissions/users/${userId}`);
   
@@ -46,24 +58,4 @@ export async function getUserPermissions(userId: string): Promise<UserPermission
   return response.json();
 }
 
-export async function updateRolePermissions(
-  roleName: string,
-  permissions: Permission[]
-): Promise<RoleInfo> {
-  const response = await fetch(`/api/permissions/roles/${roleName}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ permissions }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || PERMISSION_ERRORS.UPDATE_ROLE_PERMISSIONS_FAILED);
-  }
-
-  const data = await response.json();
-  return data.role;
-}
 

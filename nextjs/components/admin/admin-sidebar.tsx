@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Building2, Shield, UserCog, Key } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Key } from "lucide-react";
 import { ADMIN_NAVIGATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -32,16 +32,6 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       icon: Building2,
     },
     {
-      href: "/admin/roles",
-      label: ADMIN_NAVIGATION.ROLES,
-      icon: UserCog,
-    },
-    {
-      href: "/admin/permissions",
-      label: ADMIN_NAVIGATION.PERMISSIONS,
-      icon: Shield,
-    },
-    {
       href: "/admin/api-keys",
       label: ADMIN_NAVIGATION.API_KEYS,
       icon: Key,
@@ -57,12 +47,6 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const isActive = (href: string) => {
     if (href === "/admin/organizations") {
       return pathname?.startsWith("/admin/organizations");
-    }
-    if (href === "/admin/permissions") {
-      return pathname?.startsWith("/admin/permissions");
-    }
-    if (href === "/admin/roles") {
-      return pathname?.startsWith("/admin/roles");
     }
     if (href === "/admin/api-keys") {
       return pathname?.startsWith("/admin/api-keys");

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { betterAuthService } from "@/lib/better-auth-service";
+import { betterAuthService } from "@/lib/better-auth-service/index";
 import { INVITATION_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
 import { requirePermission } from "@/lib/permission-check";
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { betterAuthService } from "@/lib/better-auth-service";
+import { betterAuthService } from "@/lib/better-auth-service/index";
 import { db } from "@/lib/database";
 import { session, user } from "@/auth-schema";
 import { eq, and, gt, desc, sql } from "drizzle-orm";
@@ -7,6 +7,7 @@ import { STATS_ERRORS, STATS_LABELS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } 
 import { requirePermission } from "@/lib/permission-check";
 
  
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
     const permissionError = await requirePermission(

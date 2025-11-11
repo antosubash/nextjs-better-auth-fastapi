@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/permission-check";
 import { PERMISSION_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
 import { getAllRoles } from "@/lib/permissions-utils";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
     const permissionError = await requirePermission(

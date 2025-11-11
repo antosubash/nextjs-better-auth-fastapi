@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { betterAuthService } from "./better-auth-service";
+import { betterAuthService } from "./better-auth-service/index";
 import { getUserEffectivePermissions, formatPermissionKey } from "./permissions-utils";
 import { PERMISSION_ERRORS, USER_ROLES, ADMIN_ERRORS } from "./constants";
 
