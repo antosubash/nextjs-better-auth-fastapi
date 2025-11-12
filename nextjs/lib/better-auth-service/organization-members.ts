@@ -1,7 +1,8 @@
 import { withErrorHandling } from "./utils";
 import { getHeaders, requirePermission } from "./server-utils";
 import { auth } from "../auth";
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "../constants";
+import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, MEMBER_ERRORS } from "../constants";
+import { organizationCoreService } from "./organization-core";
 
 /**
  * Organization member-related methods
@@ -36,16 +37,24 @@ export const organizationMemberService = {
 
   /**
    * Remove a member from an organization
+   * Requires organization owner role
    */
   async removeMember(params: {
     memberIdOrEmail: string;
-    organizationId?: string;
+    organizationId: string;
   }) {
     return withErrorHandling(
       "removeMember",
       async () => {
+        // Validate required fields
+        if (!params.organizationId || !params.memberIdOrEmail) {
+          throw new Error(MEMBER_ERRORS.REMOVE_FAILED);
+        }
+
         await requirePermission(PERMISSION_RESOURCES.ORGANIZATION, PERMISSION_ACTIONS.REMOVE);
         const headersList = await getHeaders();
+
+        // Call Better Auth's removeMember API directly
         return await auth.api.removeMember({
           headers: headersList,
           body: {

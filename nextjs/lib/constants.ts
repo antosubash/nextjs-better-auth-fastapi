@@ -384,6 +384,7 @@ export const MEMBER_ERRORS = {
   USER_ALREADY_MEMBER: "This user is already a member of this organization",
   USER_NOT_SELECTED: "Please select a user or enter an email address",
   SEARCH_FAILED: "Failed to search users",
+  ONLY_OWNERS_CAN_REMOVE: "Only organization owners can remove members",
 } as const;
 
 export const MEMBER_SUCCESS = {
