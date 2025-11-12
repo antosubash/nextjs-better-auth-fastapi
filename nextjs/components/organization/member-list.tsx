@@ -39,6 +39,7 @@ import type { NormalizedMember, MemberListProps } from "@/lib/utils/organization
 export function MemberList({ organizationId }: MemberListProps) {
   const [members, setMembers] = useState<NormalizedMember[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
+  const [currentUserRole, setCurrentUserRole] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
 
@@ -68,10 +69,21 @@ export function MemberList({ organizationId }: MemberListProps) {
           extractMembers(membersResult.data),
         );
         setMembers(normalizedMembers);
-      }
-
-      if (sessionResult.data?.user?.id) {
-        setCurrentUserId(sessionResult.data.user.id);
+        
+        // Find current user's role in the organization
+        if (sessionResult.data?.user?.id) {
+          setCurrentUserId(sessionResult.data.user.id);
+          const currentMember = normalizedMembers.find(
+            (m) => m.userId === sessionResult.data.user.id
+          );
+          if (currentMember) {
+            setCurrentUserRole(currentMember.role);
+          }
+        }
+      } else {
+        if (sessionResult.data?.user?.id) {
+          setCurrentUserId(sessionResult.data.user.id);
+        }
       }
     } catch (err) {
       const errorMessage =
@@ -172,6 +184,7 @@ export function MemberList({ organizationId }: MemberListProps) {
                         member={member}
                         organizationId={organizationId}
                         currentUserId={currentUserId}
+                        currentUserRole={currentUserRole}
                         onActionSuccess={handleActionSuccess}
                         onMemberRemoved={handleMemberRemoved}
                       />

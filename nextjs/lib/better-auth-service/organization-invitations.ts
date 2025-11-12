@@ -18,7 +18,7 @@ export const organizationInvitationService = {
     return withErrorHandling(
       "createInvitation",
       async () => {
-        await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.INVITE);
+        await requirePermission(PERMISSION_RESOURCES.ORGANIZATION, PERMISSION_ACTIONS.INVITE);
         const headersList = await getHeaders();
         return await auth.api.createInvitation({
           headers: headersList,
@@ -63,7 +63,7 @@ export const organizationInvitationService = {
     return withErrorHandling(
       "cancelInvitation",
       async () => {
-        await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.INVITE);
+        await requirePermission(PERMISSION_RESOURCES.ORGANIZATION, PERMISSION_ACTIONS.INVITE);
         const headersList = await getHeaders();
         return await auth.api.cancelInvitation({
           headers: headersList,

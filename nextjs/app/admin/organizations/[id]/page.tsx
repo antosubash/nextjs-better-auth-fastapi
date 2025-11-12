@@ -10,7 +10,6 @@ import {
   ORGANIZATION_SUCCESS,
 } from "@/lib/constants";
 import { MemberList } from "@/components/organization/member-list";
-import { TeamList } from "@/components/organization/team-list";
 import { InvitationList } from "@/components/organization/invitation-list";
 import { OrganizationForm } from "@/components/organization/organization-form";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,6 @@ import {
   Building2,
   Users,
   UserPlus,
-  UsersRound,
   Edit,
   Trash2,
   RefreshCw,
@@ -67,7 +65,7 @@ export default function OrganizationDetailPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [activeTab, setActiveTab] = useState<"members" | "teams" | "invitations">("members");
+  const [activeTab, setActiveTab] = useState<"members" | "invitations">("members");
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -279,10 +277,6 @@ export default function OrganizationDetailPage() {
                 <Users className="w-4 h-4 mr-2" />
                 {ORGANIZATION_LABELS.MEMBERS}
               </TabsTrigger>
-              <TabsTrigger value="teams">
-                <UsersRound className="w-4 h-4 mr-2" />
-                {ORGANIZATION_LABELS.TEAMS}
-              </TabsTrigger>
               <TabsTrigger value="invitations">
                 <UserPlus className="w-4 h-4 mr-2" />
                 {ORGANIZATION_LABELS.INVITATIONS}
@@ -290,9 +284,6 @@ export default function OrganizationDetailPage() {
             </TabsList>
             <TabsContent value="members" className="mt-6">
               <MemberList organizationId={organizationId} />
-            </TabsContent>
-            <TabsContent value="teams" className="mt-6">
-              <TeamList organizationId={organizationId} />
             </TabsContent>
             <TabsContent value="invitations" className="mt-6">
               <InvitationList organizationId={organizationId} />

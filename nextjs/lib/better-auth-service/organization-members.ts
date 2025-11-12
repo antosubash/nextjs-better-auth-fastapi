@@ -44,7 +44,7 @@ export const organizationMemberService = {
     return withErrorHandling(
       "removeMember",
       async () => {
-        await requirePermission(PERMISSION_RESOURCES.TEAM, PERMISSION_ACTIONS.REMOVE);
+        await requirePermission(PERMISSION_RESOURCES.ORGANIZATION, PERMISSION_ACTIONS.REMOVE);
         const headersList = await getHeaders();
         return await auth.api.removeMember({
           headers: headersList,

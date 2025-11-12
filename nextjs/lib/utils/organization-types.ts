@@ -26,13 +26,6 @@ export interface Member {
   };
 }
 
-export interface Team {
-  id: string;
-  name: string;
-  createdAt: number | Date | string;
-  organizationId?: string;
-}
-
 export interface Invitation {
   id: string;
   email: string;
@@ -42,18 +35,6 @@ export interface Invitation {
   expiresAt?: number | Date | string;
   organizationId?: string;
   inviterId?: string;
-}
-
-export interface TeamMember {
-  id: string;
-  userId: string;
-  teamId: string;
-  createdAt: number | Date | string;
-  user?: {
-    email: string;
-    name?: string;
-    [key: string]: unknown;
-  };
 }
 
 /**
@@ -67,11 +48,6 @@ export interface OrganizationListResponse {
 export interface MemberListResponse {
   members?: Member[];
   data?: Member[] | { members?: Member[] };
-}
-
-export interface TeamListResponse {
-  teams?: Team[];
-  data?: Team[] | { teams?: Team[] };
 }
 
 export interface InvitationListResponse {
@@ -93,16 +69,8 @@ export interface MemberListProps {
   organizationId: string;
 }
 
-export interface TeamListProps {
-  organizationId: string;
-}
-
 export interface InvitationListProps {
   organizationId: string;
-}
-
-export interface TeamMemberListProps {
-  teamId: string;
 }
 
 /**
@@ -128,15 +96,6 @@ export function isMember(data: unknown): data is Member {
   );
 }
 
-export function isTeam(data: unknown): data is Team {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "id" in data &&
-    "name" in data
-  );
-}
-
 export function isInvitation(data: unknown): data is Invitation {
   return (
     typeof data === "object" &&
@@ -156,10 +115,6 @@ export interface NormalizedOrganization extends Omit<Organization, "createdAt"> 
 }
 
 export interface NormalizedMember extends Omit<Member, "createdAt"> {
-  createdAt: number;
-}
-
-export interface NormalizedTeam extends Omit<Team, "createdAt"> {
   createdAt: number;
 }
 

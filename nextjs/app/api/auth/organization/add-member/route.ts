@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     console.log("[add-member] Starting request");
 
     const permissionError = await requirePermission(
-      PERMISSION_RESOURCES.TEAM,
+      PERMISSION_RESOURCES.ORGANIZATION,
       PERMISSION_ACTIONS.INVITE
     );
 

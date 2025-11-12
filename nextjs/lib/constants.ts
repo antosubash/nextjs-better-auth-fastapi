@@ -303,7 +303,6 @@ export const ORGANIZATION_LABELS = {
   ACTIVE: "Active",
   INACTIVE: "Inactive",
   MEMBERS: "Members",
-  TEAMS: "Teams",
   INVITATIONS: "Invitations",
   SETTINGS: "Settings",
   DASHBOARD: "Dashboard",
@@ -475,63 +474,6 @@ export const INVITATION_CONFIG = {
   EXPIRY_DAYS: 7,
 } as const;
 
-export const TEAM_LABELS = {
-  TITLE: "Teams",
-  CREATE_TEAM: "Create Team",
-  EDIT_TEAM: "Edit Team",
-  DELETE_TEAM: "Delete Team",
-  SET_ACTIVE: "Set Active Team",
-  NAME: "Name",
-  CREATED_AT: "Created At",
-  ACTIONS: "Actions",
-  NO_TEAMS: "No teams found",
-  LOADING: "Loading teams...",
-  SEARCH_TEAMS: "Search teams...",
-  MEMBERS: "Team Members",
-  VIEW_MEMBERS: "View Members",
-  HIDE: "Hide",
-  ADD_MEMBER: "Add Team Member",
-  REMOVE_MEMBER: "Remove Team Member",
-  CONFIRM_DELETE: "Are you sure you want to delete this team?",
-  SAVING: "Saving...",
-  SAVE: "Save",
-  CANCEL: "Cancel",
-  STATUS: "Status",
-} as const;
-
-export const TEAM_MEMBER_LABELS = {
-  EMAIL: "Email",
-  ACTIONS: "Actions",
-  NO_MEMBERS: "No team members",
-  LOADING: "Loading...",
-  SELECT_MEMBER: "Select Member",
-} as const;
-
-export const TEAM_PLACEHOLDERS = {
-  NAME: "Enter team name",
-} as const;
-
-export const TEAM_ERRORS = {
-  CREATE_FAILED: "Failed to create team",
-  UPDATE_FAILED: "Failed to update team",
-  DELETE_FAILED: "Failed to delete team",
-  SET_ACTIVE_FAILED: "Failed to set active team",
-  ADD_MEMBER_FAILED: "Failed to add team member",
-  REMOVE_MEMBER_FAILED: "Failed to remove team member",
-  LOAD_TEAMS_FAILED: "Failed to load teams",
-  LOAD_TEAM_FAILED: "Failed to load team",
-  INVALID_NAME: "Invalid team name",
-  MEMBER_ALREADY_IN_TEAM: "User is already a member of this team",
-} as const;
-
-export const TEAM_SUCCESS = {
-  TEAM_CREATED: "Team created successfully",
-  TEAM_UPDATED: "Team updated successfully",
-  TEAM_DELETED: "Team deleted successfully",
-  TEAM_ACTIVATED: "Team activated successfully",
-  MEMBER_ADDED: "Team member added successfully",
-  MEMBER_REMOVED: "Team member removed successfully",
-} as const;
 
 export const ORGANIZATION_SWITCHER = {
   SELECT_ORGANIZATION: "Select Organization",
@@ -844,7 +786,6 @@ export const PERMISSION_RESOURCES = {
   USER: "user",
   API_KEY: "apiKey",
   ROLE: "role",
-  TEAM: "team",
   MEMBER: "member",
   INVITATION: "invitation",
   FILE: "file",

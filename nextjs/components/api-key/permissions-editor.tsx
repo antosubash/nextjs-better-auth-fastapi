@@ -110,8 +110,8 @@ export function PermissionsEditor({
   };
 
   const resources = Object.keys(value);
-  const allResources = Array.from(
-    new Set([...COMMON_RESOURCES, ...resources]),
+  const allResources: string[] = Array.from(
+    new Set([...COMMON_RESOURCES.map(String), ...resources]),
   ).sort();
 
   // Get available actions for a specific resource

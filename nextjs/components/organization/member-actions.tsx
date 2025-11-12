@@ -35,6 +35,7 @@ interface MemberActionsProps {
   member: Member;
   organizationId: string;
   currentUserId?: string;
+  currentUserRole?: string;
   onActionSuccess: (message: string) => void;
   onMemberRemoved: () => void;
 }
@@ -43,6 +44,7 @@ export function MemberActions({
   member,
   organizationId,
   currentUserId,
+  currentUserRole,
   onActionSuccess,
   onMemberRemoved,
 }: MemberActionsProps) {
@@ -52,6 +54,7 @@ export function MemberActions({
   const [error, setError] = useState<string | null>(null);
 
   const isCurrentUser = member.userId === currentUserId;
+  const isOwner = currentUserRole === "owner";
 
   const handleUpdateRole = async () => {
     setIsLoading(true);
@@ -86,11 +89,17 @@ export function MemberActions({
     try {
       const result = await authClient.organization.removeMember({
         organizationId,
-        memberIdOrEmail: member.userId,
+        memberIdOrEmail: member.id,
       });
 
       if (result.error) {
-        setError(result.error.message || MEMBER_ERRORS.REMOVE_FAILED);
+        // Better Auth returns "You are not allowed to delete this member" when user is not an owner
+        const errorMessage = result.error.message || MEMBER_ERRORS.REMOVE_FAILED;
+        if (errorMessage.includes("not allowed")) {
+          setError("Only organization owners can remove members");
+        } else {
+          setError(errorMessage);
+        }
       } else {
         onMemberRemoved();
       }
@@ -162,7 +171,7 @@ export function MemberActions({
               <LogOut className="w-4 h-4 mr-2" />
               {MEMBER_LABELS.LEAVE_ORGANIZATION}
             </DropdownMenuItem>
-          ) : (
+          ) : isOwner ? (
             <DropdownMenuItem
               onClick={handleRemove}
               disabled={isLoading}
@@ -171,7 +180,7 @@ export function MemberActions({
               <UserMinus className="w-4 h-4 mr-2" />
               {MEMBER_LABELS.REMOVE_MEMBER}
             </DropdownMenuItem>
-          )}
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 

@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/permission-check-server";
 export async function POST(request: NextRequest) {
   try {
     const permissionError = await requirePermission(
-      PERMISSION_RESOURCES.TEAM,
+      PERMISSION_RESOURCES.ORGANIZATION,
       PERMISSION_ACTIONS.INVITE
     );
 

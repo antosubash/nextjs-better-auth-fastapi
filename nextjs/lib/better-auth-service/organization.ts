@@ -2,7 +2,6 @@ import { organizationCoreService } from "./organization-core";
 import { organizationInvitationService } from "./organization-invitations";
 import { organizationMemberService } from "./organization-members";
 import { organizationRoleService } from "./organization-roles";
-import { organizationTeamService } from "./organization-teams";
 
 /**
  * Organization-related methods
@@ -13,5 +12,4 @@ export const organizationService = {
   ...organizationInvitationService,
   ...organizationMemberService,
   ...organizationRoleService,
-  ...organizationTeamService,
 };
