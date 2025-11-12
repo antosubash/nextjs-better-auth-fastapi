@@ -69,12 +69,20 @@ export default function OrganizationDetailPage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [activeOrganizationId, setActiveOrganizationId] = useState<string | null>(null);
 
   const loadOrganization = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/admin/organizations/${organizationId}`);
+      const [response, sessionResult] = await Promise.all([
+        fetch(`/api/admin/organizations/${organizationId}`),
+        authClient.getSession(),
+      ]);
+      
+      if (sessionResult.data?.session?.activeOrganizationId) {
+        setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
+      }
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -220,9 +228,20 @@ export default function OrganizationDetailPage() {
                   </div>
                 )}
                 <div className="flex-1">
-                  <CardTitle className="text-3xl mb-2">
-                    {organization.name}
-                  </CardTitle>
+                  <div className="flex items-center gap-3 mb-2">
+                    <CardTitle className="text-3xl">
+                      {organization.name}
+                    </CardTitle>
+                    {activeOrganizationId === organization.id ? (
+                      <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
+                        {ORGANIZATION_LABELS.ACTIVE}
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-800">
+                        {ORGANIZATION_LABELS.INACTIVE}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline">{organization.slug}</Badge>
                     <span className="text-sm text-gray-500 dark:text-gray-400">

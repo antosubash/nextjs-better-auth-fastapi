@@ -482,6 +482,13 @@ export const ORGANIZATION_SWITCHER = {
   CURRENT: "Current",
 } as const;
 
+export const ORGANIZATION_CONTEXT = {
+  LOAD_FAILED: "Failed to load organization context",
+  AUTO_SELECT_FAILED: "Failed to automatically select organization",
+  SWITCH_FAILED: "Failed to switch organization",
+  HOOK_ERROR: "useOrganizationContext must be used within an OrganizationProvider",
+} as const;
+
 export const PAGE_CONTAINER = {
   CLASS: "container mx-auto px-4 py-8 md:py-12 max-w-7xl",
 } as const;

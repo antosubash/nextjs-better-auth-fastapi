@@ -25,6 +25,7 @@ import {
   extractOrganizations,
 } from "@/lib/utils/organization-data";
 import type { NormalizedOrganization } from "@/lib/utils/organization-types";
+import { useOrganizationSafe } from "@/lib/contexts/organization-context";
 
 export function OrganizationList() {
   const router = useRouter();
@@ -43,6 +44,8 @@ export function OrganizationList() {
   const { success, showSuccess, clearSuccess } = useSuccessMessage();
   const { error, showError, clearError } = useErrorMessage();
 
+  const orgContext = useOrganizationSafe();
+
   const loadOrganizations = async () => {
     setIsLoading(true);
     clearError();
@@ -59,26 +62,45 @@ export function OrganizationList() {
         const data = await response.json();
         const orgs = data.organizations || [];
         setOrganizations(normalizeOrganizations(orgs));
-      } else {
-        const listResult = await authClient.organization.list();
-        if (listResult.error) {
-          showError(
-            listResult.error.message ||
-              ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
+
+        const sessionResult = await authClient.getSession();
+        if (sessionResult.data?.session?.activeOrganizationId) {
+          setActiveOrganizationId(
+            sessionResult.data.session.activeOrganizationId,
           );
-        } else if (listResult.data) {
+        }
+      } else {
+        if (orgContext) {
           const normalizedOrgs = normalizeOrganizations(
-            extractOrganizations(listResult.data),
+            orgContext.organizations.map((org) => ({
+              id: org.id,
+              name: org.name,
+              slug: org.slug,
+            })),
           );
           setOrganizations(normalizedOrgs);
-        }
-      }
+          setActiveOrganizationId(orgContext.organization?.id || null);
+        } else {
+          const listResult = await authClient.organization.list();
+          if (listResult.error) {
+            showError(
+              listResult.error.message ||
+                ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
+            );
+          } else if (listResult.data) {
+            const normalizedOrgs = normalizeOrganizations(
+              extractOrganizations(listResult.data),
+            );
+            setOrganizations(normalizedOrgs);
+          }
 
-      const sessionResult = await authClient.getSession();
-      if (sessionResult.data?.session?.activeOrganizationId) {
-        setActiveOrganizationId(
-          sessionResult.data.session.activeOrganizationId,
-        );
+          const sessionResult = await authClient.getSession();
+          if (sessionResult.data?.session?.activeOrganizationId) {
+            setActiveOrganizationId(
+              sessionResult.data.session.activeOrganizationId,
+            );
+          }
+        }
       }
     } catch (err) {
       const errorMessage =
@@ -94,27 +116,39 @@ export function OrganizationList() {
   useEffect(() => {
     loadOrganizations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdminContext]);
+  }, [isAdminContext, orgContext?.organization?.id, orgContext?.organizations]);
 
   const handleOrganizationCreated = () => {
     setShowCreateForm(false);
     showSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_CREATED);
+    if (orgContext) {
+      orgContext.refreshOrganizations();
+    }
     loadOrganizations();
   };
 
   const handleOrganizationUpdated = () => {
     setEditingOrganization(null);
     showSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_UPDATED);
+    if (orgContext) {
+      orgContext.refreshOrganizations();
+    }
     loadOrganizations();
   };
 
   const handleOrganizationDeleted = () => {
     showSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_DELETED);
+    if (orgContext) {
+      orgContext.refreshOrganizations();
+    }
     loadOrganizations();
   };
 
   const handleActionSuccess = (message: string) => {
     showSuccess(message);
+    if (orgContext) {
+      orgContext.refreshOrganizations();
+    }
     loadOrganizations();
   };
 

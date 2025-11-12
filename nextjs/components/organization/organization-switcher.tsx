@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useOrganizationSafe } from "@/lib/contexts/organization-context";
 import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_SWITCHER, ORGANIZATION_ERRORS } from "@/lib/constants";
 import { ChevronDown, Building2 } from "lucide-react";
 import { ErrorToast } from "@/components/ui/error-toast";
+import { useRouter } from "next/navigation";
 
 interface Organization {
   id: string;
@@ -15,15 +16,16 @@ interface Organization {
 
 export function OrganizationSwitcher() {
   const router = useRouter();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [activeOrganization, setActiveOrganization] =
-    useState<Organization | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const orgContext = useOrganizationSafe();
+  
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [activeOrganization, setActiveOrganization] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadOrganizations = async () => {
+  const loadOrganizationsFallback = useCallback(async () => {
     setIsLoading(true);
     try {
       const [listResult, sessionResult] = await Promise.all([
@@ -50,11 +52,27 @@ export function OrganizationSwitcher() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadOrganizations();
-  }, []);
+    if (orgContext) {
+      setOrganizations(orgContext.organizations);
+      setActiveOrganization(orgContext.organization);
+      setIsLoading(orgContext.isLoading);
+      setError(orgContext.error);
+      setIsSwitching(orgContext.isSwitching);
+    } else {
+      loadOrganizationsFallback();
+    }
+  }, [
+    orgContext,
+    orgContext?.organizations,
+    orgContext?.organization,
+    orgContext?.isLoading,
+    orgContext?.error,
+    orgContext?.isSwitching,
+    loadOrganizationsFallback,
+  ]);
 
   const handleSwitch = async (organizationId: string) => {
     if (organizationId === activeOrganization?.id) {
@@ -62,27 +80,42 @@ export function OrganizationSwitcher() {
       return;
     }
 
-    setIsSwitching(true);
-    try {
-      const result = await authClient.organization.setActive({
-        organizationId,
-      });
+    if (orgContext) {
+      await orgContext.switchOrganization(organizationId);
+      setIsOpen(false);
+    } else {
+      setIsSwitching(true);
+      setError(null);
+      try {
+        const result = await authClient.organization.setActive({
+          organizationId,
+        });
 
-      if (result.error) {
-        setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-      } else {
-        const org = organizations.find((o) => o.id === organizationId);
-        if (org) {
-          setActiveOrganization(org);
+        if (result.error) {
+          setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+        } else {
+          const org = organizations.find((o) => o.id === organizationId);
+          if (org) {
+            setActiveOrganization(org);
+          }
+          setIsOpen(false);
+          router.refresh();
+          window.location.reload();
         }
-        setIsOpen(false);
-        router.refresh();
+      } catch (err) {
+        console.error("Failed to switch organization:", err);
+        setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+      } finally {
+        setIsSwitching(false);
       }
-    } catch (err) {
-      console.error("Failed to switch organization:", err);
-      setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-    } finally {
-      setIsSwitching(false);
+    }
+  };
+
+  const clearErrorHandler = () => {
+    if (orgContext) {
+      orgContext.clearError();
+    } else {
+      setError(null);
     }
   };
 
@@ -98,24 +131,27 @@ export function OrganizationSwitcher() {
     return null;
   }
 
+  const displayError = orgContext ? orgContext.error : error;
+  const displayIsSwitching = orgContext ? orgContext.isSwitching : isSwitching;
+
   return (
     <>
-      {error && (
+      {displayError && (
         <ErrorToast
-          message={error}
-          onDismiss={() => setError(null)}
+          message={displayError}
+          onDismiss={clearErrorHandler}
           duration={5000}
         />
       )}
       <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        disabled={isSwitching}
+        disabled={displayIsSwitching}
         className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
       >
         <Building2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         <span className="text-sm font-medium text-gray-900 dark:text-white max-w-[150px] truncate">
-          {isSwitching
+          {displayIsSwitching
             ? ORGANIZATION_SWITCHER.SWITCHING
             : activeOrganization?.name ||
               ORGANIZATION_SWITCHER.SELECT_ORGANIZATION}
@@ -142,7 +178,7 @@ export function OrganizationSwitcher() {
                     <button
                       key={org.id}
                       onClick={() => handleSwitch(org.id)}
-                      disabled={isSwitching}
+                      disabled={displayIsSwitching}
                       className={`w-full px-4 py-2 text-left text-sm transition-colors ${
                         isActive
                           ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium"
