@@ -85,7 +85,7 @@ async function handleProxyRequest(request: NextRequest, pathSegments: string[], 
           requestHeaders.set("Authorization", `Bearer ${tokenResponse.token}`);
         }
       }
-    } catch (error) {
+    } catch {
       // Session/JWT is optional if API key is provided
       if (!apiKey) {
         return NextResponse.json({ error: PROXY_ERRORS.NOT_AUTHENTICATED }, { status: 401 });

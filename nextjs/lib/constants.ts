@@ -17,6 +17,20 @@ export const PROFILE = {
   EMAIL_LABEL: "Email address",
   NAME_LABEL: "Full name",
   LOGOUT_CONFIRM: "Are you sure you want to log out?",
+  MANAGE_SESSIONS: "Manage Sessions",
+  SESSIONS: "Sessions",
+  ACTIVE_SESSIONS: "Active Sessions",
+  REVOKE_SESSION: "Revoke Session",
+  REVOKE_ALL_SESSIONS: "Revoke All Other Sessions",
+  CONFIRM_REVOKE_SESSION: "Are you sure you want to revoke this session?",
+  CONFIRM_REVOKE_ALL_SESSIONS: "Are you sure you want to revoke all other sessions? You will remain logged in on this device.",
+  SESSION_IP: "IP Address",
+  SESSION_USER_AGENT: "User Agent",
+  SESSION_CREATED_AT: "Created At",
+  SESSION_EXPIRES_AT: "Expires At",
+  NO_SESSIONS: "No sessions found",
+  CURRENT_SESSION: "Current Session",
+  EXPIRED: "Expired",
 } as const;
 
 export const AUTH_PLACEHOLDERS = {
@@ -808,6 +822,19 @@ export const PROXY_ERRORS = {
 
 export const STATS_LABELS = {
   SESSION_CREATED: "Session created",
+} as const;
+
+export const SESSION_ERRORS = {
+  USER_NOT_FOUND: "User not found",
+  LOAD_SESSIONS_FAILED: "Failed to load sessions",
+  REVOKE_SESSION_FAILED: "Failed to revoke session",
+  SESSION_NOT_FOUND: "Session not found",
+  SESSION_TOKEN_REQUIRED: "Session token is required",
+} as const;
+
+export const SESSION_SUCCESS = {
+  SESSION_REVOKED: "Session revoked successfully",
+  SESSIONS_REVOKED: "All other sessions revoked successfully",
 } as const;
 
 export const COMMON_LABELS = {

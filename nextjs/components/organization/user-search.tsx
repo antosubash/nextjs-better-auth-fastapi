@@ -130,6 +130,7 @@ export function UserSearch({
                 >
                   <div className="flex items-center gap-2 flex-1">
                     {user.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={user.image} alt={user.name} className="w-6 h-6 rounded-full" />
                     ) : (
                       <UserIcon className="w-6 h-6 text-gray-400" />

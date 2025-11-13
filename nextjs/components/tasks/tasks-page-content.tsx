@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Pagination,
@@ -43,6 +43,22 @@ export function TasksPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const loadTasks = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      const response = await getTasks(page, pageSize, statusFilter || undefined);
+      setTasks(response.items);
+      setTotal(response.total);
+    } catch (err) {
+      console.error("Failed to load tasks:", err);
+      setError(err instanceof Error ? err.message : TASK_ERRORS.LOAD_TASKS_FAILED);
+      toast.error(TASK_ERRORS.LOAD_TASKS_FAILED);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const checkAuthAndLoadTasks = async () => {
       try {
@@ -63,29 +79,15 @@ export function TasksPageContent() {
     };
 
     checkAuthAndLoadTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   useEffect(() => {
     if (isAuthorized) {
       loadTasks();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, statusFilter, isAuthorized]);
-
-  const loadTasks = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const response = await getTasks(page, pageSize, statusFilter || undefined);
-      setTasks(response.items);
-      setTotal(response.total);
-    } catch (err) {
-      console.error("Failed to load tasks:", err);
-      setError(err instanceof Error ? err.message : TASK_ERRORS.LOAD_TASKS_FAILED);
-      toast.error(TASK_ERRORS.LOAD_TASKS_FAILED);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleCreateClick = () => {
     setEditingTask(undefined);

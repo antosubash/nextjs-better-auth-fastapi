@@ -23,7 +23,12 @@ This is a full-stack authentication system combining:
 - **Location**: `backend/` directory
 - **Framework**: FastAPI
 - **JWT Verification**: PyJWT with Ed25519 support
-- **Middleware**: JWT validation middleware (all routes protected by default)
+- **API Key Authentication**: Support for API key authentication via Better Auth
+- **Middleware**: JWT/API key validation middleware, rate limiting, request ID tracking
+- **Database**: PostgreSQL (via asyncpg)
+- **Migrations**: Alembic
+- **Package Manager**: uv
+- **Storage**: MinIO/S3 support for file storage
 - **Language**: Python 3.12+
 
 ## Code Conventions
@@ -32,7 +37,8 @@ This is a full-stack authentication system combining:
 
 **CRITICAL**: Never hardcode strings. Always use constants from:
 - **Frontend**: `nextjs/lib/constants.ts` - Contains all UI strings, labels, placeholders, error messages, and configuration constants
-- **Backend**: `backend/config.py` - Contains environment-based configuration constants
+- **Backend**: `backend/core/config.py` - Contains environment-based configuration constants
+- **Backend**: `backend/core/constants.py` - Contains error messages and other hardcoded strings
 
 ### Better Auth API Usage
 
@@ -88,20 +94,30 @@ This is a full-stack authentication system combining:
 1. **Configuration**:
    ```python
    # ✅ Good
-   from config import BETTER_AUTH_URL, JWKS_URL
+   from core.config import BETTER_AUTH_URL, JWKS_URL
+   from core.constants import ErrorMessages
    
    # ❌ Bad
    url = "http://localhost:3000"
+   error_msg = "Something went wrong"
    ```
 
 2. **JWT Verification**:
-   - Use `auth.verify_token_string()` for manual verification
+   - Use `core.auth.verify_token_string()` for manual verification
+   - Use `core.auth.verify_api_key()` for API key verification
    - Use `JWTAuthMiddleware` for automatic route protection
    - Token data available in `request.state.token_data`
+   - API key data available in `request.state.api_key_data`
+   - Unified user ID available in `request.state.user_id`
 
 3. **Public Routes**:
-   - Defined in `backend/middleware.py` in `PUBLIC_ROUTES` set
+   - Defined in `backend/core/config.py` in `PUBLIC_ROUTES` set
    - Health checks, docs, and OpenAPI endpoints are public by default
+
+4. **Authentication Methods**:
+   - Supports both JWT tokens (`Authorization: Bearer <token>`) and API keys (`X-API-Key` header)
+   - Both methods can be used simultaneously
+   - At least one valid authentication method required for protected routes
 
 ## Key Files
 
@@ -115,9 +131,22 @@ This is a full-stack authentication system combining:
 
 ### Backend
 - `backend/main.py` - FastAPI application entry point
-- `backend/auth.py` - JWT verification logic
-- `backend/middleware.py` - JWT validation middleware
-- `backend/config.py` - Configuration constants
+- `backend/core/app.py` - FastAPI application factory (`create_app()`)
+- `backend/core/auth.py` - JWT and API key verification logic
+- `backend/core/middleware.py` - JWT/API key validation middleware, rate limiting, request ID
+- `backend/core/config.py` - Configuration constants from environment variables
+- `backend/core/constants.py` - Error messages and other string constants
+- `backend/core/database.py` - Database connection and initialization
+- `backend/core/exceptions.py` - Custom exception classes
+- `backend/core/logging.py` - Logging configuration
+- `backend/core/permissions.py` - Permission definitions
+- `backend/routers/` - API route handlers
+- `backend/services/` - Business logic services
+- `backend/schemas/` - Pydantic schemas for request/response validation
+- `backend/models/` - SQLAlchemy database models
+- `backend/utils/` - Utility functions
+- `backend/dependencies.py` - FastAPI dependencies (HTTP client, etc.)
+- `backend/alembic/` - Database migrations
 
 ## Development Workflow
 
@@ -148,7 +177,14 @@ cd nextjs && pnpm lint
 ```
 
 **Backend formatting:**
-Use your preferred Python formatter (black, ruff, etc.)
+```bash
+cd backend && uv run ruff format .
+```
+
+**Backend linting:**
+```bash
+cd backend && uv run ruff check .
+```
 
 ### Environment Variables
 
@@ -160,18 +196,38 @@ Use your preferred Python formatter (black, ruff, etc.)
 **Backend** (`.env` in `backend/`):
 - `BETTER_AUTH_URL` - Better Auth base URL (default: http://localhost:3000)
 - `LOG_LEVEL` - Logging level (default: INFO)
+- `LOG_FORMAT_JSON` - Use JSON logging format (default: false)
+- `CORS_ORIGINS` - Comma-separated list of allowed CORS origins (default: http://localhost:3000)
+- `DATABASE_URL` - PostgreSQL connection string (default: postgresql+asyncpg://postgres:postgres@localhost:5432/better_auth_db)
+- `DB_SCHEMA` - Database schema name (default: api)
+- `RATE_LIMIT_ENABLED` - Enable rate limiting (default: true)
+- `RATE_LIMIT_REQUESTS_PER_MINUTE` - Rate limit per IP (default: 60)
+- `JWKS_CACHE_TTL_SECONDS` - JWKS cache TTL in seconds (default: 3600)
+- `MINIO_ENDPOINT` - MinIO endpoint (default: localhost:9000)
+- `MINIO_ACCESS_KEY` - MinIO access key (default: minioadmin)
+- `MINIO_SECRET_KEY` - MinIO secret key (default: minioadmin)
+- `MINIO_BUCKET_NAME` - MinIO bucket name (default: better-auth-storage)
 
 ## Authentication Flow
 
 1. User registers/logs in via Next.js frontend
 2. Better Auth issues JWT token (Ed25519 signed)
 3. Token stored in cookies
-4. Frontend sends requests with `Authorization: Bearer <token>` header
-5. Backend middleware validates token:
-   - Fetches JWKS from Better Auth (cached)
-   - Extracts public key by `kid` (key ID)
-   - Verifies signature and claims
-6. Validated token payload available in `request.state.token_data`
+4. Frontend sends requests with either:
+   - `Authorization: Bearer <token>` header (JWT token)
+   - `X-API-Key: <api-key>` header (API key)
+   - Both headers can be present simultaneously
+5. Backend middleware validates authentication:
+   - **For JWT tokens**:
+     - Fetches JWKS from Better Auth (cached with TTL)
+     - Extracts public key by `kid` (key ID)
+     - Verifies signature and claims (issuer, audience)
+     - Stores payload in `request.state.token_data`
+   - **For API keys**:
+     - Verifies API key via Better Auth `/api/auth/verify-api-key` endpoint
+     - Stores API key data in `request.state.api_key_data`
+6. Unified user ID extracted and stored in `request.state.user_id`
+7. Request proceeds if at least one authentication method is valid
 
 ## Common Tasks
 
@@ -183,22 +239,30 @@ from fastapi import Request
 
 @app.post("/new-endpoint")
 async def new_endpoint(request: Request):
-    token_data = request.state.token_data
-    user_id = token_data.get("sub") or token_data.get("id")
+    # Access unified user ID (works for both JWT and API key auth)
+    user_id = request.state.user_id
+    
+    # Or access specific auth data if needed
+    token_data = getattr(request.state, "token_data", None)
+    api_key_data = getattr(request.state, "api_key_data", None)
+    
     # Your logic here
     return {"user_id": user_id}
 ```
 
+**Note**: Endpoints should be added in `backend/routers/` directory and included in `backend/core/app.py`.
+
 ### Adding a Public Endpoint
 
 **Backend:**
-Add route path to `PUBLIC_ROUTES` set in `backend/middleware.py`:
+Add route path to `PUBLIC_ROUTES` set in `backend/core/config.py`:
 ```python
-PUBLIC_ROUTES = {
+PUBLIC_ROUTES: set[str] = {
     "/",
     "/docs",
     "/openapi.json",
     "/redoc",
+    "/health",
     "/new-public-endpoint",  # Add here
 }
 ```
@@ -217,9 +281,15 @@ export const NEW_FEATURE = {
 ### Adding Configuration
 
 **Backend:**
-Add to `backend/config.py`:
+Add to `backend/core/config.py`:
 ```python
 NEW_CONFIG_VALUE = os.getenv("NEW_CONFIG_VALUE", "default")
+```
+
+For error messages and other constants, add to `backend/core/constants.py`:
+```python
+class ErrorMessages:
+    NEW_ERROR = "New error message"
 ```
 
 ## Important Patterns
@@ -260,9 +330,13 @@ const user = await db.select().from(users).where(eq(users.id, userId));
 
 ### Database Migrations
 
-- Frontend uses Drizzle ORM migrations
-- Run migrations when schema changes
-- Migrations in `nextjs/drizzle/`
+- **Frontend**: Uses Drizzle ORM migrations
+  - Migrations in `nextjs/drizzle/`
+  - Run migrations when schema changes
+- **Backend**: Uses Alembic migrations
+  - Migrations in `backend/alembic/versions/`
+  - Run migrations: `cd backend && uv run alembic upgrade head`
+  - Create new migration: `cd backend && uv run alembic revision --autogenerate -m "description"`
 
 ### Commit Messages
 
@@ -280,10 +354,14 @@ const user = await db.select().from(users).where(eq(users.id, userId));
 ## Security Notes
 
 - JWT tokens use Ed25519 signature algorithm
-- Public keys fetched from JWKS endpoint (cached)
+- Public keys fetched from JWKS endpoint (cached with configurable TTL)
 - All backend routes protected by default
-- CORS configured for frontend origin only
+- CORS configured for frontend origin(s) only
 - Token validation includes issuer and audience checks
+- API key authentication supported via Better Auth verification endpoint
+- Rate limiting middleware (configurable per IP)
+- Request ID tracking for all requests
+- Both JWT and API key authentication can be used simultaneously
 
 ## Dependencies
 
@@ -299,6 +377,10 @@ const user = await db.select().from(users).where(eq(users.id, userId));
 - PyJWT
 - Cryptography (Ed25519)
 - HTTPX (async HTTP client)
+- SQLAlchemy (async PostgreSQL)
+- Alembic (database migrations)
+- MinIO client (S3-compatible storage)
+- uv (package manager)
 - Python 3.12+
 
 ## Project Structure Reference
@@ -306,21 +388,44 @@ const user = await db.select().from(users).where(eq(users.id, userId));
 ```
 nextjs-better-auth-fastapi/
 ├── backend/                 # FastAPI backend
-│   ├── auth.py             # JWT verification logic
-│   ├── config.py           # Configuration constants
-│   ├── main.py             # FastAPI application
-│   ├── middleware.py       # JWT validation middleware
+│   ├── core/               # Core application modules
+│   │   ├── app.py          # FastAPI application factory
+│   │   ├── auth.py         # JWT and API key verification logic
+│   │   ├── config.py       # Configuration constants
+│   │   ├── constants.py    # Error messages and string constants
+│   │   ├── database.py     # Database connection
+│   │   ├── exceptions.py  # Custom exceptions
+│   │   ├── logging.py      # Logging configuration
+│   │   ├── middleware.py  # JWT/API key auth, rate limiting, request ID
+│   │   └── permissions.py  # Permission definitions
+│   ├── routers/            # API route handlers
+│   │   ├── example.py
+│   │   ├── health.py
+│   │   └── tasks.py
+│   ├── services/           # Business logic services
+│   ├── schemas/            # Pydantic schemas
+│   ├── models/             # SQLAlchemy models
+│   ├── utils/              # Utility functions
+│   ├── alembic/            # Database migrations
+│   ├── dependencies.py     # FastAPI dependencies
+│   ├── main.py             # Application entry point
 │   └── pyproject.toml      # Python dependencies
 ├── nextjs/                  # Next.js frontend
 │   ├── app/                # Next.js app directory
 │   │   ├── api/            # API routes
+│   │   │   ├── auth/       # Better Auth endpoints
+│   │   │   └── proxy/      # Proxy routes to backend
 │   │   └── page.tsx        # Pages
 │   ├── components/         # React components
 │   ├── lib/                # Utilities and configuration
 │   │   ├── auth.ts         # Better Auth configuration
 │   │   ├── constants.ts    # All constants (IMPORTANT)
 │   │   └── database.ts     # Database connection
+│   ├── drizzle/            # Database migrations
+│   ├── auth-schema.ts      # Database schema definitions
 │   └── package.json        # Node.js dependencies
+├── docker-compose.yml      # Docker Compose for PostgreSQL, MinIO, pgWeb
+├── env.example             # Example environment variables
 └── Makefile                # Build automation
 ```
 
@@ -336,11 +441,14 @@ nextjs-better-auth-fastapi/
 
 ## Questions to Consider
 
-- Are all strings using constants from `constants.ts` or `config.py`?
+- Are all strings using constants from `constants.ts` or `core/config.py`/`core/constants.py`?
 - **Am I using Better Auth APIs instead of direct database queries for auth/org/team/permission operations?**
 - Is the implementation simple and straightforward?
 - Are files kept under 500 lines?
 - Have I linted and formatted the code?
 - Are new endpoints properly protected or added to public routes?
+- Are new routers included in `core/app.py`?
 - Is the commit message following conventional commits?
+- For backend: Are database models, schemas, and services properly separated?
+- For backend: Are migrations created when database schema changes?
 

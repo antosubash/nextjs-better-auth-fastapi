@@ -19,7 +19,7 @@ export async function callFastApiWithApiKey<T>(
   endpoint: string,
   options: ApiKeyRequestOptions = {}
 ): Promise<ApiKeyResponse<T>> {
-  const { apiKey, includeJwt = false, ...fetchOptions } = options;
+  const { apiKey, ...fetchOptions } = options;
 
   const endpointPath = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
   const url = `/api/proxy/${endpointPath}`;

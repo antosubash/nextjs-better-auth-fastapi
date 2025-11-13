@@ -5,6 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, PROFILE } from "@/lib/constants";
 import { User, Mail, LogOut, CheckCircle2 } from "lucide-react";
 import { ApiData } from "./api-data";
+import { UserSessions } from "./user-sessions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -68,7 +69,7 @@ export function UserProfile() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto px-4">
       {/* Welcome Header */}
       <div className="text-center mb-8">
         <Avatar className="w-20 h-20 mx-auto mb-4">
@@ -124,6 +125,11 @@ export function UserProfile() {
       {/* API Data Component */}
       <div className="mb-6">
         <ApiData />
+      </div>
+
+      {/* Session Management */}
+      <div className="mb-6">
+        <UserSessions />
       </div>
 
       {/* Logout Button */}

@@ -164,7 +164,7 @@ export function UserSessionsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{ADMIN_LABELS.MANAGE_SESSIONS}</DialogTitle>
           </DialogHeader>
@@ -204,7 +204,7 @@ export function UserSessionsDialog({
               </div>
 
               <div className="overflow-x-auto">
-                <Table>
+                <Table className="w-full min-w-[800px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>{ADMIN_LABELS.SESSION_IP}</TableHead>
@@ -218,7 +218,7 @@ export function UserSessionsDialog({
                     {sessions.map((session) => (
                       <TableRow key={session.id || session.token}>
                         <TableCell>{session.ipAddress || "N/A"}</TableCell>
-                        <TableCell className="max-w-xs truncate">
+                        <TableCell className="max-w-lg truncate" title={session.userAgent || "N/A"}>
                           {session.userAgent || "N/A"}
                         </TableCell>
                         <TableCell>{formatDate(session.createdAt)}</TableCell>

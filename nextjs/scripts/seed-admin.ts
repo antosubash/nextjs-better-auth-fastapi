@@ -89,19 +89,7 @@ const SEED_USERS = [
     password: "user1234",
     name: "George Wilson",
     role: USER_ROLES.USER,
-  },
-  {
-    email: "hannah.martinez@example.com",
-    password: "user1234",
-    name: "Hannah Martinez",
-    role: USER_ROLES.USER,
-  },
-  {
-    email: "hannah@example.com",
-    password: "user1234",
-    name: "Isaac Newton",
-    role: USER_ROLES.USER,
-  },
+  }
 ];
 
 async function seedUsers() {
