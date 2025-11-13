@@ -5,9 +5,15 @@ from jwt.exceptions import InvalidTokenError, DecodeError
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 import httpx
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
-from core.config import JWKS_URL, JWT_ISSUER, JWT_AUDIENCE, JWKS_CACHE_TTL_SECONDS
+from core.config import (
+    JWKS_URL,
+    JWT_ISSUER,
+    JWT_AUDIENCE,
+    JWKS_CACHE_TTL_SECONDS,
+    BETTER_AUTH_VERIFY_API_KEY_URL,
+)
 from core.constants import ErrorMessages
 from core.exceptions import AuthenticationError, JWKSError
 from utils.crypto import base64url_decode
@@ -191,4 +197,136 @@ async def verify_token_string(
     except Exception as e:
         logger.error(f"Unexpected error during token verification: {str(e)}", exc_info=True)
         raise AuthenticationError(f"{ErrorMessages.AUTH_TOKEN_VERIFICATION_ERROR}: {str(e)}")
+
+
+async def verify_api_key(
+    api_key: str,
+    required_permissions: Optional[Dict[str, list[str]]] = None,
+    http_client: Optional[httpx.AsyncClient] = None
+) -> Dict[str, Any]:
+    """
+    Verify API key using Better Auth's verify endpoint.
+    
+    Args:
+        api_key: API key string to verify
+        required_permissions: Optional dict of required permissions to check
+                             Format: {resource: [action1, action2, ...]}
+        http_client: Optional HTTP client to use
+        
+    Returns:
+        Dictionary containing API key data:
+        - user_id: User ID associated with the API key
+        - key_id: API key ID
+        - permissions: API key permissions (dict format)
+        - metadata: API key metadata
+        - Other fields from Better Auth response
+        
+    Raises:
+        AuthenticationError: If API key verification fails or permissions are insufficient
+    """
+    if not api_key:
+        logger.error("API key is empty")
+        raise AuthenticationError(ErrorMessages.API_KEY_MISSING)
+    
+    try:
+        # Prepare request body
+        request_body: Dict[str, Any] = {"key": api_key}
+        if required_permissions:
+            request_body["permissions"] = required_permissions
+            logger.info(f"Verifying API key with required permissions: {required_permissions}")
+        else:
+            logger.info("Verifying API key without permission checks")
+        
+        # Make request to Better Auth verify endpoint
+        if http_client is None:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.post(
+                    BETTER_AUTH_VERIFY_API_KEY_URL,
+                    json=request_body,
+                    headers={"Content-Type": "application/json"},
+                )
+        else:
+            response = await http_client.post(
+                BETTER_AUTH_VERIFY_API_KEY_URL,
+                json=request_body,
+                headers={"Content-Type": "application/json"},
+            )
+        
+        # Check response status
+        if response.status_code == 401:
+            logger.warning("API key verification failed: Unauthorized")
+            raise AuthenticationError(ErrorMessages.API_KEY_INVALID)
+        
+        if response.status_code == 403:
+            logger.warning("API key verification failed: Insufficient permissions")
+            raise AuthenticationError(ErrorMessages.API_KEY_INSUFFICIENT_PERMISSIONS)
+        
+        response.raise_for_status()
+        
+        # Parse response
+        try:
+            response_data = response.json()
+        except Exception as e:
+            logger.error(f"Failed to parse API key verification response: {str(e)}")
+            raise AuthenticationError(f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: Invalid response format")
+        
+        # Check if verification was successful
+        if not response_data.get("valid", False):
+            error_info = response_data.get("error")
+            if error_info:
+                error_message = error_info.get("message", ErrorMessages.API_KEY_INVALID)
+                logger.warning(f"API key verification failed: {error_message}")
+                raise AuthenticationError(error_message)
+            else:
+                logger.warning("API key verification failed: Invalid key")
+                raise AuthenticationError(ErrorMessages.API_KEY_INVALID)
+        
+        # Extract key data from response
+        key_data = response_data.get("key", {})
+        if not key_data:
+            logger.error("API key verification response missing key data")
+            raise AuthenticationError(f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: Missing key data")
+        
+        # Build structured response
+        api_key_data: Dict[str, Any] = {
+            "user_id": key_data.get("userId") or key_data.get("user_id"),
+            "key_id": key_data.get("id") or key_data.get("keyId"),
+            "permissions": key_data.get("permissions", {}),
+            "metadata": key_data.get("metadata", {}),
+            "name": key_data.get("name"),
+            "prefix": key_data.get("prefix"),
+            "enabled": key_data.get("enabled", True),
+        }
+        
+        # Ensure user_id is present
+        if not api_key_data["user_id"]:
+            logger.error("API key verification response missing user_id")
+            raise AuthenticationError(f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: Missing user_id")
+        
+        logger.info(
+            f"API key verified successfully. User ID: {api_key_data['user_id']}, "
+            f"Key ID: {api_key_data['key_id']}"
+        )
+        
+        return api_key_data
+        
+    except AuthenticationError:
+        raise
+    except httpx.HTTPStatusError as e:
+        logger.error(
+            f"HTTP error verifying API key: {e.response.status_code} - {str(e)}",
+            exc_info=True
+        )
+        if e.response.status_code == 401:
+            raise AuthenticationError(ErrorMessages.API_KEY_INVALID)
+        elif e.response.status_code == 403:
+            raise AuthenticationError(ErrorMessages.API_KEY_INSUFFICIENT_PERMISSIONS)
+        else:
+            raise AuthenticationError(f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: HTTP {e.response.status_code}")
+    except httpx.HTTPError as e:
+        logger.error(f"HTTP error verifying API key: {str(e)}", exc_info=True)
+        raise AuthenticationError(f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error verifying API key: {str(e)}", exc_info=True)
+        raise AuthenticationError(f"{ErrorMessages.API_KEY_VERIFICATION_ERROR}: {str(e)}")
 

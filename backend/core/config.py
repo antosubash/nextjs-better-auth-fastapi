@@ -9,6 +9,7 @@ load_dotenv()
 # Better Auth configuration
 BETTER_AUTH_URL = os.getenv("BETTER_AUTH_URL", "http://localhost:3000")
 JWKS_URL = f"{BETTER_AUTH_URL}/api/auth/jwks"
+BETTER_AUTH_VERIFY_API_KEY_URL = f"{BETTER_AUTH_URL}/api/auth/verify-api-key"
 JWT_ISSUER = BETTER_AUTH_URL
 JWT_AUDIENCE = BETTER_AUTH_URL
 

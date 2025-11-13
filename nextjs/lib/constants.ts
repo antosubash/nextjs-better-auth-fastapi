@@ -62,6 +62,31 @@ export const API_DATA = {
   RESPONSE_LABEL: "Response:",
 } as const;
 
+export const API_KEY_TEST = {
+  TITLE: "API Key Authentication Test",
+  DESCRIPTION: "Test API key authentication by making requests to protected endpoints",
+  API_KEY_LABEL: "API Key",
+  API_KEY_PLACEHOLDER: "Enter your API key",
+  ENDPOINT_LABEL: "Endpoint",
+  ENDPOINT_PLACEHOLDER: "e.g., /getdata",
+  CONTENT_LABEL: "Content (JSON)",
+  CONTENT_PLACEHOLDER: '{"content": "test data"}',
+  METHOD_LABEL: "HTTP Method",
+  SEND_REQUEST: "Send Request",
+  LOADING: "Sending request...",
+  SUCCESS: "Request successful",
+  ERROR: "Request failed",
+  RESPONSE_LABEL: "Response",
+  STATUS_LABEL: "Status Code",
+  HEADERS_LABEL: "Response Headers",
+  USE_JWT_TOKEN: "Also include JWT token",
+  AUTH_METHOD_LABEL: "Authentication Method",
+  API_KEY_ONLY: "API Key Only",
+  JWT_ONLY: "JWT Token Only",
+  BOTH: "Both API Key and JWT",
+  NO_AUTH: "No Authentication",
+} as const;
+
 export const LANDING_PAGE = {
   HERO_TITLE: "Welcome to Better Auth",
   HERO_SUBTITLE: "Secure, fast, and easy authentication for your applications",
@@ -227,6 +252,12 @@ export const ADMIN_SUCCESS = {
   IMPERSONATION_STOPPED: "Impersonation stopped successfully",
 } as const;
 
+export const DOCTOR = {
+  TITLE: "Doctor / Diagnostics",
+  DESCRIPTION: "Test and debug API authentication and endpoints",
+  PAGE_TITLE: "API Diagnostics",
+} as const;
+
 export const DASHBOARD = {
   TITLE: "Dashboard",
   WELCOME: "Welcome to your dashboard",
@@ -270,6 +301,7 @@ export const ADMIN_NAVIGATION = {
   PERMISSIONS: "Permissions",
   ROLES: "Roles",
   API_KEYS: "API Keys",
+  DOCTOR: "Doctor / Diagnostics",
   MENU_TOGGLE: "Toggle menu",
   CLOSE_MENU: "Close menu",
 } as const;

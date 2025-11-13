@@ -92,7 +92,6 @@ def create_app() -> FastAPI:
         request_id = getattr(request.state, "request_id", None)
         logger.error(
             f"Application exception: {exc.detail}",
-            extra={"request_id": request_id},
             exc_info=True
         )
         return JSONResponse(
@@ -109,7 +108,6 @@ def create_app() -> FastAPI:
         request_id = getattr(request.state, "request_id", None)
         logger.error(
             f"Unexpected error: {str(exc)}",
-            extra={"request_id": request_id},
             exc_info=True
         )
         return JSONResponse(

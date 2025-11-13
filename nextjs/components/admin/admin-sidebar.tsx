@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Building2, Key } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Key, Stethoscope } from "lucide-react";
 import { ADMIN_NAVIGATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -36,6 +36,11 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       label: ADMIN_NAVIGATION.API_KEYS,
       icon: Key,
     },
+    {
+      href: "/admin/doctor",
+      label: ADMIN_NAVIGATION.DOCTOR,
+      icon: Stethoscope,
+    },
   ];
 
   const handleLinkClick = () => {
@@ -50,6 +55,9 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     }
     if (href === "/admin/api-keys") {
       return pathname?.startsWith("/admin/api-keys");
+    }
+    if (href === "/admin/doctor") {
+      return pathname?.startsWith("/admin/doctor");
     }
     if (href === "/admin/users") {
       return pathname === "/admin/users";

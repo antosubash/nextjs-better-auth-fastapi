@@ -75,10 +75,7 @@ async def health_check(request: Request) -> JSONResponse:
             dependencies["jwks"] = "error"
             overall_status = "unhealthy"
     except Exception as e:
-        logger.warning(
-            f"Health check failed for Better Auth: {str(e)}",
-            extra={"request_id": request_id}
-        )
+        logger.warning(f"Health check failed for Better Auth: {str(e)}")
         dependencies["better_auth"] = f"error: {str(e)}"
         dependencies["jwks"] = "error"
         overall_status = "unhealthy"

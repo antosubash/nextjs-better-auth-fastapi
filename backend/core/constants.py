@@ -1,5 +1,46 @@
 """Constants for error messages and other hardcoded strings."""
 
+# Permission resources - must stay in sync with nextjs/lib/constants.ts
+class PermissionResources:
+    """Permission resource constants."""
+    
+    PROJECT = "project"
+    ORGANIZATION = "organization"
+    USER = "user"
+    API_KEY = "apiKey"
+    ROLE = "role"
+    MEMBER = "member"
+    INVITATION = "invitation"
+    FILE = "file"
+    SETTINGS = "settings"
+    SESSION = "session"
+
+
+# Permission actions - must stay in sync with nextjs/lib/constants.ts
+class PermissionActions:
+    """Permission action constants."""
+    
+    READ = "read"
+    LIST = "list"
+    VIEW = "view"
+    CREATE = "create"
+    SHARE = "share"
+    UPDATE = "update"
+    DELETE = "delete"
+    BAN = "ban"
+    UNBAN = "unban"
+    SET_ROLE = "set-role"
+    SET_PASSWORD = "set-password"
+    IMPERSONATE = "impersonate"
+    GET = "get"
+    INVITE = "invite"
+    REMOVE = "remove"
+    REVOKE = "revoke"
+    UPLOAD = "upload"
+    DOWNLOAD = "download"
+    CANCEL = "cancel"
+
+
 # Error messages
 class ErrorMessages:
     """Error message constants."""
@@ -12,6 +53,13 @@ class ErrorMessages:
     AUTH_TOKEN_INVALID = "Invalid authentication token"
     AUTH_TOKEN_VERIFICATION_FAILED = "Token verification failed"
     AUTH_TOKEN_VERIFICATION_ERROR = "Token verification error"
+    
+    # API key errors
+    API_KEY_MISSING = "API key missing"
+    API_KEY_INVALID = "Invalid API key"
+    API_KEY_VERIFICATION_FAILED = "API key verification failed"
+    API_KEY_VERIFICATION_ERROR = "API key verification error"
+    API_KEY_INSUFFICIENT_PERMISSIONS = "API key has insufficient permissions"
     
     # JWKS errors
     JWKS_FETCH_FAILED = "Failed to fetch JWKS"

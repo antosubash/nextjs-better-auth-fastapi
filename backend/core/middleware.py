@@ -1,4 +1,4 @@
-"""Middleware for JWT authentication and request tracing."""
+"""Middleware for JWT and API key authentication and request tracing."""
 
 import uuid
 import logging
@@ -7,7 +7,7 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-from core.auth import verify_token_string
+from core.auth import verify_token_string, verify_api_key
 from core.constants import ErrorMessages
 from core.config import PUBLIC_ROUTES
 
@@ -43,45 +43,130 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):
-    """Middleware to validate JWT tokens for protected routes."""
+    """Middleware to validate JWT tokens and API keys for protected routes."""
     
     def __init__(self, app: ASGIApp, excluded_paths: Set[str] = None):
         """
-        Initialize JWT auth middleware.
+        Initialize JWT and API key auth middleware.
         
         Args:
             app: ASGI application
-            excluded_paths: Set of paths to exclude from JWT validation
+            excluded_paths: Set of paths to exclude from authentication validation
         """
         super().__init__(app)
         self.excluded_paths = excluded_paths or PUBLIC_ROUTES
     
     async def dispatch(self, request: Request, call_next):
-        """Validate JWT token for protected routes."""
+        """
+        Validate JWT token or API key for protected routes.
+        
+        Supports both authentication methods:
+        - API Key: X-API-Key header
+        - JWT Token: Authorization: Bearer <token> header
+        
+        Both can be present simultaneously. If neither is present and route is protected,
+        returns 401 Unauthorized.
+        """
         method = request.method
         path = request.url.path
         client_ip = request.client.host if request.client else "unknown"
         request_id = getattr(request.state, "request_id", "unknown")
         
-        logger.info(
-            f"JWT middleware: {method} {path} from {client_ip}",
-            extra={"request_id": request_id}
-        )
+        logger.info(f"Auth middleware: {method} {path} from {client_ip}")
         
-        # Check if the route should be excluded from JWT validation
-        if path in self.excluded_paths:
-            logger.debug(
-                f"Route {path} is excluded from JWT validation",
-                extra={"request_id": request_id}
-            )
+        # Allow OPTIONS requests (CORS preflight) to pass through without authentication
+        if method == "OPTIONS":
+            logger.debug(f"OPTIONS request for {path} - allowing CORS preflight")
             return await call_next(request)
         
-        # Extract token from Authorization header
+        # Check if the route should be excluded from authentication validation
+        if path in self.excluded_paths:
+            logger.debug(f"Route {path} is excluded from authentication validation")
+            return await call_next(request)
+        
+        # Get HTTP client from app state if available
+        http_client = getattr(request.app.state, "http_client", None)
+        
+        # Check for API key first (X-API-Key header)
+        api_key = request.headers.get("X-API-Key")
+        if api_key:
+            api_key = api_key.strip()
+            if api_key:
+                logger.debug(
+                    f"Found API key in X-API-Key header for {method} {path} from {client_ip}"
+                )
+                try:
+                    # Verify API key (without specific permission checks at middleware level)
+                    api_key_data = await verify_api_key(api_key, http_client=http_client)
+                    
+                    # Store API key data in request state
+                    request.state.api_key_data = api_key_data
+                    
+                    user_id = api_key_data.get("user_id", "unknown")
+                    logger.info(
+                        f"API key validated successfully for {method} {path} from {client_ip}. "
+                        f"User ID: {user_id}, Key ID: {api_key_data.get('key_id', 'unknown')}"
+                    )
+                except Exception as e:
+                    error_detail = str(e) if hasattr(e, "detail") else ErrorMessages.API_KEY_VERIFICATION_FAILED
+                    status_code = e.status_code if hasattr(e, "status_code") else status.HTTP_401_UNAUTHORIZED
+                    
+                    logger.warning(
+                        f"API key validation failed for {method} {path} from {client_ip}: "
+                        f"{status_code} - {error_detail}"
+                    )
+                    return JSONResponse(
+                        status_code=status_code,
+                        content={
+                            "detail": error_detail,
+                            "request_id": request_id
+                        },
+                    )
+        
+        # Check for JWT token (Authorization: Bearer header)
         authorization = request.headers.get("Authorization")
-        if not authorization:
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.replace("Bearer ", "").strip()
+            if token:
+                logger.debug(
+                    f"Found JWT token in Authorization header for {method} {path} from {client_ip}"
+                )
+                try:
+                    # Verify JWT token
+                    token_payload = await verify_token_string(token, http_client=http_client)
+                    
+                    # Store token payload in request state
+                    request.state.token_data = token_payload
+                    
+                    user_id = token_payload.get("sub") or token_payload.get("id", "unknown")
+                    logger.info(
+                        f"JWT token validated successfully for {method} {path} from {client_ip}. "
+                        f"User ID: {user_id}"
+                    )
+                except Exception as e:
+                    error_detail = str(e) if hasattr(e, "detail") else ErrorMessages.AUTH_TOKEN_VERIFICATION_FAILED
+                    status_code = e.status_code if hasattr(e, "status_code") else status.HTTP_401_UNAUTHORIZED
+                    
+                    logger.warning(
+                        f"JWT validation failed for {method} {path} from {client_ip}: "
+                        f"{status_code} - {error_detail}"
+                    )
+                    return JSONResponse(
+                        status_code=status_code,
+                        content={
+                            "detail": error_detail,
+                            "request_id": request_id
+                        },
+                    )
+        
+        # Check if at least one authentication method succeeded
+        has_api_key = hasattr(request.state, "api_key_data")
+        has_jwt = hasattr(request.state, "token_data")
+        
+        if not has_api_key and not has_jwt:
             logger.warning(
-                f"Authorization header missing for {method} {path} from {client_ip}",
-                extra={"request_id": request_id}
+                f"No valid authentication found for {method} {path} from {client_ip}. "
+                f"Missing both API key and JWT token."
             )
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -91,75 +176,16 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                 },
             )
         
-        # Check if it's a Bearer token
-        if not authorization.startswith("Bearer "):
-            logger.warning(
-                f"Invalid authorization scheme for {method} {path} from {client_ip}. "
-                f"Received: {authorization[:20]}...",
-                extra={"request_id": request_id}
-            )
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={
-                    "detail": ErrorMessages.AUTH_INVALID_SCHEME,
-                    "request_id": request_id
-                },
-            )
-        
-        # Extract the token
-        token = authorization.replace("Bearer ", "").strip()
-        if not token:
-            logger.warning(
-                f"Token missing in Authorization header for {method} {path} from {client_ip}",
-                extra={"request_id": request_id}
-            )
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={
-                    "detail": ErrorMessages.AUTH_TOKEN_MISSING,
-                    "request_id": request_id
-                },
-            )
-        
-        # Verify the token
-        logger.debug(
-            f"Validating JWT token for {method} {path} from {client_ip}",
-            extra={"request_id": request_id}
-        )
-        try:
-            # Get HTTP client from app state if available
-            http_client = getattr(request.app.state, "http_client", None)
-            token_payload = await verify_token_string(token, http_client=http_client)
-            
-            # Store token payload in request state for use in route handlers
-            request.state.token_data = token_payload
-            
-            user_id = token_payload.get("sub") or token_payload.get("id", "unknown")
-            logger.info(
-                f"JWT token validated successfully for {method} {path} from {client_ip}. "
-                f"User ID: {user_id}",
-                extra={"request_id": request_id}
-            )
-        except Exception as e:
-            error_detail = str(e) if hasattr(e, "detail") else ErrorMessages.AUTH_TOKEN_VERIFICATION_FAILED
-            status_code = e.status_code if hasattr(e, "status_code") else status.HTTP_401_UNAUTHORIZED
-            
-            logger.warning(
-                f"JWT validation failed for {method} {path} from {client_ip}: "
-                f"{status_code} - {error_detail}",
-                extra={"request_id": request_id}
-            )
-            return JSONResponse(
-                status_code=status_code,
-                content={
-                    "detail": error_detail,
-                    "request_id": request_id
-                },
-            )
-        
         # Continue with the request
+        auth_methods = []
+        if has_api_key:
+            auth_methods.append("API Key")
+        if has_jwt:
+            auth_methods.append("JWT")
+        
         logger.debug(
-            f"Request proceeding to handler for {method} {path}",
+            f"Request proceeding to handler for {method} {path} "
+            f"(authenticated via: {', '.join(auth_methods)})",
             extra={"request_id": request_id}
         )
         return await call_next(request)
@@ -214,10 +240,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         
         # Check rate limit
         if len(self._request_counts[client_ip]) >= self.requests_per_minute:
-            logger.warning(
-                f"Rate limit exceeded for {client_ip} on {path}",
-                extra={"request_id": request_id}
-            )
+            logger.warning(f"Rate limit exceeded for {client_ip} on {path}")
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 content={

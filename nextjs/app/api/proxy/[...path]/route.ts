@@ -48,22 +48,23 @@ async function handleProxyRequest(
   method: string,
 ) {
   try {
-    const session = await betterAuthService.session.getSession();
-
-    if (!session?.session) {
-      return NextResponse.json(
-        { error: PROXY_ERRORS.NOT_AUTHENTICATED },
-        { status: 401 }
-      );
-    }
-
-    const tokenResponse = await betterAuthService.session.getToken();
-
-    if (!tokenResponse?.token) {
-      return NextResponse.json(
-        { error: PROXY_ERRORS.FAILED_TO_GENERATE_TOKEN },
-        { status: 500 },
-      );
+    // Handle special case: auth/get-token - requires session
+    if (pathSegments.length === 2 && pathSegments[0] === "auth" && pathSegments[1] === "get-token") {
+      const session = await betterAuthService.session.getSession();
+      if (!session?.session) {
+        return NextResponse.json(
+          { error: PROXY_ERRORS.NOT_AUTHENTICATED },
+          { status: 401 }
+        );
+      }
+      const tokenResponse = await betterAuthService.session.getToken();
+      if (!tokenResponse?.token) {
+        return NextResponse.json(
+          { error: PROXY_ERRORS.FAILED_TO_GENERATE_TOKEN },
+          { status: 500 },
+        );
+      }
+      return NextResponse.json(tokenResponse);
     }
 
     const endpoint = `/${pathSegments.join("/")}`;
@@ -74,8 +75,40 @@ async function handleProxyRequest(
     const fullUrl = searchParams ? `${url}?${searchParams}` : url;
 
     const requestHeaders = new Headers();
-    requestHeaders.set("Authorization", `Bearer ${tokenResponse.token}`);
     requestHeaders.set("Content-Type", "application/json");
+    
+    // Check for API key first (allows API key authentication without session)
+    const apiKey = request.headers.get("X-API-Key");
+    if (apiKey) {
+      requestHeaders.set("X-API-Key", apiKey);
+    }
+    
+    // Try to get JWT token from session (optional if API key is present)
+    try {
+      const session = await betterAuthService.session.getSession();
+      if (session?.session) {
+        const tokenResponse = await betterAuthService.session.getToken();
+        if (tokenResponse?.token) {
+          requestHeaders.set("Authorization", `Bearer ${tokenResponse.token}`);
+        }
+      }
+    } catch (error) {
+      // Session/JWT is optional if API key is provided
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: PROXY_ERRORS.NOT_AUTHENTICATED },
+          { status: 401 }
+        );
+      }
+    }
+    
+    // Require either API key or JWT token
+    if (!apiKey && !requestHeaders.has("Authorization")) {
+      return NextResponse.json(
+        { error: PROXY_ERRORS.NOT_AUTHENTICATED },
+        { status: 401 }
+      );
+    }
 
     const requestOptions: RequestInit = {
       method,

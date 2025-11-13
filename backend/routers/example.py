@@ -98,19 +98,12 @@ async def create_data(
     
     try:
         message = await file_service.write_data(payload.content)
-        logger.info(
-            f"Data written successfully: {payload.content}",
-            extra={"request_id": request_id}
-        )
-        logger.info(
-            f"Token data: {token_data}",
-            extra={"request_id": request_id}
-        )
+        logger.info(f"Data written successfully: {payload.content}")
+        logger.info(f"Token data: {token_data}")
         return DataResponse(content=payload.content, message=message)
     except Exception as e:
         logger.error(
             f"Failed to write data: {str(e)}",
-            extra={"request_id": request_id},
             exc_info=True
         )
         error_detail = str(e) if hasattr(e, "detail") else ErrorMessages.FILE_WRITE_ERROR
