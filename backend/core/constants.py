@@ -1,9 +1,10 @@
 """Constants for error messages and other hardcoded strings."""
 
+
 # Permission resources - must stay in sync with nextjs/lib/constants.ts
 class PermissionResources:
     """Permission resource constants."""
-    
+
     PROJECT = "project"
     ORGANIZATION = "organization"
     USER = "user"
@@ -19,7 +20,7 @@ class PermissionResources:
 # Permission actions - must stay in sync with nextjs/lib/constants.ts
 class PermissionActions:
     """Permission action constants."""
-    
+
     READ = "read"
     LIST = "list"
     VIEW = "view"
@@ -44,7 +45,7 @@ class PermissionActions:
 # Error messages
 class ErrorMessages:
     """Error message constants."""
-    
+
     # Authentication errors
     AUTH_HEADER_MISSING = "Authorization header missing"
     AUTH_INVALID_SCHEME = "Invalid authorization scheme. Expected 'Bearer'"
@@ -53,22 +54,29 @@ class ErrorMessages:
     AUTH_TOKEN_INVALID = "Invalid authentication token"
     AUTH_TOKEN_VERIFICATION_FAILED = "Token verification failed"
     AUTH_TOKEN_VERIFICATION_ERROR = "Token verification error"
-    
+
     # API key errors
     API_KEY_MISSING = "API key missing"
     API_KEY_INVALID = "Invalid API key"
     API_KEY_VERIFICATION_FAILED = "API key verification failed"
     API_KEY_VERIFICATION_ERROR = "API key verification error"
     API_KEY_INSUFFICIENT_PERMISSIONS = "API key has insufficient permissions"
-    
+
     # JWKS errors
     JWKS_FETCH_FAILED = "Failed to fetch JWKS"
     JWKS_KEY_NOT_FOUND = "Key with kid '{kid}' not found in JWKS"
-    
+
     # File operation errors
     FILE_WRITE_ERROR = "Failed to write to file"
     FILE_READ_ERROR = "Failed to read from file"
-    
+
+    # Task errors
+    TASK_NOT_FOUND = "Task not found"
+    TASK_CREATE_ERROR = "Failed to create task"
+    TASK_UPDATE_ERROR = "Failed to update task"
+    TASK_DELETE_ERROR = "Failed to delete task"
+    TASK_ACCESS_DENIED = "Access denied to this task"
+
     # General errors
     INTERNAL_SERVER_ERROR = "Internal server error"
     SERVICE_UNAVAILABLE = "Service unavailable"
@@ -77,14 +85,16 @@ class ErrorMessages:
 # Success messages
 class SuccessMessages:
     """Success message constants."""
-    
+
     DATA_WRITTEN = "Data written successfully"
     HEALTH_CHECK_OK = "Service is healthy"
+    TASK_CREATED = "Task created successfully"
+    TASK_UPDATED = "Task updated successfully"
+    TASK_DELETED = "Task deleted successfully"
 
 
 # API response messages
 class ApiMessages:
     """API response message constants."""
-    
-    HELLO_WORLD = "Hello World! FastAPI is working."
 
+    HELLO_WORLD = "Hello World! FastAPI is working."

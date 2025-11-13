@@ -54,11 +54,7 @@ export function downloadFile(content: string, filename: string, mimeType: string
   URL.revokeObjectURL(url);
 }
 
-export function exportUsers(
-  users: User[],
-  format: "csv" | "json",
-  filename?: string
-) {
+export function exportUsers(users: User[], format: "csv" | "json", filename?: string) {
   const timestamp = new Date().toISOString().split("T")[0];
   const defaultFilename = `users-export-${timestamp}`;
 
@@ -70,4 +66,3 @@ export function exportUsers(
     downloadFile(jsonContent, filename || `${defaultFilename}.json`, "application/json");
   }
 }
-

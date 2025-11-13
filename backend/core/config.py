@@ -1,7 +1,7 @@
 """Application configuration from environment variables."""
 
 import os
-from typing import List
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,10 +14,7 @@ JWT_ISSUER = BETTER_AUTH_URL
 JWT_AUDIENCE = BETTER_AUTH_URL
 
 # CORS configuration
-CORS_ORIGINS: List[str] = os.getenv(
-    "CORS_ORIGINS", 
-    "http://localhost:3000"
-).split(",")
+CORS_ORIGINS: list[str] = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 
 # File operations configuration
 OUTPUT_FILE_PATH = os.getenv("OUTPUT_FILE_PATH", "output_file.txt")
@@ -39,3 +36,23 @@ LOG_FORMAT_JSON = os.getenv("LOG_FORMAT_JSON", "false").lower() == "true"
 # Public routes that don't require JWT authentication
 PUBLIC_ROUTES: set[str] = {"/", "/docs", "/openapi.json", "/redoc", "/health"}
 
+# Database configuration
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/better_auth_db"
+)
+# Synchronous database URL for Alembic migrations
+DATABASE_URL_SYNC = DATABASE_URL.replace("+asyncpg", "")
+
+# Database connection pool settings
+DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "5"))
+DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "10"))
+DB_POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "30"))
+DB_POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "3600"))
+
+# MinIO/S3 configuration
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
+MINIO_USE_SSL = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "better-auth-storage")
+MINIO_REGION = os.getenv("MINIO_REGION", "us-east-1")

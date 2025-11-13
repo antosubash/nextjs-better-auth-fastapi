@@ -25,8 +25,16 @@ export function getAvailableRoles(): RoleInfo[] {
  * Get only assignable user roles (filters out organization roles and default role)
  */
 export function getAssignableUserRoles(): RoleInfo[] {
-  return getAllRoles().filter((role) => 
-    ASSIGNABLE_USER_ROLES.has(role.name as typeof USER_ROLES.ADMIN | typeof USER_ROLES.MY_CUSTOM_ROLE | typeof USER_ROLES.MODERATOR | typeof USER_ROLES.EDITOR | typeof USER_ROLES.VIEWER | typeof USER_ROLES.SUPPORT)
+  return getAllRoles().filter((role) =>
+    ASSIGNABLE_USER_ROLES.has(
+      role.name as
+        | typeof USER_ROLES.ADMIN
+        | typeof USER_ROLES.MY_CUSTOM_ROLE
+        | typeof USER_ROLES.MODERATOR
+        | typeof USER_ROLES.EDITOR
+        | typeof USER_ROLES.VIEWER
+        | typeof USER_ROLES.SUPPORT
+    )
   );
 }
 
@@ -62,7 +70,15 @@ export function isAssignableUserRole(roleName: string | null | undefined): boole
   if (!roleName) {
     return false;
   }
-  return ASSIGNABLE_USER_ROLES.has(roleName as typeof USER_ROLES.ADMIN | typeof USER_ROLES.MY_CUSTOM_ROLE | typeof USER_ROLES.MODERATOR | typeof USER_ROLES.EDITOR | typeof USER_ROLES.VIEWER | typeof USER_ROLES.SUPPORT);
+  return ASSIGNABLE_USER_ROLES.has(
+    roleName as
+      | typeof USER_ROLES.ADMIN
+      | typeof USER_ROLES.MY_CUSTOM_ROLE
+      | typeof USER_ROLES.MODERATOR
+      | typeof USER_ROLES.EDITOR
+      | typeof USER_ROLES.VIEWER
+      | typeof USER_ROLES.SUPPORT
+  );
 }
 
 /**
@@ -114,4 +130,3 @@ export function canBanRole(roleName: string | null | undefined): boolean {
 export function findRoleByName(roleName: string): RoleInfo | undefined {
   return getAllRoles().find((role) => role.name === roleName);
 }
-

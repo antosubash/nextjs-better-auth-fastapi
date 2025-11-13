@@ -45,12 +45,7 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
         <div className="flex-1 lg:ml-0" />
         <div className="flex items-center gap-3">
           <OrganizationSwitcher />
-          <Button
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            variant="default"
-            size="sm"
-          >
+          <Button onClick={handleLogout} disabled={isLoggingOut} variant="default" size="sm">
             {isLoggingOut ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (

@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  API_KEY_LABELS,
-  API_KEY_PLACEHOLDERS,
-} from "@/lib/constants";
+import { API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 import { statement } from "@/lib/permissions";
 import { Plus, Trash2, ChevronDown, ChevronUp, Code } from "lucide-react";
 
@@ -16,10 +13,7 @@ interface PermissionsEditorProps {
 // Extract resources and actions from the permissions statement
 const COMMON_RESOURCES = Object.keys(statement) as Array<keyof typeof statement>;
 
-export function PermissionsEditor({
-  value,
-  onChange,
-}: PermissionsEditorProps) {
+export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
   const [showJsonEditor, setShowJsonEditor] = useState(false);
   const [jsonValue, setJsonValue] = useState("");
   const [jsonError, setJsonError] = useState("");
@@ -90,9 +84,7 @@ export function PermissionsEditor({
           // Validate structure
           for (const [key, val] of Object.entries(parsed)) {
             if (!Array.isArray(val)) {
-              throw new Error(
-                `Invalid format: ${key} must be an array of strings`,
-              );
+              throw new Error(`Invalid format: ${key} must be an array of strings`);
             }
           }
           onChange(parsed);
@@ -103,15 +95,13 @@ export function PermissionsEditor({
         onChange({});
       }
     } catch (err) {
-      setJsonError(
-        err instanceof Error ? err.message : "Invalid JSON format",
-      );
+      setJsonError(err instanceof Error ? err.message : "Invalid JSON format");
     }
   };
 
   const resources = Object.keys(value);
   const allResources: string[] = Array.from(
-    new Set([...COMMON_RESOURCES.map(String), ...resources]),
+    new Set([...COMMON_RESOURCES.map(String), ...resources])
   ).sort();
 
   // Get available actions for a specific resource
@@ -131,9 +121,7 @@ export function PermissionsEditor({
           className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
         >
           <Code className="w-4 h-4" />
-          {showJsonEditor
-            ? API_KEY_LABELS.VISUAL_EDITOR
-            : API_KEY_LABELS.JSON_EDITOR}
+          {showJsonEditor ? API_KEY_LABELS.VISUAL_EDITOR : API_KEY_LABELS.JSON_EDITOR}
         </button>
       </div>
 
@@ -150,11 +138,7 @@ export function PermissionsEditor({
                 : "border-gray-300 dark:border-gray-700"
             }`}
           />
-          {jsonError && (
-            <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-              {jsonError}
-            </p>
-          )}
+          {jsonError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{jsonError}</p>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -303,4 +287,3 @@ export function PermissionsEditor({
     </div>
   );
 }
-

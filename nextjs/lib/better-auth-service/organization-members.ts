@@ -39,10 +39,7 @@ export const organizationMemberService = {
    * Remove a member from an organization
    * Requires organization owner role
    */
-  async removeMember(params: {
-    memberIdOrEmail: string;
-    organizationId: string;
-  }) {
+  async removeMember(params: { memberIdOrEmail: string; organizationId: string }) {
     return withErrorHandling(
       "removeMember",
       async () => {
@@ -144,9 +141,7 @@ export const organizationMemberService = {
   /**
    * Leave an organization
    */
-  async leave(params: {
-    organizationId: string;
-  }) {
+  async leave(params: { organizationId: string }) {
     return withErrorHandling(
       "leave",
       async () => {
@@ -162,4 +157,3 @@ export const organizationMemberService = {
     );
   },
 };
-

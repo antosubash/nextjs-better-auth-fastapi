@@ -20,10 +20,6 @@ export async function GET(_request: NextRequest) {
     return NextResponse.json({ roles });
   } catch (error) {
     console.error("Failed to fetch roles:", error);
-    return NextResponse.json(
-      { error: PERMISSION_ERRORS.LOAD_ROLES_FAILED },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: PERMISSION_ERRORS.LOAD_ROLES_FAILED }, { status: 500 });
   }
 }
-

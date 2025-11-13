@@ -1,11 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  API_KEY_LABELS,
-  API_KEY_PLACEHOLDERS,
-  API_KEY_ERRORS,
-} from "@/lib/constants";
+import { API_KEY_LABELS, API_KEY_PLACEHOLDERS, API_KEY_ERRORS } from "@/lib/constants";
 import { X, CheckCircle, XCircle } from "lucide-react";
 
 interface ApiKeyVerifyProps {
@@ -67,8 +63,7 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
         setResult(verifyResult.data);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : API_KEY_ERRORS.VERIFY_FAILED;
+      const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.VERIFY_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -174,9 +169,7 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
 
             {result.error && (
               <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Error:
-                </p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Error:</p>
                 <p className="text-sm text-red-600 dark:text-red-400">
                   {result.error.message} ({result.error.code})
                 </p>
@@ -185,9 +178,7 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
 
             {result.key && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Key Details:
-                </p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Key Details:</p>
                 <div className="text-sm text-gray-900 dark:text-white">
                   <p>
                     <span className="font-medium">Name:</span> {result.key.name || "N/A"}
@@ -216,4 +207,3 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
     </div>
   );
 }
-

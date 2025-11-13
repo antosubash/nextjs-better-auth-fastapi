@@ -1,6 +1,6 @@
 /**
  * Better Auth Service
- * 
+ *
  * Centralized service for all Better Auth API calls with:
  * - Automatic header handling
  * - Error handling
@@ -34,4 +34,3 @@ export const betterAuthService = {
 };
 
 export default betterAuthService;
-

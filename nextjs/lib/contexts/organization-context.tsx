@@ -1,19 +1,9 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import {
-  ORGANIZATION_ERRORS,
-  ORGANIZATION_CONTEXT,
-} from "@/lib/constants";
+import { ORGANIZATION_ERRORS, ORGANIZATION_CONTEXT } from "@/lib/constants";
 
 interface Organization {
   id: string;
@@ -32,9 +22,7 @@ interface OrganizationContextType {
   clearError: () => void;
 }
 
-const OrganizationContext = createContext<OrganizationContextType | undefined>(
-  undefined,
-);
+const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 interface OrganizationProviderProps {
   children: ReactNode;
@@ -43,8 +31,7 @@ interface OrganizationProviderProps {
 export function OrganizationProvider({ children }: OrganizationProviderProps) {
   const router = useRouter();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [activeOrganization, setActiveOrganization] =
-    useState<Organization | null>(null);
+  const [activeOrganization, setActiveOrganization] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,14 +62,8 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
           });
 
           if (result.error) {
-            console.error(
-              ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED,
-              result.error,
-            );
-            setError(
-              result.error.message ||
-                ORGANIZATION_ERRORS.SET_ACTIVE_FAILED,
-            );
+            console.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, result.error);
+            setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
           }
         } catch (err) {
           console.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, err);
@@ -92,7 +73,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
 
       setActiveOrganization(activeOrg);
     },
-    [],
+    []
   );
 
   const loadOrganizations = useCallback(async () => {
@@ -103,10 +84,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       ]);
 
       if (listResult.error) {
-        setError(
-          listResult.error.message ||
-            ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
-        );
+        setError(listResult.error.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
         setOrganizations([]);
         setActiveOrganization(null);
         return;
@@ -115,8 +93,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       const orgs = Array.isArray(listResult.data) ? listResult.data : [];
       setOrganizations(orgs);
 
-      const sessionActiveOrgId =
-        sessionResult.data?.session?.activeOrganizationId || null;
+      const sessionActiveOrgId = sessionResult.data?.session?.activeOrganizationId || null;
 
       await ensureActiveOrganization(orgs, sessionActiveOrgId);
     } catch (err) {
@@ -150,9 +127,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
         });
 
         if (result.error) {
-          setError(
-            result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED,
-          );
+          setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
           return;
         }
 
@@ -171,7 +146,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
         setIsSwitching(false);
       }
     },
-    [activeOrganization, organizations, router, refreshOrganizations],
+    [activeOrganization, organizations, router, refreshOrganizations]
   );
 
   useEffect(() => {
@@ -211,19 +186,13 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     clearError,
   };
 
-  return (
-    <OrganizationContext.Provider value={value}>
-      {children}
-    </OrganizationContext.Provider>
-  );
+  return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;
 }
 
 export function useOrganizationContext(): OrganizationContextType {
   const context = useContext(OrganizationContext);
   if (context === undefined) {
-    throw new Error(
-      ORGANIZATION_CONTEXT.HOOK_ERROR,
-    );
+    throw new Error(ORGANIZATION_CONTEXT.HOOK_ERROR);
   }
   return context;
 }
@@ -258,4 +227,3 @@ export function useOrganizationSafe() {
     clearError: context.clearError,
   };
 }
-

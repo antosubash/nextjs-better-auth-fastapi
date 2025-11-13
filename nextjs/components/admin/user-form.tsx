@@ -128,7 +128,10 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     try {
       if (isEditing) {
         // Ensure only assignable roles are used
-        const validRole = getValidAssignableRole(values.role, availableRoles[0]?.name || USER_ROLES.USER);
+        const validRole = getValidAssignableRole(
+          values.role,
+          availableRoles[0]?.name || USER_ROLES.USER
+        );
 
         const result = await authClient.admin.updateUser({
           userId: user!.id,
@@ -152,7 +155,10 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         }
 
         // Ensure only assignable roles are used
-        const validRole = getValidAssignableRole(values.role, availableRoles[0]?.name || USER_ROLES.USER);
+        const validRole = getValidAssignableRole(
+          values.role,
+          availableRoles[0]?.name || USER_ROLES.USER
+        );
 
         // Better Auth client types don't include custom roles, but they are supported at runtime
         const result = await authClient.admin.createUser({
@@ -192,130 +198,120 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              rules={{ required: AUTH_ERRORS.NAME_REQUIRED }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{ADMIN_LABELS.NAME}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={ADMIN_PLACEHOLDERS.NAME}
-                      {...field}
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              rules={{
-                required: AUTH_ERRORS.EMAIL_REQUIRED,
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: MEMBER_ERRORS.INVALID_EMAIL,
-                },
-              }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{ADMIN_LABELS.EMAIL}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder={ADMIN_PLACEHOLDERS.EMAIL}
-                      {...field}
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {!isEditing && (
-              <FormField
-                control={form.control}
-                name="password"
-                rules={{ required: AUTH_ERRORS.PASSWORD_REQUIRED }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{ADMIN_LABELS.PASSWORD}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={ADMIN_PLACEHOLDERS.PASSWORD}
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name="name"
+            rules={{ required: AUTH_ERRORS.NAME_REQUIRED }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{ADMIN_LABELS.NAME}</FormLabel>
+                <FormControl>
+                  <Input placeholder={ADMIN_PLACEHOLDERS.NAME} {...field} disabled={isLoading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
+          />
 
+          <FormField
+            control={form.control}
+            name="email"
+            rules={{
+              required: AUTH_ERRORS.EMAIL_REQUIRED,
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: MEMBER_ERRORS.INVALID_EMAIL,
+              },
+            }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{ADMIN_LABELS.EMAIL}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder={ADMIN_PLACEHOLDERS.EMAIL}
+                    {...field}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {!isEditing && (
             <FormField
               control={form.control}
-              name="role"
+              name="password"
+              rules={{ required: AUTH_ERRORS.PASSWORD_REQUIRED }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{ADMIN_LABELS.ROLE}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={isLoadingRoles}
-                  >
-                    <FormControl>
-                      <SelectTrigger disabled={isLoading || isLoadingRoles}>
-                        <SelectValue placeholder={ADMIN_PLACEHOLDERS.ROLE} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoadingRoles ? (
-                        <div className="p-2">
-                          <Skeleton className="h-8 w-full" />
-                        </div>
-                      ) : (
-                        availableRoles.map((roleInfo) => (
-                          <SelectItem key={roleInfo.name} value={roleInfo.name}>
-                            {ROLE_DISPLAY_NAMES[
-                              roleInfo.name as keyof typeof ROLE_DISPLAY_NAMES
-                            ] || roleInfo.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>{ADMIN_LABELS.PASSWORD}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder={ADMIN_PLACEHOLDERS.PASSWORD}
+                      {...field}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          )}
 
-            <div className="flex gap-3 pt-4">
-              <Button type="submit" disabled={isLoading || isLoadingRoles} className="flex-1">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {ADMIN_LABELS.SAVING}
-                  </>
-                ) : (
-                  ADMIN_LABELS.SAVE
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isLoading}
-              >
-                {ADMIN_LABELS.CANCEL}
-              </Button>
-            </div>
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{ADMIN_LABELS.ROLE}</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  disabled={isLoadingRoles}
+                >
+                  <FormControl>
+                    <SelectTrigger disabled={isLoading || isLoadingRoles}>
+                      <SelectValue placeholder={ADMIN_PLACEHOLDERS.ROLE} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {isLoadingRoles ? (
+                      <div className="p-2">
+                        <Skeleton className="h-8 w-full" />
+                      </div>
+                    ) : (
+                      availableRoles.map((roleInfo) => (
+                        <SelectItem key={roleInfo.name} value={roleInfo.name}>
+                          {ROLE_DISPLAY_NAMES[roleInfo.name as keyof typeof ROLE_DISPLAY_NAMES] ||
+                            roleInfo.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex gap-3 pt-4">
+            <Button type="submit" disabled={isLoading || isLoadingRoles} className="flex-1">
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {ADMIN_LABELS.SAVING}
+                </>
+              ) : (
+                ADMIN_LABELS.SAVE
+              )}
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+              {ADMIN_LABELS.CANCEL}
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

@@ -102,15 +102,18 @@ export function UserBulkActions({
     try {
       const userIds = Array.from(selectedUserIds);
       // Ensure only assignable roles are used
-      const validRole = getValidAssignableRole(bulkRole, availableRoles[0]?.name || USER_ROLES.USER);
+      const validRole = getValidAssignableRole(
+        bulkRole,
+        availableRoles[0]?.name || USER_ROLES.USER
+      );
 
       // Better Auth client types don't include custom roles, but they are supported at runtime
       const results = await Promise.allSettled(
         userIds.map((userId) =>
-          authClient.admin.setRole({ 
-            userId, 
+          authClient.admin.setRole({
+            userId,
             // @ts-expect-error - Better Auth types only include "user" | "admin" but custom roles are supported
-            role: validRole 
+            role: validRole,
           })
         )
       );
@@ -135,13 +138,13 @@ export function UserBulkActions({
     setIsProcessingBulk(true);
     try {
       const userIds = Array.from(selectedUserIds);
-      
+
       // Filter out admin users
       const adminUserIds = userIds.filter((userId) => {
         const user = users.find((u) => u.id === userId);
         return !canBanRole(user?.role);
       });
-      
+
       const nonAdminUserIds = userIds.filter((userId) => {
         const user = users.find((u) => u.id === userId);
         return canBanRole(user?.role);
@@ -167,14 +170,10 @@ export function UserBulkActions({
       // Check for failed results
       // Note: We already filtered out admin users, so any errors are not admin-related
       const failedResults = results.filter(
-        (r) =>
-          r.status === "rejected" ||
-          (r.status === "fulfilled" && r.value.error)
+        (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.error)
       );
 
-      const successfulBans = results.filter(
-        (r) => r.status === "fulfilled" && !r.value.error
-      );
+      const successfulBans = results.filter((r) => r.status === "fulfilled" && !r.value.error);
 
       if (failedResults.length > 0) {
         if (successfulBans.length > 0) {
@@ -241,35 +240,19 @@ export function UserBulkActions({
               </span>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowBulkRoleDialog(true)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowBulkRoleDialog(true)}>
                 <Shield className="w-4 h-4 mr-2" />
                 {ADMIN_BULK_ACTIONS.CHANGE_ROLE}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowBulkBanDialog(true)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowBulkBanDialog(true)}>
                 <Ban className="w-4 h-4 mr-2" />
                 {ADMIN_BULK_ACTIONS.BAN_SELECTED}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowBulkUnbanDialog(true)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowBulkUnbanDialog(true)}>
                 <UserCheck className="w-4 h-4 mr-2" />
                 {ADMIN_BULK_ACTIONS.UNBAN_SELECTED}
               </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowBulkDeleteDialog(true)}
-              >
+              <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteDialog(true)}>
                 <Trash2 className="w-4 h-4 mr-2" />
                 {ADMIN_BULK_ACTIONS.DELETE_SELECTED}
               </Button>
@@ -278,23 +261,16 @@ export function UserBulkActions({
         </CardContent>
       </Card>
 
-      <AlertDialog
-        open={showBulkDeleteDialog}
-        onOpenChange={setShowBulkDeleteDialog}
-      >
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {ADMIN_BULK_ACTIONS.CONFIRM_BULK_DELETE}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{ADMIN_BULK_ACTIONS.CONFIRM_BULK_DELETE}</AlertDialogTitle>
             <AlertDialogDescription>
               {selectedUserIds.size} {ADMIN_BULK_ACTIONS.SELECTED_COUNT}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isProcessingBulk}>
-              {ADMIN_LABELS.CANCEL}
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isProcessingBulk}>{ADMIN_LABELS.CANCEL}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBulkDelete}
               disabled={isProcessingBulk}
@@ -328,9 +304,8 @@ export function UserBulkActions({
                 <SelectContent>
                   {availableRoles.map((role) => (
                     <SelectItem key={role.name} value={role.name}>
-                      {ROLE_DISPLAY_NAMES[
-                        role.name as keyof typeof ROLE_DISPLAY_NAMES
-                      ] || role.name}
+                      {ROLE_DISPLAY_NAMES[role.name as keyof typeof ROLE_DISPLAY_NAMES] ||
+                        role.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -348,10 +323,7 @@ export function UserBulkActions({
             >
               {ADMIN_LABELS.CANCEL}
             </Button>
-            <Button
-              onClick={handleBulkRoleChange}
-              disabled={isProcessingBulk || !bulkRole}
-            >
+            <Button onClick={handleBulkRoleChange} disabled={isProcessingBulk || !bulkRole}>
               {isProcessingBulk ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -372,9 +344,7 @@ export function UserBulkActions({
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="bulkBanReason">
-                {ADMIN_LABELS.BAN_REASON} (optional)
-              </Label>
+              <Label htmlFor="bulkBanReason">{ADMIN_LABELS.BAN_REASON} (optional)</Label>
               <Input
                 id="bulkBanReason"
                 value={bulkBanReason}
@@ -395,11 +365,7 @@ export function UserBulkActions({
             >
               {ADMIN_LABELS.CANCEL}
             </Button>
-            <Button
-              onClick={handleBulkBan}
-              disabled={isProcessingBulk}
-              variant="destructive"
-            >
+            <Button onClick={handleBulkBan} disabled={isProcessingBulk} variant="destructive">
               {isProcessingBulk ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -413,27 +379,17 @@ export function UserBulkActions({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
-        open={showBulkUnbanDialog}
-        onOpenChange={setShowBulkUnbanDialog}
-      >
+      <AlertDialog open={showBulkUnbanDialog} onOpenChange={setShowBulkUnbanDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {ADMIN_BULK_ACTIONS.CONFIRM_BULK_UNBAN}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{ADMIN_BULK_ACTIONS.CONFIRM_BULK_UNBAN}</AlertDialogTitle>
             <AlertDialogDescription>
               {selectedUserIds.size} {ADMIN_BULK_ACTIONS.SELECTED_COUNT}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isProcessingBulk}>
-              {ADMIN_LABELS.CANCEL}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBulkUnban}
-              disabled={isProcessingBulk}
-            >
+            <AlertDialogCancel disabled={isProcessingBulk}>{ADMIN_LABELS.CANCEL}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkUnban} disabled={isProcessingBulk}>
               {isProcessingBulk ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -449,4 +405,3 @@ export function UserBulkActions({
     </>
   );
 }
-

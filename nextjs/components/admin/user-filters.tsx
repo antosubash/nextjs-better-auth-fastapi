@@ -12,11 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { X, Filter } from "lucide-react";
@@ -63,10 +59,7 @@ export function UserFilters({
   return (
     <div className="mb-4 space-y-4">
       <div className="flex gap-2">
-        <Button
-          variant="outline"
-          onClick={() => onShowFiltersChange(!showFilters)}
-        >
+        <Button variant="outline" onClick={() => onShowFiltersChange(!showFilters)}>
           <Filter className="w-4 h-4 mr-2" />
           {ADMIN_FILTERS.FILTER_BY_DATE}
           {activeFilterCount > 0 && (
@@ -96,14 +89,11 @@ export function UserFilters({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">
-                      {ADMIN_FILTERS.ALL_ROLES}
-                    </SelectItem>
+                    <SelectItem value="all">{ADMIN_FILTERS.ALL_ROLES}</SelectItem>
                     {availableRoles.map((role) => (
                       <SelectItem key={role.name} value={role.name}>
-                        {ROLE_DISPLAY_NAMES[
-                          role.name as keyof typeof ROLE_DISPLAY_NAMES
-                        ] || role.name}
+                        {ROLE_DISPLAY_NAMES[role.name as keyof typeof ROLE_DISPLAY_NAMES] ||
+                          role.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -114,23 +104,15 @@ export function UserFilters({
                 <Label>{ADMIN_FILTERS.FILTER_BY_STATUS}</Label>
                 <Select
                   value={filterStatus}
-                  onValueChange={(value) =>
-                    onFilterStatusChange(value as FilterStatus)
-                  }
+                  onValueChange={(value) => onFilterStatusChange(value as FilterStatus)}
                 >
                   <SelectTrigger className="mt-2">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">
-                      {ADMIN_FILTERS.ALL_STATUSES}
-                    </SelectItem>
-                    <SelectItem value="active">
-                      {ADMIN_LABELS.ACTIVE}
-                    </SelectItem>
-                    <SelectItem value="banned">
-                      {ADMIN_LABELS.BANNED}
-                    </SelectItem>
+                    <SelectItem value="all">{ADMIN_FILTERS.ALL_STATUSES}</SelectItem>
+                    <SelectItem value="active">{ADMIN_LABELS.ACTIVE}</SelectItem>
+                    <SelectItem value="banned">{ADMIN_LABELS.BANNED}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -185,4 +167,3 @@ export function UserFilters({
     </div>
   );
 }
-

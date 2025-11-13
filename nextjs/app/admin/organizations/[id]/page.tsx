@@ -4,11 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ORGANIZATION_LABELS,
-  ORGANIZATION_ERRORS,
-  ORGANIZATION_SUCCESS,
-} from "@/lib/constants";
+import { ORGANIZATION_LABELS, ORGANIZATION_ERRORS, ORGANIZATION_SUCCESS } from "@/lib/constants";
 import { MemberList } from "@/components/organization/member-list";
 import { InvitationList } from "@/components/organization/invitation-list";
 import { OrganizationForm } from "@/components/organization/organization-form";
@@ -16,12 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,15 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ErrorToast } from "@/components/ui/error-toast";
-import {
-  Building2,
-  Users,
-  UserPlus,
-  Edit,
-  Trash2,
-  RefreshCw,
-  ArrowLeft,
-} from "lucide-react";
+import { Building2, Users, UserPlus, Edit, Trash2, RefreshCw, ArrowLeft } from "lucide-react";
 import { formatDate } from "@/lib/utils/date";
 import { authClient } from "@/lib/auth-client";
 
@@ -79,16 +62,14 @@ export default function OrganizationDetailPage() {
         fetch(`/api/admin/organizations/${organizationId}`),
         authClient.getSession(),
       ]);
-      
+
       if (sessionResult.data?.session?.activeOrganizationId) {
         setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
       }
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        setError(
-          errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED
-        );
+        setError(errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED);
         return;
       }
 
@@ -100,9 +81,7 @@ export default function OrganizationDetailPage() {
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED;
+        err instanceof Error ? err.message : ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -146,10 +125,7 @@ export default function OrganizationDetailPage() {
         }, 1000);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ORGANIZATION_ERRORS.DELETE_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ORGANIZATION_ERRORS.DELETE_FAILED;
       setError(errorMessage);
       setShowDeleteDialog(false);
     } finally {
@@ -183,19 +159,11 @@ export default function OrganizationDetailPage() {
 
   return (
     <div className="space-y-6">
-      {error && (
-        <ErrorToast
-          message={error}
-          onDismiss={() => setError("")}
-          duration={5000}
-        />
-      )}
+      {error && <ErrorToast message={error} onDismiss={() => setError("")} duration={5000} />}
 
       {success && (
         <div className="fixed top-4 right-4 z-50 max-w-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg shadow-lg p-4">
-          <p className="text-sm font-medium text-green-800 dark:text-green-200">
-            {success}
-          </p>
+          <p className="text-sm font-medium text-green-800 dark:text-green-200">{success}</p>
         </div>
       )}
 
@@ -229,9 +197,7 @@ export default function OrganizationDetailPage() {
                 )}
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <CardTitle className="text-3xl">
-                      {organization.name}
-                    </CardTitle>
+                    <CardTitle className="text-3xl">{organization.name}</CardTitle>
                     {activeOrganizationId === organization.id ? (
                       <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
                         {ORGANIZATION_LABELS.ACTIVE}
@@ -245,8 +211,7 @@ export default function OrganizationDetailPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline">{organization.slug}</Badge>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {ORGANIZATION_LABELS.CREATED_ON}{" "}
-                      {formatDate(organization.createdAt, "long")}
+                      {ORGANIZATION_LABELS.CREATED_ON} {formatDate(organization.createdAt, "long")}
                     </span>
                   </div>
                 </div>
@@ -265,21 +230,13 @@ export default function OrganizationDetailPage() {
                 disabled={isRefreshing}
                 title={ORGANIZATION_LABELS.REFRESH}
               >
-                <RefreshCw
-                  className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
-                />
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowEditDialog(true)}
-              >
+              <Button variant="outline" onClick={() => setShowEditDialog(true)}>
                 <Edit className="w-4 h-4 mr-2" />
                 {ORGANIZATION_LABELS.EDIT_ORGANIZATION}
               </Button>
-              <Button
-                variant="destructive"
-                onClick={() => setShowDeleteDialog(true)}
-              >
+              <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
                 <Trash2 className="w-4 h-4 mr-2" />
                 {ORGANIZATION_LABELS.DELETE_ORGANIZATION}
               </Button>
@@ -290,7 +247,10 @@ export default function OrganizationDetailPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as typeof activeTab)}
+          >
             <TabsList>
               <TabsTrigger value="members">
                 <Users className="w-4 h-4 mr-2" />
@@ -329,9 +289,7 @@ export default function OrganizationDetailPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{ORGANIZATION_LABELS.DELETE_ORGANIZATION}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {ORGANIZATION_LABELS.CONFIRM_DELETE}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{ORGANIZATION_LABELS.CONFIRM_DELETE}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>

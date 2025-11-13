@@ -80,11 +80,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             <FormItem>
               <FormLabel>{AUTH_LABELS.EMAIL}</FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder={AUTH_PLACEHOLDERS.EMAIL}
-                  {...field}
-                />
+                <Input type="email" placeholder={AUTH_PLACEHOLDERS.EMAIL} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -101,11 +97,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             <FormItem>
               <FormLabel>{AUTH_LABELS.PASSWORD}</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder={AUTH_PLACEHOLDERS.PASSWORD}
-                  {...field}
-                />
+                <Input type="password" placeholder={AUTH_PLACEHOLDERS.PASSWORD} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -131,12 +123,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
 
         <p className="text-sm text-center text-muted-foreground">
           {AUTH_LABELS.DONT_HAVE_ACCOUNT}{" "}
-          <Button
-            type="button"
-            variant="link"
-            onClick={onSwitchToSignup}
-            className="p-0 h-auto"
-          >
+          <Button type="button" variant="link" onClick={onSwitchToSignup} className="p-0 h-auto">
             {AUTH_LABELS.SIGNUP}
           </Button>
         </p>
@@ -144,4 +131,3 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     </Form>
   );
 }
-

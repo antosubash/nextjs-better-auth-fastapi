@@ -83,6 +83,46 @@ BETTER_AUTH_URL=http://localhost:3000
 LOG_LEVEL=INFO
 ```
 
+### Docker Compose Setup (PostgreSQL, MinIO, and pgWeb)
+
+The project includes a `docker-compose.yml` file for running PostgreSQL, MinIO, and pgWeb services.
+
+1. **Copy the example environment file:**
+   ```bash
+   cp env.example .env
+   ```
+
+2. **Start the services:**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Verify services are running:**
+   ```bash
+   docker-compose ps
+   ```
+
+4. **Access pgWeb (PostgreSQL UI with automatic authentication):**
+   - URL: http://localhost:8081
+   - **No login required** - automatically connected using environment variables
+   - Credentials are pre-configured from your `.env` file
+
+5. **Access MinIO Console:**
+   - URL: http://localhost:9001
+   - Default credentials: `minioadmin` / `minioadmin`
+
+6. **Stop the services:**
+   ```bash
+   docker-compose down
+   ```
+
+7. **Stop and remove volumes (clean slate):**
+   ```bash
+   docker-compose down -v
+   ```
+
+The `env.example` file contains all necessary environment variables for PostgreSQL, MinIO, and pgWeb configuration. Update the `.env` file with your preferred values before starting the services.
+
 ## Running the Project
 
 ### Run Both Servers
@@ -141,6 +181,8 @@ nextjs-better-auth-fastapi/
 │   │   ├── constants.ts    # Application constants
 │   │   └── database.ts     # Database connection
 │   └── package.json        # Node.js dependencies
+├── docker-compose.yml      # Docker Compose for PostgreSQL and MinIO
+├── env.example             # Example environment variables
 └── Makefile                # Build automation
 ```
 

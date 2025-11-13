@@ -3,9 +3,7 @@
  * @param date - Date value that can be Date, number (timestamp), or string
  * @returns Timestamp in milliseconds as a number
  */
-export function normalizeDate(
-  date: Date | number | string | undefined | null,
-): number {
+export function normalizeDate(date: Date | number | string | undefined | null): number {
   if (!date) {
     return Date.now();
   }
@@ -35,7 +33,7 @@ export function normalizeDate(
  */
 export function formatDate(
   timestamp: Date | number | string | undefined | null,
-  format: "short" | "long" = "short",
+  format: "short" | "long" = "short"
 ): string {
   const normalized = normalizeDate(timestamp);
   const date = new Date(normalized);
@@ -55,4 +53,3 @@ export function formatDate(
     day: "numeric",
   });
 }
-

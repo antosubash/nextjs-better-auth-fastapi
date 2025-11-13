@@ -46,9 +46,7 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
         }
       } catch (err) {
         const errorMessage =
-          err instanceof Error
-            ? err.message
-            : API_KEY_ERRORS.LOAD_API_KEY_FAILED;
+          err instanceof Error ? err.message : API_KEY_ERRORS.LOAD_API_KEY_FAILED;
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -74,7 +72,9 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
     }
   };
 
-  const formatJson = (obj: Record<string, unknown> | Record<string, string[]> | null | undefined) => {
+  const formatJson = (
+    obj: Record<string, unknown> | Record<string, string[]> | null | undefined
+  ) => {
     if (!obj) return "None";
     try {
       return JSON.stringify(obj, null, 2);
@@ -114,18 +114,14 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.NAME}
               </label>
-              <p className="text-gray-900 dark:text-white">
-                {apiKey.name || "N/A"}
-              </p>
+              <p className="text-gray-900 dark:text-white">{apiKey.name || "N/A"}</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.PREFIX}
               </label>
-              <p className="text-gray-900 dark:text-white">
-                {apiKey.prefix || "N/A"}
-              </p>
+              <p className="text-gray-900 dark:text-white">{apiKey.prefix || "N/A"}</p>
             </div>
 
             <div>
@@ -147,18 +143,14 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.CREATED_AT}
               </label>
-              <p className="text-gray-900 dark:text-white">
-                {formatDate(apiKey.createdAt)}
-              </p>
+              <p className="text-gray-900 dark:text-white">{formatDate(apiKey.createdAt)}</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.EXPIRES_AT}
               </label>
-              <p className="text-gray-900 dark:text-white">
-                {formatDate(apiKey.expiresAt)}
-              </p>
+              <p className="text-gray-900 dark:text-white">{formatDate(apiKey.expiresAt)}</p>
             </div>
 
             {apiKey.remaining !== undefined && (
@@ -166,9 +158,7 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {API_KEY_LABELS.REMAINING}
                 </label>
-                <p className="text-gray-900 dark:text-white">
-                  {apiKey.remaining}
-                </p>
+                <p className="text-gray-900 dark:text-white">{apiKey.remaining}</p>
               </div>
             )}
 
@@ -177,9 +167,7 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {API_KEY_LABELS.REFILL_AMOUNT}
                 </label>
-                <p className="text-gray-900 dark:text-white">
-                  {apiKey.refillAmount}
-                </p>
+                <p className="text-gray-900 dark:text-white">{apiKey.refillAmount}</p>
               </div>
             )}
 
@@ -188,9 +176,7 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {API_KEY_LABELS.REFILL_INTERVAL}
                 </label>
-                <p className="text-gray-900 dark:text-white">
-                  {apiKey.refillInterval} ms
-                </p>
+                <p className="text-gray-900 dark:text-white">{apiKey.refillInterval} ms</p>
               </div>
             )}
 
@@ -200,18 +186,14 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}
                   </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {apiKey.rateLimitTimeWindow} ms
-                  </p>
+                  <p className="text-gray-900 dark:text-white">{apiKey.rateLimitTimeWindow} ms</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {API_KEY_LABELS.RATE_LIMIT_MAX}
                   </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {apiKey.rateLimitMax}
-                  </p>
+                  <p className="text-gray-900 dark:text-white">{apiKey.rateLimitMax}</p>
                 </div>
               </>
             )}
@@ -248,4 +230,3 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
     </div>
   );
 }
-

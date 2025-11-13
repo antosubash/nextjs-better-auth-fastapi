@@ -10,11 +10,7 @@ export const organizationInvitationService = {
   /**
    * Create an invitation
    */
-  async createInvitation(params: {
-    email: string;
-    role: string;
-    organizationId: string;
-  }) {
+  async createInvitation(params: { email: string; role: string; organizationId: string }) {
     return withErrorHandling(
       "createInvitation",
       async () => {
@@ -36,9 +32,7 @@ export const organizationInvitationService = {
   /**
    * Accept an invitation
    */
-  async acceptInvitation(params: {
-    invitationId: string;
-  }) {
+  async acceptInvitation(params: { invitationId: string }) {
     return withErrorHandling(
       "acceptInvitation",
       async () => {
@@ -57,9 +51,7 @@ export const organizationInvitationService = {
   /**
    * Cancel an invitation
    */
-  async cancelInvitation(params: {
-    invitationId: string;
-  }) {
+  async cancelInvitation(params: { invitationId: string }) {
     return withErrorHandling(
       "cancelInvitation",
       async () => {
@@ -79,9 +71,7 @@ export const organizationInvitationService = {
   /**
    * Reject an invitation
    */
-  async rejectInvitation(params: {
-    invitationId: string;
-  }) {
+  async rejectInvitation(params: { invitationId: string }) {
     return withErrorHandling(
       "rejectInvitation",
       async () => {
@@ -100,9 +90,7 @@ export const organizationInvitationService = {
   /**
    * Get an invitation by ID
    */
-  async getInvitation(params: {
-    id: string;
-  }) {
+  async getInvitation(params: { id: string }) {
     return withErrorHandling(
       "getInvitation",
       async () => {
@@ -121,9 +109,7 @@ export const organizationInvitationService = {
   /**
    * List invitations
    */
-  async listInvitations(params?: {
-    organizationId?: string;
-  }) {
+  async listInvitations(params?: { organizationId?: string }) {
     return withErrorHandling(
       "listInvitations",
       async () => {
@@ -137,4 +123,3 @@ export const organizationInvitationService = {
     );
   },
 };
-

@@ -100,8 +100,7 @@ export const LANDING_PAGE = {
   FEATURES: [
     {
       TITLE: "Secure by Default",
-      DESCRIPTION:
-        "Enterprise-grade security with modern authentication protocols",
+      DESCRIPTION: "Enterprise-grade security with modern authentication protocols",
     },
     {
       TITLE: "Lightning Fast",
@@ -301,6 +300,7 @@ export const ADMIN_NAVIGATION = {
   PERMISSIONS: "Permissions",
   ROLES: "Roles",
   API_KEYS: "API Keys",
+  TASKS: "Tasks",
   DOCTOR: "Doctor / Diagnostics",
   MENU_TOGGLE: "Toggle menu",
   CLOSE_MENU: "Close menu",
@@ -507,7 +507,6 @@ export const INVITATION_CONFIG = {
   EXPIRY_DAYS: 7,
 } as const;
 
-
 export const ORGANIZATION_SWITCHER = {
   SELECT_ORGANIZATION: "Select Organization",
   NO_ORGANIZATIONS: "No organizations available",
@@ -598,7 +597,8 @@ export const ROLE_DESCRIPTIONS = {
 
 export const ROLE_MANAGEMENT_LABELS = {
   TITLE: "Role Management",
-  DESCRIPTION: "Manage roles and their permissions. Click Edit Permissions to modify what each role can do.",
+  DESCRIPTION:
+    "Manage roles and their permissions. Click Edit Permissions to modify what each role can do.",
   LOADING: "Loading...",
   SEARCH_ROLES: "Search roles...",
   NO_ROLES: "No roles found",
@@ -853,4 +853,65 @@ export const PERMISSION_ACTIONS = {
   UPLOAD: "upload",
   DOWNLOAD: "download",
   CANCEL: "cancel",
+} as const;
+
+export const TASK_LABELS = {
+  TITLE: "Tasks",
+  CREATE_TASK: "Create Task",
+  EDIT_TASK: "Edit Task",
+  DELETE_TASK: "Delete Task",
+  TASK_TITLE: "Title",
+  TASK_DESCRIPTION: "Description",
+  TASK_STATUS: "Status",
+  TASK_CREATED_AT: "Created At",
+  TASK_UPDATED_AT: "Updated At",
+  ACTIONS: "Actions",
+  NO_TASKS: "No tasks found",
+  LOADING: "Loading tasks...",
+  FILTER_BY_STATUS: "Filter by status",
+  ALL_STATUSES: "All Statuses",
+  PENDING: "Pending",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  SAVE: "Save",
+  CANCEL: "Cancel",
+  CONFIRM_DELETE: "Are you sure you want to delete this task?",
+  SAVING: "Saving...",
+  CREATING: "Creating...",
+  DELETING: "Deleting...",
+  VIEW_DETAILS: "View Details",
+  ITEMS_PER_PAGE: "Items per page",
+  SHOWING: "Showing",
+  TO: "to",
+  OF: "of",
+  TASKS: "tasks",
+  FIRST_PAGE: "First page",
+  LAST_PAGE: "Last page",
+  PREVIOUS_PAGE: "Previous page",
+  NEXT_PAGE: "Next page",
+  PAGE: "Page",
+} as const;
+
+export const TASK_PLACEHOLDERS = {
+  TITLE: "Enter task title",
+  DESCRIPTION: "Enter task description (optional)",
+  STATUS: "Select status",
+} as const;
+
+export const TASK_ERRORS = {
+  CREATE_FAILED: "Failed to create task",
+  UPDATE_FAILED: "Failed to update task",
+  DELETE_FAILED: "Failed to delete task",
+  LOAD_TASKS_FAILED: "Failed to load tasks",
+  LOAD_TASK_FAILED: "Failed to load task",
+  TITLE_REQUIRED: "Title is required",
+  TITLE_TOO_LONG: "Title must be less than 255 characters",
+  DESCRIPTION_TOO_LONG: "Description must be less than 5000 characters",
+  INVALID_STATUS: "Invalid status",
+} as const;
+
+export const TASK_SUCCESS = {
+  TASK_CREATED: "Task created successfully",
+  TASK_UPDATED: "Task updated successfully",
+  TASK_DELETED: "Task deleted successfully",
 } as const;

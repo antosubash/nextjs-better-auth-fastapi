@@ -15,7 +15,7 @@ export function useSuccessMessage(autoDismissDelay = 3000) {
         setTimeout(() => setSuccess(""), autoDismissDelay);
       }
     },
-    [autoDismissDelay],
+    [autoDismissDelay]
   );
 
   const clearSuccess = useCallback(() => {
@@ -28,4 +28,3 @@ export function useSuccessMessage(autoDismissDelay = 3000) {
     clearSuccess,
   };
 }
-

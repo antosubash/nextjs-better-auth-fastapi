@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  API_KEY_LABELS,
-  API_KEY_ERRORS,
-  API_KEY_SUCCESS,
-} from "@/lib/constants";
+import { API_KEY_LABELS, API_KEY_ERRORS, API_KEY_SUCCESS } from "@/lib/constants";
 import { ApiKeyForm } from "./api-key-form";
 import { ApiKeyActions } from "./api-key-actions";
 import { ApiKeyDetails } from "./api-key-details";
@@ -42,9 +38,7 @@ export function ApiKeyList() {
       const result = await response.json();
 
       if (!response.ok || result.error) {
-        setError(
-          result.error || API_KEY_ERRORS.LOAD_API_KEYS_FAILED,
-        );
+        setError(result.error || API_KEY_ERRORS.LOAD_API_KEYS_FAILED);
       } else if (result.data) {
         const keys = Array.isArray(result.data) ? result.data : [];
         setApiKeys(
@@ -56,14 +50,11 @@ export function ApiKeyList() {
                 : typeof key.createdAt === "number"
                   ? key.createdAt
                   : Date.now(),
-          })),
+          }))
         );
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : API_KEY_ERRORS.LOAD_API_KEYS_FAILED;
+      const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.LOAD_API_KEYS_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -119,9 +110,7 @@ export function ApiKeyList() {
       const result = await response.json();
 
       if (!response.ok || result.error) {
-        setError(
-          result.error || API_KEY_ERRORS.DELETE_EXPIRED_FAILED,
-        );
+        setError(result.error || API_KEY_ERRORS.DELETE_EXPIRED_FAILED);
       } else {
         setSuccess(API_KEY_SUCCESS.EXPIRED_DELETED);
         setTimeout(() => setSuccess(""), 3000);
@@ -129,9 +118,7 @@ export function ApiKeyList() {
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : API_KEY_ERRORS.DELETE_EXPIRED_FAILED;
+        err instanceof Error ? err.message : API_KEY_ERRORS.DELETE_EXPIRED_FAILED;
       setError(errorMessage);
     }
   };
@@ -151,7 +138,7 @@ export function ApiKeyList() {
   const filteredApiKeys = apiKeys.filter(
     (key) =>
       key.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
-      key.prefix?.toLowerCase().includes(searchValue.toLowerCase()),
+      key.prefix?.toLowerCase().includes(searchValue.toLowerCase())
   );
 
   const formatDate = (timestamp: number | Date) => {
@@ -165,8 +152,7 @@ export function ApiKeyList() {
 
   const isExpired = (expiresAt: Date | number | null | undefined) => {
     if (!expiresAt) return false;
-    const expiryDate =
-      expiresAt instanceof Date ? expiresAt : new Date(expiresAt);
+    const expiryDate = expiresAt instanceof Date ? expiresAt : new Date(expiresAt);
     return expiryDate < new Date();
   };
 
@@ -210,10 +196,7 @@ export function ApiKeyList() {
 
       {showCreateForm && (
         <div className="mb-6">
-          <ApiKeyForm
-            onSuccess={handleApiKeyCreated}
-            onCancel={() => setShowCreateForm(false)}
-          />
+          <ApiKeyForm onSuccess={handleApiKeyCreated} onCancel={() => setShowCreateForm(false)} />
         </div>
       )}
 
@@ -228,15 +211,10 @@ export function ApiKeyList() {
       )}
 
       {viewingApiKeyId && (
-        <ApiKeyDetails
-          apiKeyId={viewingApiKeyId}
-          onClose={() => setViewingApiKeyId(null)}
-        />
+        <ApiKeyDetails apiKeyId={viewingApiKeyId} onClose={() => setViewingApiKeyId(null)} />
       )}
 
-      {showVerifyModal && (
-        <ApiKeyVerify onClose={() => setShowVerifyModal(false)} />
-      )}
+      {showVerifyModal && <ApiKeyVerify onClose={() => setShowVerifyModal(false)} />}
 
       {newlyCreatedKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -346,10 +324,7 @@ export function ApiKeyList() {
                 {filteredApiKeys.map((key) => {
                   const expired = isExpired(key.expiresAt);
                   return (
-                    <tr
-                      key={key.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                    >
+                    <tr key={key.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                         {key.name || "Unnamed"}
                       </td>
@@ -378,7 +353,7 @@ export function ApiKeyList() {
                                 ? key.expiresAt.getTime()
                                 : typeof key.expiresAt === "number"
                                   ? key.expiresAt
-                                  : new Date(key.expiresAt).getTime(),
+                                  : new Date(key.expiresAt).getTime()
                             )
                           : "Never"}
                       </td>
@@ -405,4 +380,3 @@ export function ApiKeyList() {
     </div>
   );
 }
-

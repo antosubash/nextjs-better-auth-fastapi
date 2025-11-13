@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import {
-  INVITATION_LABELS,
-  INVITATION_ERRORS,
-  INVITATION_SUCCESS,
-} from "@/lib/constants";
+import { INVITATION_LABELS, INVITATION_ERRORS, INVITATION_SUCCESS } from "@/lib/constants";
 import { MoreVertical, X, RotateCcw } from "lucide-react";
 import { ErrorToast } from "@/components/ui/error-toast";
 import { Button } from "@/components/ui/button";
@@ -60,8 +56,7 @@ export function InvitationActions({
         onInvitationRemoved();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : INVITATION_ERRORS.CANCEL_FAILED;
+      const errorMessage = err instanceof Error ? err.message : INVITATION_ERRORS.CANCEL_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -84,8 +79,7 @@ export function InvitationActions({
         onActionSuccess(INVITATION_SUCCESS.INVITATION_RESENT);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : INVITATION_ERRORS.RESEND_FAILED;
+      const errorMessage = err instanceof Error ? err.message : INVITATION_ERRORS.RESEND_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -96,13 +90,7 @@ export function InvitationActions({
 
   return (
     <>
-      {error && (
-        <ErrorToast
-          message={error}
-          onDismiss={() => setError(null)}
-          duration={5000}
-        />
-      )}
+      {error && <ErrorToast message={error} onDismiss={() => setError(null)} duration={5000} />}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" disabled={isLoading}>
@@ -111,10 +99,7 @@ export function InvitationActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {isPending && (
-            <DropdownMenuItem
-              onClick={handleResend}
-              disabled={isLoading}
-            >
+            <DropdownMenuItem onClick={handleResend} disabled={isLoading}>
               <RotateCcw className="w-4 h-4 mr-2" />
               {INVITATION_LABELS.RESEND_INVITATION}
             </DropdownMenuItem>

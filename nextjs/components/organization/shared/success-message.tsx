@@ -6,11 +6,7 @@ interface SuccessMessageProps {
   className?: string;
 }
 
-export function SuccessMessage({
-  message,
-  onDismiss,
-  className = "",
-}: SuccessMessageProps) {
+export function SuccessMessage({ message, onDismiss, className = "" }: SuccessMessageProps) {
   if (!message) {
     return null;
   }
@@ -34,4 +30,3 @@ export function SuccessMessage({
     </div>
   );
 }
-

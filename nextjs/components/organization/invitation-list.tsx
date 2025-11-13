@@ -2,11 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
-import {
-  INVITATION_LABELS,
-  INVITATION_ERRORS,
-  INVITATION_SUCCESS,
-} from "@/lib/constants";
+import { INVITATION_LABELS, INVITATION_ERRORS, INVITATION_SUCCESS } from "@/lib/constants";
 import { InvitationForm } from "./invitation-form";
 import { InvitationActions } from "./invitation-actions";
 import { Plus, Mail } from "lucide-react";
@@ -30,10 +26,7 @@ import { SuccessMessage } from "./shared/success-message";
 import { ErrorMessage } from "./shared/error-message";
 import { LoadingState } from "./shared/loading-state";
 import { EmptyState } from "./shared/empty-state";
-import {
-  normalizeInvitations,
-  extractInvitations,
-} from "@/lib/utils/organization-data";
+import { normalizeInvitations, extractInvitations } from "@/lib/utils/organization-data";
 import type {
   NormalizedInvitation,
   InvitationListProps,
@@ -61,20 +54,16 @@ export function InvitationList({ organizationId }: InvitationListProps) {
       });
 
       if (result.error) {
-        showError(
-          result.error.message || INVITATION_ERRORS.LOAD_INVITATIONS_FAILED,
-        );
+        showError(result.error.message || INVITATION_ERRORS.LOAD_INVITATIONS_FAILED);
       } else if (result.data) {
         const normalizedInvitations = normalizeInvitations(
-          extractInvitations(result.data as InvitationListResponse | Invitation[]),
+          extractInvitations(result.data as InvitationListResponse | Invitation[])
         );
         setInvitations(normalizedInvitations);
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : INVITATION_ERRORS.LOAD_INVITATIONS_FAILED;
+        err instanceof Error ? err.message : INVITATION_ERRORS.LOAD_INVITATIONS_FAILED;
       showError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -101,41 +90,42 @@ export function InvitationList({ organizationId }: InvitationListProps) {
   };
 
   const filteredInvitations = invitations.filter((inv) =>
-    inv.email.toLowerCase().includes(searchValue.toLowerCase()),
+    inv.email.toLowerCase().includes(searchValue.toLowerCase())
   );
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
         return (
-          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 border-yellow-300 dark:border-yellow-800">
+          <Badge
+            variant="outline"
+            className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 border-yellow-300 dark:border-yellow-800"
+          >
             {INVITATION_LABELS.PENDING}
           </Badge>
         );
       case "accepted":
         return (
-          <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border-green-300 dark:border-green-800">
+          <Badge
+            variant="outline"
+            className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border-green-300 dark:border-green-800"
+          >
             {INVITATION_LABELS.ACCEPTED}
           </Badge>
         );
       case "rejected":
         return (
-          <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border-red-300 dark:border-red-800">
+          <Badge
+            variant="outline"
+            className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border-red-300 dark:border-red-800"
+          >
             {INVITATION_LABELS.REJECTED}
           </Badge>
         );
       case "expired":
-        return (
-          <Badge variant="secondary">
-            {INVITATION_LABELS.EXPIRED}
-          </Badge>
-        );
+        return <Badge variant="secondary">{INVITATION_LABELS.EXPIRED}</Badge>;
       default:
-        return (
-          <Badge variant="secondary">
-            {status}
-          </Badge>
-        );
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
@@ -195,15 +185,11 @@ export function InvitationList({ organizationId }: InvitationListProps) {
               <TableBody>
                 {filteredInvitations.map((invitation) => (
                   <TableRow key={invitation.id}>
-                    <TableCell className="font-medium">
-                      {invitation.email}
-                    </TableCell>
+                    <TableCell className="font-medium">{invitation.email}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{invitation.role}</Badge>
                     </TableCell>
-                    <TableCell>
-                      {getStatusBadge(invitation.status)}
-                    </TableCell>
+                    <TableCell>{getStatusBadge(invitation.status)}</TableCell>
                     <TableCell>{formatDate(invitation.createdAt)}</TableCell>
                     <TableCell>
                       <InvitationActions

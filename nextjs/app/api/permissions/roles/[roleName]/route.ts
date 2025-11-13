@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission } from "@/lib/permission-check-server";
-import {
-  PERMISSION_RESOURCES,
-  PERMISSION_ACTIONS,
-  ROLE_MANAGEMENT_ERRORS,
-} from "@/lib/constants";
+import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, ROLE_MANAGEMENT_ERRORS } from "@/lib/constants";
 import { getRole } from "@/lib/permissions-utils";
 
 export async function GET(
@@ -25,19 +21,12 @@ export async function GET(
     const role = getRole(roleName);
 
     if (!role) {
-      return NextResponse.json(
-        { error: ROLE_MANAGEMENT_ERRORS.ROLE_NOT_FOUND },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: ROLE_MANAGEMENT_ERRORS.ROLE_NOT_FOUND }, { status: 404 });
     }
 
     return NextResponse.json({ role });
   } catch (error) {
     console.error("Failed to fetch role:", error);
-    return NextResponse.json(
-      { error: ROLE_MANAGEMENT_ERRORS.ROLE_NOT_FOUND },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: ROLE_MANAGEMENT_ERRORS.ROLE_NOT_FOUND }, { status: 500 });
   }
 }
-

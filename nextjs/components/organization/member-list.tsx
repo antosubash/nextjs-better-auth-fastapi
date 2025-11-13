@@ -2,11 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
-import {
-  MEMBER_LABELS,
-  MEMBER_ERRORS,
-  MEMBER_SUCCESS,
-} from "@/lib/constants";
+import { MEMBER_LABELS, MEMBER_ERRORS, MEMBER_SUCCESS } from "@/lib/constants";
 import { MemberActions } from "./member-actions";
 import { AddMemberDialog } from "./add-member-dialog";
 import { Plus, Users } from "lucide-react";
@@ -30,10 +26,7 @@ import { SuccessMessage } from "./shared/success-message";
 import { ErrorMessage } from "./shared/error-message";
 import { LoadingState } from "./shared/loading-state";
 import { EmptyState } from "./shared/empty-state";
-import {
-  normalizeMembers,
-  extractMembers,
-} from "@/lib/utils/organization-data";
+import { normalizeMembers, extractMembers } from "@/lib/utils/organization-data";
 import type { NormalizedMember, MemberListProps } from "@/lib/utils/organization-types";
 
 export function MemberList({ organizationId }: MemberListProps) {
@@ -61,15 +54,11 @@ export function MemberList({ organizationId }: MemberListProps) {
       ]);
 
       if (membersResult.error) {
-        showError(
-          membersResult.error.message || MEMBER_ERRORS.LOAD_MEMBERS_FAILED,
-        );
+        showError(membersResult.error.message || MEMBER_ERRORS.LOAD_MEMBERS_FAILED);
       } else if (membersResult.data) {
-        const normalizedMembers = normalizeMembers(
-          extractMembers(membersResult.data),
-        );
+        const normalizedMembers = normalizeMembers(extractMembers(membersResult.data));
         setMembers(normalizedMembers);
-        
+
         // Find current user's role in the organization
         if (sessionResult.data?.user?.id) {
           setCurrentUserId(sessionResult.data.user.id);
@@ -86,8 +75,7 @@ export function MemberList({ organizationId }: MemberListProps) {
         }
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : MEMBER_ERRORS.LOAD_MEMBERS_FAILED;
+      const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.LOAD_MEMBERS_FAILED;
       showError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -116,7 +104,7 @@ export function MemberList({ organizationId }: MemberListProps) {
   const filteredMembers = members.filter(
     (member) =>
       member.user?.email?.toLowerCase().includes(searchValue.toLowerCase()) ||
-      member.user?.name?.toLowerCase().includes(searchValue.toLowerCase()),
+      member.user?.name?.toLowerCase().includes(searchValue.toLowerCase())
   );
 
   return (
@@ -172,9 +160,7 @@ export function MemberList({ organizationId }: MemberListProps) {
               <TableBody>
                 {filteredMembers.map((member) => (
                   <TableRow key={member.id}>
-                    <TableCell className="font-medium">
-                      {member.user?.email || "Unknown"}
-                    </TableCell>
+                    <TableCell className="font-medium">{member.user?.email || "Unknown"}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{member.role}</Badge>
                     </TableCell>

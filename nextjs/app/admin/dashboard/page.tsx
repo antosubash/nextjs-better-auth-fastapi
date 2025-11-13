@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ADMIN_DASHBOARD } from "@/lib/constants";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Activity, Ban, UserPlus, Link as LinkIcon, Clock } from "lucide-react";
 import Link from "next/link";
 
@@ -87,9 +82,7 @@ function formatActivityItems(
   });
 
   // Sort by timestamp descending and limit to 10
-  return activities
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 10);
+  return activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 10);
 }
 
 function formatTimestamp(timestamp: number): string {
@@ -143,9 +136,7 @@ export default function AdminDashboardPage() {
         setStats(data);
       } catch (err) {
         console.error("Failed to load admin dashboard:", err);
-        setError(
-          err instanceof Error ? err.message : ADMIN_DASHBOARD.ERROR
-        );
+        setError(err instanceof Error ? err.message : ADMIN_DASHBOARD.ERROR);
       } finally {
         setIsLoading(false);
       }
@@ -157,9 +148,7 @@ export default function AdminDashboardPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg text-gray-600 dark:text-gray-400">
-          {ADMIN_DASHBOARD.LOADING}
-        </div>
+        <div className="text-lg text-gray-600 dark:text-gray-400">{ADMIN_DASHBOARD.LOADING}</div>
       </div>
     );
   }
@@ -178,9 +167,7 @@ export default function AdminDashboardPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-red-600 dark:text-red-400">
-            {ADMIN_DASHBOARD.ERROR}
-          </p>
+          <p className="text-lg text-red-600 dark:text-red-400">{ADMIN_DASHBOARD.ERROR}</p>
         </div>
       </div>
     );
@@ -188,210 +175,194 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              {ADMIN_DASHBOARD.TITLE}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {ADMIN_DASHBOARD.WELCOME}
-            </p>
-          </div>
-          <Link
-            href="/admin"
-            className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-          >
-            {ADMIN_DASHBOARD.VIEW_ALL_USERS}
-          </Link>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            {ADMIN_DASHBOARD.TITLE}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">{ADMIN_DASHBOARD.WELCOME}</p>
         </div>
+        <Link
+          href="/admin"
+          className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+        >
+          {ADMIN_DASHBOARD.VIEW_ALL_USERS}
+        </Link>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {ADMIN_DASHBOARD.TOTAL_USERS}
-                </h3>
-                <div className="p-2 rounded-lg bg-muted">
-                  <Users className="w-5 h-5 text-muted-foreground" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <p className="text-3xl font-bold">
-                  {stats.totalUsers}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {ADMIN_DASHBOARD.ACTIVE_SESSIONS}
-                </h3>
-                <div className="p-2 rounded-lg bg-muted">
-                  <Activity className="w-5 h-5 text-muted-foreground" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <p className="text-3xl font-bold">
-                  {stats.activeSessions}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {ADMIN_DASHBOARD.BANNED_USERS}
-                </h3>
-                <div className="p-2 rounded-lg bg-muted">
-                  <Ban className="w-5 h-5 text-muted-foreground" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <p className="text-3xl font-bold">
-                  {stats.bannedUsers}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {ADMIN_DASHBOARD.RECENT_REGISTRATIONS}
-                </h3>
-                <div className="p-2 rounded-lg bg-muted">
-                  <UserPlus className="w-5 h-5 text-muted-foreground" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <p className="text-3xl font-bold">
-                  {stats.recentRegistrations}
-                </p>
-                <p className="ml-2 text-sm text-muted-foreground">
-                  {ADMIN_DASHBOARD.RECENT_REGISTRATIONS_SUBTITLE}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {ADMIN_DASHBOARD.RECENT_USERS}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {ADMIN_DASHBOARD.TOTAL_USERS}
               </h3>
-              <Link
-                href="/admin"
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              >
-                {ADMIN_DASHBOARD.VIEW_ALL_USERS} →
-              </Link>
-            </div>
-            {stats.recentUsers.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                {ADMIN_DASHBOARD.NO_USERS}
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {stats.recentUsers.slice(0, 5).map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {user.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {user.email}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
-                        {user.role || "user"}
-                      </span>
-                      {user.banned && (
-                        <span className="ml-2 text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200">
-                          Banned
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div className="p-2 rounded-lg bg-muted">
+                <Users className="w-5 h-5 text-muted-foreground" />
               </div>
-            )}
-          </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold">{stats.totalUsers}</p>
+            </div>
+          </CardContent>
+        </Card>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {ADMIN_DASHBOARD.RECENT_SESSIONS}
-            </h3>
-            {stats.recentSessions.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                {ADMIN_DASHBOARD.NO_SESSIONS}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {ADMIN_DASHBOARD.ACTIVE_SESSIONS}
+              </h3>
+              <div className="p-2 rounded-lg bg-muted">
+                <Activity className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold">{stats.activeSessions}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {ADMIN_DASHBOARD.BANNED_USERS}
+              </h3>
+              <div className="p-2 rounded-lg bg-muted">
+                <Ban className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold">{stats.bannedUsers}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {ADMIN_DASHBOARD.RECENT_REGISTRATIONS}
+              </h3>
+              <div className="p-2 rounded-lg bg-muted">
+                <UserPlus className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold">{stats.recentRegistrations}</p>
+              <p className="ml-2 text-sm text-muted-foreground">
+                {ADMIN_DASHBOARD.RECENT_REGISTRATIONS_SUBTITLE}
               </p>
-            ) : (
-              <div className="space-y-3">
-                {stats.recentSessions.slice(0, 5).map((session) => (
-                  <div
-                    key={session.id}
-                    className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <LinkIcon className="w-4 h-4 text-gray-400" />
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {session.userName || session.userEmail}
-                      </p>
-                    </div>
-                    {session.ipAddress && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        IP: {session.ipAddress}
-                      </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {ADMIN_DASHBOARD.RECENT_USERS}
+            </h3>
+            <Link
+              href="/admin"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            >
+              {ADMIN_DASHBOARD.VIEW_ALL_USERS} →
+            </Link>
+          </div>
+          {stats.recentUsers.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+              {ADMIN_DASHBOARD.NO_USERS}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {stats.recentUsers.slice(0, 5).map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
+                      {user.role || "user"}
+                    </span>
+                    {user.banned && (
+                      <span className="ml-2 text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200">
+                        Banned
+                      </span>
                     )}
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      {new Date(session.createdAt).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {ADMIN_DASHBOARD.RECENT_SESSIONS}
+          </h3>
+          {stats.recentSessions.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+              {ADMIN_DASHBOARD.NO_SESSIONS}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {stats.recentSessions.slice(0, 5).map((session) => (
+                <div
+                  key={session.id}
+                  className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <LinkIcon className="w-4 h-4 text-gray-400" />
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {session.userName || session.userEmail}
                     </p>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  {session.ipAddress && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      IP: {session.ipAddress}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    {new Date(session.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
 
-        {(() => {
-          const activities = formatActivityItems(stats.recentUsers, stats.recentSessions);
-          return activities.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">
-                  {ADMIN_DASHBOARD.NO_SESSIONS}
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {activities.map((activity, index) => (
+      {(() => {
+        const activities = formatActivityItems(stats.recentUsers, stats.recentSessions);
+        return activities.length === 0 ? (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-muted-foreground">{ADMIN_DASHBOARD.NO_SESSIONS}</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {activities.map((activity, index) => (
                   <div
                     key={index}
                     className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border"
@@ -400,9 +371,7 @@ export default function AdminDashboardPage() {
                       <Clock className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">
-                        {activity.message}
-                      </p>
+                      <p className="text-sm font-medium">{activity.message}</p>
                       {activity.details && (
                         <div className="mt-1 space-y-1">
                           {activity.details.ipAddress && (
@@ -422,12 +391,12 @@ export default function AdminDashboardPage() {
                       </p>
                     </div>
                   </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })()}
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
     </>
   );
 }

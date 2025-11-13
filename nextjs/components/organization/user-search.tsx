@@ -10,11 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  USER_SEARCH_LABELS,
-  USER_SEARCH_PLACEHOLDERS,
-  MEMBER_ERRORS,
-} from "@/lib/constants";
+import { USER_SEARCH_LABELS, USER_SEARCH_PLACEHOLDERS, MEMBER_ERRORS } from "@/lib/constants";
 import { Check, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,43 +47,39 @@ export function UserSearch({
     }
   }, [value, searchQuery]);
 
-  const searchUsers = useCallback(
-    async (query: string) => {
-      if (!query || query.length < 2) {
+  const searchUsers = useCallback(async (query: string) => {
+    if (!query || query.length < 2) {
+      setUsers([]);
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const result = await authClient.admin.listUsers({
+        query: {
+          searchValue: query,
+          limit: "20",
+          offset: "0",
+        },
+      });
+
+      if (result.error) {
+        setError(result.error.message || MEMBER_ERRORS.SEARCH_FAILED);
         setUsers([]);
-        return;
+      } else if (result.data) {
+        const usersData = (result.data as { users?: User[] })?.users || [];
+        setUsers(usersData);
       }
-
-      setIsLoading(true);
-      setError("");
-
-      try {
-        const result = await authClient.admin.listUsers({
-          query: {
-            searchValue: query,
-            limit: "20",
-            offset: "0",
-          },
-        });
-
-        if (result.error) {
-          setError(result.error.message || MEMBER_ERRORS.SEARCH_FAILED);
-          setUsers([]);
-        } else if (result.data) {
-          const usersData = (result.data as { users?: User[] })?.users || [];
-          setUsers(usersData);
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : MEMBER_ERRORS.SEARCH_FAILED;
-        setError(errorMessage);
-        setUsers([]);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.SEARCH_FAILED;
+      setError(errorMessage);
+      setUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -134,26 +126,17 @@ export function UserSearch({
                   value={user.email}
                   onSelect={() => !isMember && handleSelect(user)}
                   disabled={isMember || disabled}
-                  className={cn(
-                    "cursor-pointer",
-                    isMember && "opacity-50 cursor-not-allowed"
-                  )}
+                  className={cn("cursor-pointer", isMember && "opacity-50 cursor-not-allowed")}
                 >
                   <div className="flex items-center gap-2 flex-1">
                     {user.image ? (
-                      <img
-                        src={user.image}
-                        alt={user.name}
-                        className="w-6 h-6 rounded-full"
-                      />
+                      <img src={user.image} alt={user.name} className="w-6 h-6 rounded-full" />
                     ) : (
                       <UserIcon className="w-6 h-6 text-gray-400" />
                     )}
                     <div className="flex-1">
                       <div className="font-medium">{user.name || user.email}</div>
-                      {user.name && (
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                      )}
+                      {user.name && <div className="text-sm text-gray-500">{user.email}</div>}
                     </div>
                     {isMember && (
                       <span className="text-xs text-gray-500">
@@ -173,4 +156,3 @@ export function UserSearch({
     </Command>
   );
 }
-

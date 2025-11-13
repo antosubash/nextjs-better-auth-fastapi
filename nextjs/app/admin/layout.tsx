@@ -20,11 +20,7 @@ import { ImpersonationIndicator } from "@/components/admin/impersonation-indicat
  * Next.js App Router automatically scopes layouts to their route segments.
  */
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,9 +56,7 @@ export default function AdminLayout({
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black">
-        <div className="text-lg text-gray-600 dark:text-gray-400">
-          {ADMIN_LAYOUT.LOADING}
-        </div>
+        <div className="text-lg text-gray-600 dark:text-gray-400">{ADMIN_LAYOUT.LOADING}</div>
       </div>
     );
   }
@@ -74,9 +68,7 @@ export default function AdminLayout({
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             {ADMIN_LAYOUT.ACCESS_DENIED}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {ADMIN_ERRORS.ACCESS_DENIED}
-          </p>
+          <p className="text-gray-600 dark:text-gray-400">{ADMIN_ERRORS.ACCESS_DENIED}</p>
         </div>
       </div>
     );
@@ -88,11 +80,8 @@ export default function AdminLayout({
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="lg:pl-64">
         <AdminHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
-        <main className={PAGE_CONTAINER.CLASS}>
-          {children}
-        </main>
+        <main className={PAGE_CONTAINER.CLASS}>{children}</main>
       </div>
     </div>
   );
 }
-

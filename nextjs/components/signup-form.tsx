@@ -83,11 +83,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             <FormItem>
               <FormLabel>{AUTH_LABELS.NAME}</FormLabel>
               <FormControl>
-                <Input
-                  type="text"
-                  placeholder={AUTH_PLACEHOLDERS.NAME}
-                  {...field}
-                />
+                <Input type="text" placeholder={AUTH_PLACEHOLDERS.NAME} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -104,11 +100,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             <FormItem>
               <FormLabel>{AUTH_LABELS.EMAIL}</FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder={AUTH_PLACEHOLDERS.EMAIL}
-                  {...field}
-                />
+                <Input type="email" placeholder={AUTH_PLACEHOLDERS.EMAIL} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -125,11 +117,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             <FormItem>
               <FormLabel>{AUTH_LABELS.PASSWORD}</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder={AUTH_PLACEHOLDERS.PASSWORD}
-                  {...field}
-                />
+                <Input type="password" placeholder={AUTH_PLACEHOLDERS.PASSWORD} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -155,12 +143,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
 
         <p className="text-sm text-center text-muted-foreground">
           {AUTH_LABELS.ALREADY_HAVE_ACCOUNT}{" "}
-          <Button
-            type="button"
-            variant="link"
-            onClick={onSwitchToLogin}
-            className="p-0 h-auto"
-          >
+          <Button type="button" variant="link" onClick={onSwitchToLogin} className="p-0 h-auto">
             {AUTH_LABELS.LOGIN}
           </Button>
         </p>
@@ -168,4 +151,3 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     </Form>
   );
 }
-

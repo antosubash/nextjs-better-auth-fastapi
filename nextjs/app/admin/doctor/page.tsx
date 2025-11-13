@@ -14,9 +14,7 @@ export default function AdminDoctorPage() {
             {DOCTOR.PAGE_TITLE}
           </h1>
         </div>
-        <p className="text-gray-600 dark:text-gray-400">
-          {DOCTOR.DESCRIPTION}
-        </p>
+        <p className="text-gray-600 dark:text-gray-400">{DOCTOR.DESCRIPTION}</p>
       </div>
 
       <div className="space-y-6">
@@ -25,5 +23,3 @@ export default function AdminDoctorPage() {
     </div>
   );
 }
-
-

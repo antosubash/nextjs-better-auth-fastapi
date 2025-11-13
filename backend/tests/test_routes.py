@@ -1,7 +1,10 @@
 """Tests for API routes."""
 
+import tempfile
+from pathlib import Path
+
 import pytest
-from unittest.mock import AsyncMock, patch
+
 from services.file_service import FileService
 
 
@@ -36,39 +39,34 @@ def test_getdata_endpoint_invalid_payload(client):
 @pytest.mark.asyncio
 async def test_file_service_write():
     """Test file service write operation."""
-    import tempfile
-    import os
-    
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp:
         tmp_path = tmp.name
-    
+
     try:
         service = FileService(file_path=tmp_path)
         result = await service.write_data("test content")
         assert "successfully" in result.lower() or "written" in result.lower()
-        
+
         # Verify file was written
-        assert os.path.exists(tmp_path)
+        assert Path(tmp_path).exists()
     finally:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
+        tmp_file = Path(tmp_path)
+        if tmp_file.exists():
+            tmp_file.unlink()
 
 
 @pytest.mark.asyncio
 async def test_file_service_read():
     """Test file service read operation."""
-    import tempfile
-    import os
-    
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp:
         tmp.write("test content\n")
         tmp_path = tmp.name
-    
+
     try:
         service = FileService(file_path=tmp_path)
         content = await service.read_data()
         assert "test content" in content
     finally:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-
+        tmp_file = Path(tmp_path)
+        if tmp_file.exists():
+            tmp_file.unlink()

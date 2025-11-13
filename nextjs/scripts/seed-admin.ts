@@ -150,21 +150,14 @@ async function seedUsers() {
         // Update role if it's different from the default role (user) or admin
         const defaultRole = userData.role === USER_ROLES.ADMIN ? USER_ROLES.ADMIN : USER_ROLES.USER;
         if (userData.role !== defaultRole) {
-          await db
-            .update(user)
-            .set({ role: userData.role })
-            .where(eq(user.id, newUser.user.id));
+          await db.update(user).set({ role: userData.role }).where(eq(user.id, newUser.user.id));
         }
         console.log(`✓ Created user: ${userData.email} (${userData.role})`);
       } else {
-        console.error(
-          `✗ Failed to create user ${userData.email}:`,
-          "Unknown error"
-        );
+        console.error(`✗ Failed to create user ${userData.email}:`, "Unknown error");
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error(`✗ Failed to process user ${userData.email}:`, errorMessage);
     }
   }

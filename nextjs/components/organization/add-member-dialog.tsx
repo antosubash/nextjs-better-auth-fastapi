@@ -56,9 +56,7 @@ export function AddMemberDialog({
   const [error, setError] = useState("");
   const [useEmailInput, setUseEmailInput] = useState(false);
 
-  const existingMemberIds = new Set(
-    existingMembers.map((m) => m.userId)
-  );
+  const existingMemberIds = new Set(existingMembers.map((m) => m.userId));
 
   useEffect(() => {
     if (!open) {
@@ -108,8 +106,7 @@ export function AddMemberDialog({
         onOpenChange(false);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : MEMBER_ERRORS.ADD_FAILED;
+      const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.ADD_FAILED;
       setError(errorMessage);
     } finally {
       setIsAdding(false);
@@ -140,8 +137,7 @@ export function AddMemberDialog({
         onOpenChange(false);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : INVITATION_ERRORS.SEND_FAILED;
+      const errorMessage = err instanceof Error ? err.message : INVITATION_ERRORS.SEND_FAILED;
       setError(errorMessage);
     } finally {
       setIsInviting(false);
@@ -165,9 +161,7 @@ export function AddMemberDialog({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{ADD_MEMBER_DIALOG_LABELS.TITLE}</DialogTitle>
-          <DialogDescription>
-            {ADD_MEMBER_DIALOG_LABELS.DESCRIPTION}
-          </DialogDescription>
+          <DialogDescription>{ADD_MEMBER_DIALOG_LABELS.DESCRIPTION}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -188,8 +182,8 @@ export function AddMemberDialog({
               }}
               className={cn(
                 "flex-1",
-                !useEmailInput 
-                  ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" 
+                !useEmailInput
+                  ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
                   : "text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
               )}
             >
@@ -205,8 +199,8 @@ export function AddMemberDialog({
               }}
               className={cn(
                 "flex-1",
-                useEmailInput 
-                  ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" 
+                useEmailInput
+                  ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
                   : "text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
               )}
             >
@@ -225,9 +219,7 @@ export function AddMemberDialog({
               {selectedUser && (
                 <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded text-sm">
                   <div className="font-medium">{selectedUser.name || selectedUser.email}</div>
-                  {selectedUser.name && (
-                    <div className="text-gray-500">{selectedUser.email}</div>
-                  )}
+                  {selectedUser.name && <div className="text-gray-500">{selectedUser.email}</div>}
                 </div>
               )}
             </div>
@@ -250,11 +242,7 @@ export function AddMemberDialog({
 
           <div className="space-y-2">
             <Label htmlFor="role">{MEMBER_LABELS.ROLE}</Label>
-            <MemberRoleSelector
-              value={role}
-              onChange={setRole}
-              disabled={isAdding || isInviting}
-            />
+            <MemberRoleSelector value={role} onChange={setRole} disabled={isAdding || isInviting} />
           </div>
         </div>
 
@@ -283,4 +271,3 @@ export function AddMemberDialog({
     </Dialog>
   );
 }
-

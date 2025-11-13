@@ -9,13 +9,7 @@ import { LogIn, LogOut, Menu } from "lucide-react";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function MainNavbar() {
@@ -95,23 +89,15 @@ export function MainNavbar() {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo/Brand */}
-          <Link
-            href="/"
-            className="text-xl font-bold hover:opacity-80 transition-opacity"
-          >
+          <Link href="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
             Better Auth
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated && (
-              <Button
-                asChild
-                variant={pathname === "/dashboard" ? "default" : "ghost"}
-              >
-                <Link href="/dashboard">
-                  {DASHBOARD.TITLE}
-                </Link>
+              <Button asChild variant={pathname === "/dashboard" ? "default" : "ghost"}>
+                <Link href="/dashboard">{DASHBOARD.TITLE}</Link>
               </Button>
             )}
 
@@ -161,9 +147,7 @@ export function MainNavbar() {
                     className="w-full justify-start"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Link href="/dashboard">
-                      {DASHBOARD.TITLE}
-                    </Link>
+                    <Link href="/dashboard">{DASHBOARD.TITLE}</Link>
                   </Button>
                 )}
 
@@ -174,17 +158,11 @@ export function MainNavbar() {
                     </div>
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
                       <Avatar className="w-10 h-10">
-                        <AvatarFallback>
-                          {getInitials(user.name, user.email)}
-                        </AvatarFallback>
+                        <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-sm font-medium">
-                          {user.name || "User"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {user.email}
-                        </p>
+                        <p className="text-sm font-medium">{user.name || "User"}</p>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
                     <Button
@@ -220,4 +198,3 @@ export function MainNavbar() {
     </nav>
   );
 }
-

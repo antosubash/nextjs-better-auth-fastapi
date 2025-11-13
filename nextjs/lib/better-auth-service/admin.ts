@@ -62,14 +62,7 @@ export const adminService = {
               | "editor"
               | "viewer"
               | "support"
-              | (
-                  | "admin"
-                  | "myCustomRole"
-                  | "moderator"
-                  | "editor"
-                  | "viewer"
-                  | "support"
-                )[];
+              | ("admin" | "myCustomRole" | "moderator" | "editor" | "viewer" | "support")[];
             data?: Record<string, unknown>;
           },
         });
@@ -81,10 +74,7 @@ export const adminService = {
   /**
    * Set user role (admin only)
    */
-  async setRole(params: {
-    userId: string;
-    role: string;
-  }) {
+  async setRole(params: { userId: string; role: string }) {
     return withErrorHandling(
       "setRole",
       async () => {
@@ -101,14 +91,7 @@ export const adminService = {
               | "editor"
               | "viewer"
               | "support"
-              | (
-                  | "admin"
-                  | "myCustomRole"
-                  | "moderator"
-                  | "editor"
-                  | "viewer"
-                  | "support"
-                )[],
+              | ("admin" | "myCustomRole" | "moderator" | "editor" | "viewer" | "support")[],
           },
         });
       },
@@ -119,10 +102,7 @@ export const adminService = {
   /**
    * Set user password (admin only)
    */
-  async setUserPassword(params: {
-    userId: string;
-    newPassword: string;
-  }) {
+  async setUserPassword(params: { userId: string; newPassword: string }) {
     return withErrorHandling(
       "setUserPassword",
       async () => {
@@ -143,10 +123,7 @@ export const adminService = {
   /**
    * Update user (admin only)
    */
-  async updateUser(params: {
-    userId: string;
-    data: Record<string, unknown>;
-  }) {
+  async updateUser(params: { userId: string; data: Record<string, unknown> }) {
     return withErrorHandling(
       "updateUser",
       async () => {
@@ -167,11 +144,7 @@ export const adminService = {
   /**
    * Ban a user (admin only)
    */
-  async banUser(params: {
-    userId: string;
-    banReason?: string;
-    banExpiresIn?: number;
-  }) {
+  async banUser(params: { userId: string; banReason?: string; banExpiresIn?: number }) {
     return withErrorHandling(
       "banUser",
       async () => {
@@ -193,9 +166,7 @@ export const adminService = {
   /**
    * Unban a user (admin only)
    */
-  async unbanUser(params: {
-    userId: string;
-  }) {
+  async unbanUser(params: { userId: string }) {
     return withErrorHandling(
       "unbanUser",
       async () => {
@@ -215,9 +186,7 @@ export const adminService = {
   /**
    * List user sessions (admin only)
    */
-  async listUserSessions(params: {
-    userId: string;
-  }) {
+  async listUserSessions(params: { userId: string }) {
     return withErrorHandling(
       "listUserSessions",
       async () => {
@@ -237,9 +206,7 @@ export const adminService = {
   /**
    * Revoke a specific user session (admin only)
    */
-  async revokeUserSession(params: {
-    sessionToken: string;
-  }) {
+  async revokeUserSession(params: { sessionToken: string }) {
     return withErrorHandling(
       "revokeUserSession",
       async () => {
@@ -259,9 +226,7 @@ export const adminService = {
   /**
    * Revoke all sessions for a user (admin only)
    */
-  async revokeUserSessions(params: {
-    userId: string;
-  }) {
+  async revokeUserSessions(params: { userId: string }) {
     return withErrorHandling(
       "revokeUserSessions",
       async () => {
@@ -281,9 +246,7 @@ export const adminService = {
   /**
    * Impersonate a user (admin only)
    */
-  async impersonateUser(params: {
-    userId: string;
-  }) {
+  async impersonateUser(params: { userId: string }) {
     return withErrorHandling(
       "impersonateUser",
       async () => {
@@ -316,9 +279,7 @@ export const adminService = {
   /**
    * Remove a user (admin only)
    */
-  async removeUser(params: {
-    userId: string;
-  }) {
+  async removeUser(params: { userId: string }) {
     return withErrorHandling(
       "removeUser",
       async () => {
@@ -370,4 +331,3 @@ export const adminService = {
     );
   },
 };
-

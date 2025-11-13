@@ -25,10 +25,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: result });
   } catch (error) {
     console.error("Failed to verify API key:", error);
-    return NextResponse.json(
-      { error: API_KEY_ERRORS.VERIFY_FAILED },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: API_KEY_ERRORS.VERIFY_FAILED }, { status: 500 });
   }
 }
-

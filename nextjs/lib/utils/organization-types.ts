@@ -78,21 +78,13 @@ export interface InvitationListProps {
  */
 export function isOrganization(data: unknown): data is Organization {
   return (
-    typeof data === "object" &&
-    data !== null &&
-    "id" in data &&
-    "name" in data &&
-    "slug" in data
+    typeof data === "object" && data !== null && "id" in data && "name" in data && "slug" in data
   );
 }
 
 export function isMember(data: unknown): data is Member {
   return (
-    typeof data === "object" &&
-    data !== null &&
-    "id" in data &&
-    "userId" in data &&
-    "role" in data
+    typeof data === "object" && data !== null && "id" in data && "userId" in data && "role" in data
   );
 }
 
@@ -122,4 +114,3 @@ export interface NormalizedInvitation extends Omit<Invitation, "createdAt" | "ex
   createdAt: number;
   expiresAt?: number;
 }
-

@@ -4,20 +4,8 @@ import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { DASHBOARD, USER_ROLES, PAGE_CONTAINER } from "@/lib/constants";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Users,
-  Calendar,
-  CheckCircle2,
-  XCircle,
-  Activity,
-  Clock,
-} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Calendar, CheckCircle2, XCircle, Activity, Clock } from "lucide-react";
 
 interface UserStats {
   sessionsCount: number;
@@ -109,9 +97,7 @@ export default function DashboardPage() {
         setStats(data);
       } catch (err) {
         console.error("Failed to load dashboard:", err);
-        setError(
-          err instanceof Error ? err.message : DASHBOARD.ERROR
-        );
+        setError(err instanceof Error ? err.message : DASHBOARD.ERROR);
       } finally {
         setIsLoading(false);
       }
@@ -123,9 +109,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg text-gray-600 dark:text-gray-400">
-          {DASHBOARD.LOADING}
-        </div>
+        <div className="text-lg text-gray-600 dark:text-gray-400">{DASHBOARD.LOADING}</div>
       </div>
     );
   }
@@ -148,9 +132,7 @@ export default function DashboardPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-red-600 dark:text-red-400">
-            {DASHBOARD.ERROR}
-          </p>
+          <p className="text-lg text-red-600 dark:text-red-400">{DASHBOARD.ERROR}</p>
         </div>
       </div>
     );
@@ -158,157 +140,141 @@ export default function DashboardPage() {
 
   return (
     <main className={PAGE_CONTAINER.CLASS}>
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            {DASHBOARD.TITLE}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {DASHBOARD.WELCOME}
-          </p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          {DASHBOARD.TITLE}
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">{DASHBOARD.WELCOME}</p>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {DASHBOARD.ACTIVE_SESSIONS}
-                </h3>
-                <div className="p-2 rounded-lg bg-muted">
-                  <Users className="w-5 h-5 text-muted-foreground" />
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {DASHBOARD.ACTIVE_SESSIONS}
+              </h3>
+              <div className="p-2 rounded-lg bg-muted">
+                <Users className="w-5 h-5 text-muted-foreground" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <p className="text-3xl font-bold">
-                  {stats.sessionsCount}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold">{stats.sessionsCount}</p>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {DASHBOARD.ACCOUNT_CREATED}
-                </h3>
-                <div className="p-2 rounded-lg bg-muted">
-                  <Calendar className="w-5 h-5 text-muted-foreground" />
-                </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {DASHBOARD.ACCOUNT_CREATED}
+              </h3>
+              <div className="p-2 rounded-lg bg-muted">
+                <Calendar className="w-5 h-5 text-muted-foreground" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <p className="text-3xl font-bold">
-                  {formatDate(stats.accountCreatedAt)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold">{formatDate(stats.accountCreatedAt)}</p>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {DASHBOARD.EMAIL_VERIFIED}
-                </h3>
-                <div className="p-2 rounded-lg bg-muted">
-                  {stats.emailVerified ? (
-                    <CheckCircle2 className="w-5 h-5 text-muted-foreground" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-muted-foreground" />
-                  )}
-                </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {DASHBOARD.EMAIL_VERIFIED}
+              </h3>
+              <div className="p-2 rounded-lg bg-muted">
+                {stats.emailVerified ? (
+                  <CheckCircle2 className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <XCircle className="w-5 h-5 text-muted-foreground" />
+                )}
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <p className="text-3xl font-bold">
-                  {stats.emailVerified
-                    ? DASHBOARD.EMAIL_VERIFIED
-                    : DASHBOARD.EMAIL_NOT_VERIFIED}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {DASHBOARD.RECENT_ACTIVITY}
-                </h3>
-                <div className="p-2 rounded-lg bg-muted">
-                  <Activity className="w-5 h-5 text-muted-foreground" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <p className="text-3xl font-bold">
-                  {stats.recentActivity.length}
-                </p>
-                <p className="ml-2 text-sm text-muted-foreground">
-                  items
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {stats.recentActivity.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-center text-muted-foreground">
-                {DASHBOARD.NO_ACTIVITY}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold">
+                {stats.emailVerified ? DASHBOARD.EMAIL_VERIFIED : DASHBOARD.EMAIL_NOT_VERIFIED}
               </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stats.recentActivity.map((activity, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border"
-                  >
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">
-                        {activity.message}
-                      </p>
-                      {activity.details && (
-                        <div className="mt-1 space-y-1">
-                          {activity.details.ipAddress && (
-                            <p className="text-xs text-muted-foreground">
-                              IP: {activity.details.ipAddress}
-                            </p>
-                          )}
-                          {activity.details.userAgent && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {activity.details.userAgent}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {formatTimestamp(activity.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {DASHBOARD.RECENT_ACTIVITY}
+              </h3>
+              <div className="p-2 rounded-lg bg-muted">
+                <Activity className="w-5 h-5 text-muted-foreground" />
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold">{stats.recentActivity.length}</p>
+              <p className="ml-2 text-sm text-muted-foreground">items</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {stats.recentActivity.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">{DASHBOARD.NO_ACTIVITY}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {stats.recentActivity.map((activity, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border"
+                >
+                  <div className="p-2 rounded-lg bg-muted">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{activity.message}</p>
+                    {activity.details && (
+                      <div className="mt-1 space-y-1">
+                        {activity.details.ipAddress && (
+                          <p className="text-xs text-muted-foreground">
+                            IP: {activity.details.ipAddress}
+                          </p>
+                        )}
+                        {activity.details.userAgent && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {activity.details.userAgent}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {formatTimestamp(activity.timestamp)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }

@@ -1,11 +1,11 @@
 """Health check routes."""
 
+import logging
+
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-import httpx
-import logging
-from typing import Dict, Any
-from core.config import BETTER_AUTH_URL, JWKS_URL
+
+from core.config import BETTER_AUTH_URL
 from core.constants import SuccessMessages
 from dependencies import get_http_client
 
@@ -25,13 +25,10 @@ router = APIRouter(tags=["health"])
                 "application/json": {
                     "example": {
                         "status": "healthy",
-                        "dependencies": {
-                            "better_auth": "ok",
-                            "jwks": "ok"
-                        }
+                        "dependencies": {"better_auth": "ok", "jwks": "ok"},
                     }
                 }
-            }
+            },
         },
         503: {
             "description": "Service is unhealthy",
@@ -39,30 +36,26 @@ router = APIRouter(tags=["health"])
                 "application/json": {
                     "example": {
                         "status": "unhealthy",
-                        "dependencies": {
-                            "better_auth": "error",
-                            "jwks": "ok"
-                        }
+                        "dependencies": {"better_auth": "error", "jwks": "ok"},
                     }
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
-async def health_check(request: Request) -> JSONResponse:
+async def health_check(_request: Request) -> JSONResponse:
     """
     Check health status of the service and its dependencies.
-    
+
     Args:
         request: FastAPI request object
-        
+
     Returns:
         JSONResponse with health status
     """
-    request_id = getattr(request.state, "request_id", None)
-    dependencies: Dict[str, str] = {}
+    dependencies: dict[str, str] = {}
     overall_status = "healthy"
-    
+
     # Check Better Auth connectivity
     try:
         http_client = await get_http_client()
@@ -75,19 +68,20 @@ async def health_check(request: Request) -> JSONResponse:
             dependencies["jwks"] = "error"
             overall_status = "unhealthy"
     except Exception as e:
-        logger.warning(f"Health check failed for Better Auth: {str(e)}")
-        dependencies["better_auth"] = f"error: {str(e)}"
+        logger.warning(f"Health check failed for Better Auth: {e!s}")
+        dependencies["better_auth"] = f"error: {e!s}"
         dependencies["jwks"] = "error"
         overall_status = "unhealthy"
-    
+
     status_code = 200 if overall_status == "healthy" else 503
-    
+
     return JSONResponse(
         status_code=status_code,
         content={
             "status": overall_status,
-            "message": SuccessMessages.HEALTH_CHECK_OK if overall_status == "healthy" else "Service dependencies unavailable",
-            "dependencies": dependencies
-        }
+            "message": SuccessMessages.HEALTH_CHECK_OK
+            if overall_status == "healthy"
+            else "Service dependencies unavailable",
+            "dependencies": dependencies,
+        },
     )
-

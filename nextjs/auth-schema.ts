@@ -5,9 +5,7 @@ export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: integer("email_verified", { mode: "boolean" })
-    .default(false)
-    .notNull(),
+  emailVerified: integer("email_verified", { mode: "boolean" }).default(false).notNull(),
   image: text("image"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
@@ -97,7 +95,7 @@ export const team = sqliteTable("team", {
     .references(() => organization.id, { onDelete: "cascade" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$onUpdate(
-    () => /* @__PURE__ */ new Date(),
+    () => /* @__PURE__ */ new Date()
   ),
 });
 
@@ -161,9 +159,7 @@ export const apikey = sqliteTable("apikey", {
   refillAmount: integer("refill_amount"),
   lastRefillAt: integer("last_refill_at", { mode: "timestamp_ms" }),
   enabled: integer("enabled", { mode: "boolean" }).default(true),
-  rateLimitEnabled: integer("rate_limit_enabled", { mode: "boolean" }).default(
-    true,
-  ),
+  rateLimitEnabled: integer("rate_limit_enabled", { mode: "boolean" }).default(true),
   rateLimitTimeWindow: integer("rate_limit_time_window").default(86400000),
   rateLimitMax: integer("rate_limit_max").default(10),
   requestCount: integer("request_count").default(0),
@@ -175,4 +171,3 @@ export const apikey = sqliteTable("apikey", {
   permissions: text("permissions"),
   metadata: text("metadata"),
 });
-

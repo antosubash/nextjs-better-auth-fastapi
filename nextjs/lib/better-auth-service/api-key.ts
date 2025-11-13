@@ -119,10 +119,7 @@ export const apiKeyService = {
   /**
    * Verify an API key
    */
-  async verifyApiKey(params: {
-    key: string;
-    permissions?: Record<string, string[]>;
-  }) {
+  async verifyApiKey(params: { key: string; permissions?: Record<string, string[]> }) {
     return withErrorHandling(
       "verifyApiKey",
       async () => {
@@ -149,4 +146,3 @@ export const apiKeyService = {
     });
   },
 };
-

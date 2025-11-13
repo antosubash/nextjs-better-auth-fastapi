@@ -3,10 +3,7 @@ import { betterAuthService } from "@/lib/better-auth-service/index";
 import { requirePermission } from "@/lib/permission-check-server";
 import { API_KEY_ERRORS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const permissionError = await requirePermission(
       PERMISSION_RESOURCES.API_KEY,
@@ -23,17 +20,11 @@ export async function GET(
     return NextResponse.json({ data: result });
   } catch (error) {
     console.error("Failed to get API key:", error);
-    return NextResponse.json(
-      { error: API_KEY_ERRORS.LOAD_API_KEY_FAILED },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: API_KEY_ERRORS.LOAD_API_KEY_FAILED }, { status: 500 });
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const permissionError = await requirePermission(
       PERMISSION_RESOURCES.API_KEY,
@@ -60,10 +51,7 @@ export async function PATCH(
     return NextResponse.json({ data: result });
   } catch (error) {
     console.error("Failed to update API key:", error);
-    return NextResponse.json(
-      { error: API_KEY_ERRORS.UPDATE_FAILED },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: API_KEY_ERRORS.UPDATE_FAILED }, { status: 500 });
   }
 }
 
@@ -87,10 +75,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete API key:", error);
-    return NextResponse.json(
-      { error: API_KEY_ERRORS.DELETE_FAILED },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: API_KEY_ERRORS.DELETE_FAILED }, { status: 500 });
   }
 }
-

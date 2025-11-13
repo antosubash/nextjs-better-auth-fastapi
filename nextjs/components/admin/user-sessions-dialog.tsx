@@ -3,11 +3,7 @@
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/lib/hooks/use-toast";
-import {
-  ADMIN_LABELS,
-  ADMIN_ERRORS,
-  ADMIN_SUCCESS,
-} from "@/lib/constants";
+import { ADMIN_LABELS, ADMIN_ERRORS, ADMIN_SUCCESS } from "@/lib/constants";
 import {
   Dialog,
   DialogContent,
@@ -92,21 +88,26 @@ export function UserSessionsDialog({
         toast.error(result.error.message || ADMIN_ERRORS.LOAD_SESSIONS_FAILED);
       } else {
         // Transform the sessions data to match our interface
-        const sessionsData = ((result.data as { sessions?: unknown[] })?.sessions || []).map((session: unknown) => {
-          const s = session as { createdAt?: Date | number; expiresAt?: Date | number; [key: string]: unknown };
-          return {
-            ...s,
-            createdAt: s.createdAt instanceof Date ? s.createdAt.getTime() : (s.createdAt as number) || 0,
-            expiresAt: s.expiresAt instanceof Date ? s.expiresAt.getTime() : (s.expiresAt as number) || 0,
-          } as Session;
-        });
+        const sessionsData = ((result.data as { sessions?: unknown[] })?.sessions || []).map(
+          (session: unknown) => {
+            const s = session as {
+              createdAt?: Date | number;
+              expiresAt?: Date | number;
+              [key: string]: unknown;
+            };
+            return {
+              ...s,
+              createdAt:
+                s.createdAt instanceof Date ? s.createdAt.getTime() : (s.createdAt as number) || 0,
+              expiresAt:
+                s.expiresAt instanceof Date ? s.expiresAt.getTime() : (s.expiresAt as number) || 0,
+            } as Session;
+          }
+        );
         setSessions(sessionsData);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ADMIN_ERRORS.LOAD_SESSIONS_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.LOAD_SESSIONS_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -128,10 +129,7 @@ export function UserSessionsDialog({
         onSuccess?.();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ADMIN_ERRORS.REVOKE_SESSION_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.REVOKE_SESSION_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsRevoking(null);
@@ -152,10 +150,7 @@ export function UserSessionsDialog({
         onSuccess?.();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ADMIN_ERRORS.REVOKE_SESSIONS_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.REVOKE_SESSIONS_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsRevokingAll(false);
@@ -181,9 +176,7 @@ export function UserSessionsDialog({
               <Skeleton className="h-10 w-full" />
             </div>
           ) : sessions.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground">
-              {ADMIN_LABELS.NO_SESSIONS}
-            </div>
+            <div className="py-8 text-center text-muted-foreground">{ADMIN_LABELS.NO_SESSIONS}</div>
           ) : (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -224,15 +217,11 @@ export function UserSessionsDialog({
                   <TableBody>
                     {sessions.map((session) => (
                       <TableRow key={session.id || session.token}>
-                        <TableCell>
-                          {session.ipAddress || "N/A"}
-                        </TableCell>
+                        <TableCell>{session.ipAddress || "N/A"}</TableCell>
                         <TableCell className="max-w-xs truncate">
                           {session.userAgent || "N/A"}
                         </TableCell>
-                        <TableCell>
-                          {formatDate(session.createdAt)}
-                        </TableCell>
+                        <TableCell>{formatDate(session.createdAt)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {formatDate(session.expiresAt)}
@@ -264,30 +253,21 @@ export function UserSessionsDialog({
           )}
 
           <DialogFooter>
-            <Button onClick={() => onOpenChange(false)}>
-              {ADMIN_LABELS.CANCEL}
-            </Button>
+            <Button onClick={() => onOpenChange(false)}>{ADMIN_LABELS.CANCEL}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
-        open={showRevokeAllDialog}
-        onOpenChange={setShowRevokeAllDialog}
-      >
+      <AlertDialog open={showRevokeAllDialog} onOpenChange={setShowRevokeAllDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {ADMIN_LABELS.CONFIRM_REVOKE_ALL_SESSIONS}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{ADMIN_LABELS.CONFIRM_REVOKE_ALL_SESSIONS}</AlertDialogTitle>
             <AlertDialogDescription>
               This will revoke all active sessions for this user. They will need to log in again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isRevokingAll}>
-              {ADMIN_LABELS.CANCEL}
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isRevokingAll}>{ADMIN_LABELS.CANCEL}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRevokeAllSessions}
               disabled={isRevokingAll}
@@ -308,4 +288,3 @@ export function UserSessionsDialog({
     </>
   );
 }
-

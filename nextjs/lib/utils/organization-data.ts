@@ -17,9 +17,7 @@ import type {
 /**
  * Normalize a date value to a timestamp (number)
  */
-export function normalizeDate(
-  date: number | Date | string | undefined | null,
-): number {
+export function normalizeDate(date: number | Date | string | undefined | null): number {
   if (!date) {
     return Date.now();
   }
@@ -39,9 +37,7 @@ export function normalizeDate(
 /**
  * Normalize an organization object
  */
-export function normalizeOrganization(
-  org: Organization,
-): NormalizedOrganization {
+export function normalizeOrganization(org: Organization): NormalizedOrganization {
   return {
     ...org,
     logo: org.logo ?? undefined, // Convert null to undefined
@@ -62,15 +58,11 @@ export function normalizeMember(member: Member): NormalizedMember {
 /**
  * Normalize an invitation object
  */
-export function normalizeInvitation(
-  invitation: Invitation,
-): NormalizedInvitation {
+export function normalizeInvitation(invitation: Invitation): NormalizedInvitation {
   return {
     ...invitation,
     createdAt: normalizeDate(invitation.createdAt),
-    expiresAt: invitation.expiresAt
-      ? normalizeDate(invitation.expiresAt)
-      : undefined,
+    expiresAt: invitation.expiresAt ? normalizeDate(invitation.expiresAt) : undefined,
   };
 }
 
@@ -78,7 +70,7 @@ export function normalizeInvitation(
  * Extract organizations from API response
  */
 export function extractOrganizations(
-  response: OrganizationListResponse | Organization[] | Organization | null | undefined,
+  response: OrganizationListResponse | Organization[] | Organization | null | undefined
 ): Organization[] {
   if (!response) {
     return [];
@@ -108,7 +100,7 @@ export function extractOrganizations(
  * Extract members from API response
  */
 export function extractMembers(
-  response: MemberListResponse | Member[] | null | undefined,
+  response: MemberListResponse | Member[] | null | undefined
 ): Member[] {
   if (!response) {
     return [];
@@ -144,7 +136,7 @@ export function extractMembers(
  * Handles cases where createdAt might be missing
  */
 export function extractInvitations(
-  response: InvitationListResponse | Invitation[] | null | undefined,
+  response: InvitationListResponse | Invitation[] | null | undefined
 ): Invitation[] {
   if (!response) {
     return [];
@@ -189,7 +181,7 @@ export function extractInvitations(
  * Transform and normalize organizations from API response
  */
 export function normalizeOrganizations(
-  response: OrganizationListResponse | Organization[] | Organization | null | undefined,
+  response: OrganizationListResponse | Organization[] | Organization | null | undefined
 ): NormalizedOrganization[] {
   return extractOrganizations(response).map(normalizeOrganization);
 }
@@ -198,7 +190,7 @@ export function normalizeOrganizations(
  * Transform and normalize members from API response
  */
 export function normalizeMembers(
-  response: MemberListResponse | Member[] | null | undefined,
+  response: MemberListResponse | Member[] | null | undefined
 ): NormalizedMember[] {
   return extractMembers(response).map(normalizeMember);
 }
@@ -207,8 +199,7 @@ export function normalizeMembers(
  * Transform and normalize invitations from API response
  */
 export function normalizeInvitations(
-  response: InvitationListResponse | Invitation[] | null | undefined,
+  response: InvitationListResponse | Invitation[] | null | undefined
 ): NormalizedInvitation[] {
   return extractInvitations(response).map(normalizeInvitation);
 }
-

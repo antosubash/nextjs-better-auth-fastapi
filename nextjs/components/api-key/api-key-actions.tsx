@@ -2,11 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import {
-  API_KEY_LABELS,
-  API_KEY_ERRORS,
-  API_KEY_SUCCESS,
-} from "@/lib/constants";
+import { API_KEY_LABELS, API_KEY_ERRORS, API_KEY_SUCCESS } from "@/lib/constants";
 import { MoreVertical, Trash2, Edit, Power, PowerOff, Eye } from "lucide-react";
 
 interface ApiKey {
@@ -56,17 +52,12 @@ export function ApiKeyActions({
         alert(result.error || API_KEY_ERRORS.UPDATE_FAILED);
       } else {
         onActionSuccess(
-          apiKey.enabled
-            ? API_KEY_SUCCESS.API_KEY_DISABLED
-            : API_KEY_SUCCESS.API_KEY_ENABLED,
+          apiKey.enabled ? API_KEY_SUCCESS.API_KEY_DISABLED : API_KEY_SUCCESS.API_KEY_ENABLED
         );
         setIsOpen(false);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : API_KEY_ERRORS.UPDATE_FAILED;
+      const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.UPDATE_FAILED;
       alert(errorMessage);
     } finally {
       setIsLoading(false);
@@ -91,8 +82,7 @@ export function ApiKeyActions({
         onDelete();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : API_KEY_ERRORS.DELETE_FAILED;
+      const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.DELETE_FAILED;
       alert(errorMessage);
     } finally {
       setIsLoading(false);
@@ -127,10 +117,7 @@ export function ApiKeyActions({
 
   const dropdownContent = isOpen && dropdownPosition && (
     <>
-      <div
-        className="fixed inset-0 z-10"
-        onClick={() => setIsOpen(false)}
-      />
+      <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
       <div
         className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
         style={{
@@ -213,4 +200,3 @@ export function ApiKeyActions({
     </div>
   );
 }
-

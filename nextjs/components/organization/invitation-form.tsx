@@ -17,11 +17,7 @@ interface InvitationFormProps {
   onCancel: () => void;
 }
 
-export function InvitationForm({
-  organizationId,
-  onSuccess,
-  onCancel,
-}: InvitationFormProps) {
+export function InvitationForm({ organizationId, onSuccess, onCancel }: InvitationFormProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>(ORGANIZATION_ROLES.MEMBER);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,8 +42,7 @@ export function InvitationForm({
         onSuccess();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : INVITATION_ERRORS.SEND_FAILED;
+      const errorMessage = err instanceof Error ? err.message : INVITATION_ERRORS.SEND_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);

@@ -42,9 +42,7 @@ export const organizationCoreService = {
   /**
    * Check if organization slug is available
    */
-  async checkSlug(params: {
-    slug: string;
-  }) {
+  async checkSlug(params: { slug: string }) {
     return withErrorHandling(
       "checkSlug",
       async () => {
@@ -61,10 +59,7 @@ export const organizationCoreService = {
   /**
    * Update an organization
    */
-  async updateOrganization(params: {
-    organizationId: string;
-    data: Record<string, unknown>;
-  }) {
+  async updateOrganization(params: { organizationId: string; data: Record<string, unknown> }) {
     return withErrorHandling(
       "updateOrganization",
       async () => {
@@ -85,9 +80,7 @@ export const organizationCoreService = {
   /**
    * Delete an organization
    */
-  async deleteOrganization(params: {
-    organizationId: string;
-  }) {
+  async deleteOrganization(params: { organizationId: string }) {
     return withErrorHandling(
       "deleteOrganization",
       async () => {
@@ -107,9 +100,7 @@ export const organizationCoreService = {
   /**
    * Set active organization
    */
-  async setActiveOrganization(params: {
-    organizationId: string;
-  }) {
+  async setActiveOrganization(params: { organizationId: string }) {
     return withErrorHandling(
       "setActiveOrganization",
       async () => {
@@ -156,8 +147,10 @@ export const organizationCoreService = {
     return withErrorHandling("getOrganization", async () => {
       await requirePermission(PERMISSION_RESOURCES.ORGANIZATION, PERMISSION_ACTIONS.READ);
       const headersList = await getHeaders();
-      return await auth.api.getFullOrganization({ headers: headersList, query: { organizationId: id } });
+      return await auth.api.getFullOrganization({
+        headers: headersList,
+        query: { organizationId: id },
+      });
     });
   },
 };
-

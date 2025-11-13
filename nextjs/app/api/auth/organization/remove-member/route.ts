@@ -8,10 +8,7 @@ export async function POST(request: NextRequest) {
     const { organizationId, memberIdOrEmail } = body;
 
     if (!organizationId || !memberIdOrEmail) {
-      return NextResponse.json(
-        { error: MEMBER_ERRORS.REMOVE_FAILED },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: MEMBER_ERRORS.REMOVE_FAILED }, { status: 400 });
     }
 
     const data = await betterAuthService.organization.removeMember({
@@ -34,8 +31,7 @@ export async function POST(request: NextRequest) {
         statusCode?: number;
         status?: number;
       };
-      errorMessage =
-        errorObj?.message || errorObj?.body?.message || String(error);
+      errorMessage = errorObj?.message || errorObj?.body?.message || String(error);
       statusCode = errorObj?.statusCode || errorObj?.status || 500;
     } else {
       errorMessage = String(error);
@@ -51,12 +47,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Return appropriate status code based on error
-    const httpStatus =
-      statusCode >= 400 && statusCode < 600 ? statusCode : 500;
+    const httpStatus = statusCode >= 400 && statusCode < 600 ? statusCode : 500;
     return NextResponse.json(
       { error: errorMessage || MEMBER_ERRORS.REMOVE_FAILED },
       { status: httpStatus }
     );
   }
 }
-

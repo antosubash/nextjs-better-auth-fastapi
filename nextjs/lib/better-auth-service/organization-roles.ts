@@ -41,11 +41,7 @@ export const organizationRoleService = {
   /**
    * Delete an organization role
    */
-  async deleteRole(params: {
-    roleName?: string;
-    roleId?: string;
-    organizationId?: string;
-  }) {
+  async deleteRole(params: { roleName?: string; roleId?: string; organizationId?: string }) {
     return withErrorHandling(
       "deleteRole",
       async () => {
@@ -71,9 +67,7 @@ export const organizationRoleService = {
   /**
    * List organization roles
    */
-  async listRoles(params?: {
-    organizationId?: string;
-  }) {
+  async listRoles(params?: { organizationId?: string }) {
     return withErrorHandling(
       "listRoles",
       async () => {
@@ -95,11 +89,7 @@ export const organizationRoleService = {
   /**
    * Get an organization role
    */
-  async getRole(params: {
-    roleName?: string;
-    roleId?: string;
-    organizationId?: string;
-  }) {
+  async getRole(params: { roleName?: string; roleId?: string; organizationId?: string }) {
     return withErrorHandling(
       "getRole",
       async () => {
@@ -157,4 +147,3 @@ export const organizationRoleService = {
     );
   },
 };
-

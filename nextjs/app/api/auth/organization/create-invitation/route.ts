@@ -18,10 +18,7 @@ export async function POST(request: NextRequest) {
     const { organizationId, email, role } = body;
 
     if (!organizationId || !email || !role) {
-      return NextResponse.json(
-        { error: INVITATION_ERRORS.MISSING_FIELDS },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: INVITATION_ERRORS.MISSING_FIELDS }, { status: 400 });
     }
 
     // Use better-auth's createInvitation API
@@ -34,10 +31,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error("Error creating invitation:", error);
-    return NextResponse.json(
-      { error: INVITATION_ERRORS.INTERNAL_SERVER_ERROR },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: INVITATION_ERRORS.INTERNAL_SERVER_ERROR }, { status: 500 });
   }
 }
-

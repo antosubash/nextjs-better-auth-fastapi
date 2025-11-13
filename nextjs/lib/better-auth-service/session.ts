@@ -14,7 +14,7 @@ export const sessionService = {
    */
   async getSession(headers?: Headers) {
     return withErrorHandling("getSession", async () => {
-      const headersList = headers || await getHeaders();
+      const headersList = headers || (await getHeaders());
       return await auth.api.getSession({ headers: headersList });
     });
   },
@@ -25,9 +25,8 @@ export const sessionService = {
    */
   async getToken(headers?: Headers) {
     return withErrorHandling("getToken", async () => {
-      const headersList = headers || await getHeaders();
+      const headersList = headers || (await getHeaders());
       return await auth.api.getToken({ headers: headersList });
     });
   },
 };
-

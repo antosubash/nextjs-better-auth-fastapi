@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       // This is a public endpoint, so we don't require session authentication
       const headers = new Headers();
       headers.set("X-API-Key", key);
-      
+
       const result = await auth.api.verifyApiKey({
         headers,
         body: {
@@ -53,8 +53,7 @@ export async function POST(request: NextRequest) {
       );
     } catch (error: unknown) {
       // Handle Better Auth errors
-      const errorMessage =
-        error instanceof Error ? error.message : API_KEY_ERRORS.VERIFY_FAILED;
+      const errorMessage = error instanceof Error ? error.message : API_KEY_ERRORS.VERIFY_FAILED;
 
       // Check if it's a permission error (403)
       if (errorMessage.includes("permission") || errorMessage.includes("403")) {
@@ -98,4 +97,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

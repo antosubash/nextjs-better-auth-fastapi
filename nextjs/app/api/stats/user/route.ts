@@ -3,10 +3,14 @@ import { betterAuthService } from "@/lib/better-auth-service/index";
 import { db } from "@/lib/database";
 import { session, user } from "@/auth-schema";
 import { eq, and, gt, desc, sql } from "drizzle-orm";
-import { STATS_ERRORS, STATS_LABELS, PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "@/lib/constants";
+import {
+  STATS_ERRORS,
+  STATS_LABELS,
+  PERMISSION_RESOURCES,
+  PERMISSION_ACTIONS,
+} from "@/lib/constants";
 import { requirePermission } from "@/lib/permission-check-server";
 
- 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
@@ -22,28 +26,18 @@ export async function GET(_request: NextRequest) {
     const sessionData = await betterAuthService.session.getSession();
 
     const userId = sessionData?.user?.id;
-    
+
     if (!userId) {
-      return NextResponse.json(
-        { error: STATS_ERRORS.USER_NOT_FOUND },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: STATS_ERRORS.USER_NOT_FOUND }, { status: 404 });
     }
 
     const now = new Date();
 
     // Get user info first
-    const userData = await db
-      .select()
-      .from(user)
-      .where(eq(user.id, userId))
-      .limit(1);
+    const userData = await db.select().from(user).where(eq(user.id, userId)).limit(1);
 
     if (userData.length === 0) {
-      return NextResponse.json(
-        { error: STATS_ERRORS.USER_NOT_FOUND },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: STATS_ERRORS.USER_NOT_FOUND }, { status: 404 });
     }
 
     const currentUser = userData[0];
@@ -54,12 +48,7 @@ export async function GET(_request: NextRequest) {
       const activeSessions = await db
         .select({ count: sql<number>`count(*)` })
         .from(session)
-        .where(
-          and(
-            eq(session.userId, userId),
-            gt(session.expiresAt, now)
-          )
-        );
+        .where(and(eq(session.userId, userId), gt(session.expiresAt, now)));
       sessionsCount = Number(activeSessions[0]?.count ?? 0);
     } catch (err) {
       console.error("Error fetching active sessions:", err);
@@ -74,7 +63,7 @@ export async function GET(_request: NextRequest) {
       ipAddress: string | null;
       userAgent: string | null;
     }> = [];
-    
+
     try {
       const sessions = await db
         .select({
@@ -121,10 +110,6 @@ export async function GET(_request: NextRequest) {
     });
   } catch (error) {
     console.error("Failed to fetch user stats:", error);
-    return NextResponse.json(
-      { error: STATS_ERRORS.LOAD_USER_STATS_FAILED },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: STATS_ERRORS.LOAD_USER_STATS_FAILED }, { status: 500 });
   }
 }
-

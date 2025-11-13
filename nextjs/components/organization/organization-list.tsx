@@ -3,11 +3,7 @@
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
-import {
-  ORGANIZATION_LABELS,
-  ORGANIZATION_ERRORS,
-  ORGANIZATION_SUCCESS,
-} from "@/lib/constants";
+import { ORGANIZATION_LABELS, ORGANIZATION_ERRORS, ORGANIZATION_SUCCESS } from "@/lib/constants";
 import { OrganizationForm } from "./organization-form";
 import { OrganizationActions } from "./organization-actions";
 import { Plus, Building2 } from "lucide-react";
@@ -20,10 +16,7 @@ import { SuccessMessage } from "./shared/success-message";
 import { ErrorMessage } from "./shared/error-message";
 import { LoadingState } from "./shared/loading-state";
 import { EmptyState } from "./shared/empty-state";
-import {
-  normalizeOrganizations,
-  extractOrganizations,
-} from "@/lib/utils/organization-data";
+import { normalizeOrganizations, extractOrganizations } from "@/lib/utils/organization-data";
 import type { NormalizedOrganization } from "@/lib/utils/organization-types";
 import { useOrganizationSafe } from "@/lib/contexts/organization-context";
 
@@ -32,13 +25,12 @@ export function OrganizationList() {
   const pathname = usePathname();
   const isAdminContext = pathname?.startsWith("/admin") ?? false;
   const [organizations, setOrganizations] = useState<NormalizedOrganization[]>([]);
-  const [activeOrganizationId, setActiveOrganizationId] = useState<
-    string | null
-  >(null);
+  const [activeOrganizationId, setActiveOrganizationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingOrganization, setEditingOrganization] =
-    useState<NormalizedOrganization | null>(null);
+  const [editingOrganization, setEditingOrganization] = useState<NormalizedOrganization | null>(
+    null
+  );
 
   const { searchValue, handleSearch } = useSearch();
   const { success, showSuccess, clearSuccess } = useSuccessMessage();
@@ -54,9 +46,7 @@ export function OrganizationList() {
         const response = await fetch("/api/admin/organizations");
         if (!response.ok) {
           const errorData = await response.json();
-          showError(
-            errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
-          );
+          showError(errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
           return;
         }
         const data = await response.json();
@@ -65,9 +55,7 @@ export function OrganizationList() {
 
         const sessionResult = await authClient.getSession();
         if (sessionResult.data?.session?.activeOrganizationId) {
-          setActiveOrganizationId(
-            sessionResult.data.session.activeOrganizationId,
-          );
+          setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
         }
       } else {
         if (orgContext) {
@@ -76,37 +64,28 @@ export function OrganizationList() {
               id: org.id,
               name: org.name,
               slug: org.slug,
-            })),
+            }))
           );
           setOrganizations(normalizedOrgs);
           setActiveOrganizationId(orgContext.organization?.id || null);
         } else {
           const listResult = await authClient.organization.list();
           if (listResult.error) {
-            showError(
-              listResult.error.message ||
-                ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED,
-            );
+            showError(listResult.error.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
           } else if (listResult.data) {
-            const normalizedOrgs = normalizeOrganizations(
-              extractOrganizations(listResult.data),
-            );
+            const normalizedOrgs = normalizeOrganizations(extractOrganizations(listResult.data));
             setOrganizations(normalizedOrgs);
           }
 
           const sessionResult = await authClient.getSession();
           if (sessionResult.data?.session?.activeOrganizationId) {
-            setActiveOrganizationId(
-              sessionResult.data.session.activeOrganizationId,
-            );
+            setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
           }
         }
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED;
+        err instanceof Error ? err.message : ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED;
       showError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -155,7 +134,7 @@ export function OrganizationList() {
   const filteredOrganizations = organizations.filter(
     (org) =>
       org.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      org.slug.toLowerCase().includes(searchValue.toLowerCase()),
+      org.slug.toLowerCase().includes(searchValue.toLowerCase())
   );
 
   return (
@@ -240,9 +219,7 @@ export function OrganizationList() {
                     <tr
                       key={org.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-900/50 cursor-pointer"
-                      onClick={() =>
-                        router.push(`/admin/organizations/${org.id}`)
-                      }
+                      onClick={() => router.push(`/admin/organizations/${org.id}`)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                         {org.name}

@@ -6,11 +6,7 @@ interface ErrorMessageProps {
   className?: string;
 }
 
-export function ErrorMessage({
-  message,
-  onDismiss,
-  className = "",
-}: ErrorMessageProps) {
+export function ErrorMessage({ message, onDismiss, className = "" }: ErrorMessageProps) {
   if (!message) {
     return null;
   }
@@ -34,4 +30,3 @@ export function ErrorMessage({
     </div>
   );
 }
-

@@ -5,12 +5,7 @@ import { useForm } from "react-hook-form";
 import { callFastApi } from "@/lib/api-client";
 import { API_DATA } from "@/lib/constants";
 import { Send, Loader2, CheckCircle2, XCircle } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -21,11 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ApiDataFormValues {
   content: string;
@@ -58,9 +49,7 @@ export function ApiData() {
       setSuccess(true);
       form.reset();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : API_DATA.ERROR
-      );
+      setError(err instanceof Error ? err.message : API_DATA.ERROR);
       setSuccess(false);
     } finally {
       setIsLoading(false);
@@ -74,10 +63,7 @@ export function ApiData() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4 mb-6"
-          >
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mb-6">
             <FormField
               control={form.control}
               name="content"
@@ -88,11 +74,7 @@ export function ApiData() {
                 <FormItem>
                   <FormLabel>{API_DATA.CONTENT_PLACEHOLDER}</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder={API_DATA.CONTENT_PLACEHOLDER}
-                      rows={3}
-                      {...field}
-                    />
+                    <Textarea placeholder={API_DATA.CONTENT_PLACEHOLDER} rows={3} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,12 +115,8 @@ export function ApiData() {
             <AlertTitle>{API_DATA.SUCCESS}</AlertTitle>
             <AlertDescription>
               <div className="mt-2">
-                <p className="text-sm font-medium mb-1">
-                  {API_DATA.RESPONSE_LABEL}
-                </p>
-                <p className="text-sm bg-muted p-3 rounded border">
-                  {response}
-                </p>
+                <p className="text-sm font-medium mb-1">{API_DATA.RESPONSE_LABEL}</p>
+                <p className="text-sm bg-muted p-3 rounded border">{response}</p>
               </div>
             </AlertDescription>
           </Alert>
@@ -147,4 +125,3 @@ export function ApiData() {
     </Card>
   );
 }
-

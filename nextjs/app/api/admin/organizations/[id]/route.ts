@@ -4,10 +4,7 @@ import { ORGANIZATION_ERRORS } from "@/lib/constants";
 import { requireAdmin } from "@/lib/permission-check-server";
 import { normalizeDate } from "@/lib/utils/date";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const adminCheck = await requireAdmin();
     if (adminCheck instanceof NextResponse) {
@@ -19,7 +16,7 @@ export async function GET(
     if (!organizationId) {
       return NextResponse.json(
         { error: ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -32,7 +29,7 @@ export async function GET(
       if (!organization) {
         return NextResponse.json(
           { error: ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED },
-          { status: 404 },
+          { status: 404 }
         );
       }
 
@@ -47,21 +44,17 @@ export async function GET(
         },
       });
     } catch (apiError) {
-      console.error(
-        "Failed to fetch organization via Better Auth API:",
-        apiError,
-      );
+      console.error("Failed to fetch organization via Better Auth API:", apiError);
       return NextResponse.json(
         { error: ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED },
-        { status: 500 },
+        { status: 500 }
       );
     }
   } catch (error) {
     console.error("Failed to fetch organization:", error);
     return NextResponse.json(
       { error: ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
-

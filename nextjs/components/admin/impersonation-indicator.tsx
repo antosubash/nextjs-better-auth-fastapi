@@ -44,7 +44,6 @@ export function ImpersonationIndicator() {
       await checkImpersonationStatus();
     };
     void checkStatus();
-     
   }, []);
 
   const handleStopImpersonating = async () => {
@@ -62,9 +61,7 @@ export function ImpersonationIndicator() {
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ADMIN_ERRORS.STOP_IMPERSONATION_FAILED;
+        err instanceof Error ? err.message : ADMIN_ERRORS.STOP_IMPERSONATION_FAILED;
       toast.error(errorMessage);
     }
   };
@@ -95,4 +92,3 @@ export function ImpersonationIndicator() {
     </div>
   );
 }
-

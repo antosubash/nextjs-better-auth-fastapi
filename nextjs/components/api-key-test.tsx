@@ -5,13 +5,7 @@ import { useForm } from "react-hook-form";
 import { callFastApiWithApiKey } from "@/lib/api-key-client";
 import { API_KEY_TEST } from "@/lib/constants";
 import { Send, Loader2, CheckCircle2, XCircle, Key } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,11 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ApiKeyTestFormValues {
@@ -49,9 +39,7 @@ interface ApiKeyTestFormValues {
 export function ApiKeyTest() {
   const [response, setResponse] = useState<unknown | null>(null);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
-  const [responseHeaders, setResponseHeaders] = useState<
-    Record<string, string>
-  >({});
+  const [responseHeaders, setResponseHeaders] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -112,13 +100,13 @@ export function ApiKeyTest() {
       setResponse(result.data);
       setResponseStatus(result.status);
       setResponseHeaders(result.headers);
-      
+
       // Consider it successful if status is 2xx
       if (result.status >= 200 && result.status < 300) {
         setSuccess(true);
       } else {
         // Show error for non-2xx responses
-        const errorMessage = 
+        const errorMessage =
           typeof result.data === "object" && result.data !== null && "detail" in result.data
             ? String(result.data.detail)
             : `Request failed with status ${result.status}: ${result.statusText}`;
@@ -152,10 +140,7 @@ export function ApiKeyTest() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4 mb-6"
-          >
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mb-6">
             <FormField
               control={form.control}
               name="authMethod"
@@ -163,26 +148,15 @@ export function ApiKeyTest() {
                 <FormItem>
                   <FormLabel>{API_KEY_TEST.AUTH_METHOD_LABEL}</FormLabel>
                   <FormControl>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="apiKey">
-                          {API_KEY_TEST.API_KEY_ONLY}
-                        </SelectItem>
-                        <SelectItem value="jwt">
-                          {API_KEY_TEST.JWT_ONLY}
-                        </SelectItem>
-                        <SelectItem value="both">
-                          {API_KEY_TEST.BOTH}
-                        </SelectItem>
-                        <SelectItem value="none">
-                          {API_KEY_TEST.NO_AUTH}
-                        </SelectItem>
+                        <SelectItem value="apiKey">{API_KEY_TEST.API_KEY_ONLY}</SelectItem>
+                        <SelectItem value="jwt">{API_KEY_TEST.JWT_ONLY}</SelectItem>
+                        <SelectItem value="both">{API_KEY_TEST.BOTH}</SelectItem>
+                        <SelectItem value="none">{API_KEY_TEST.NO_AUTH}</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -191,8 +165,7 @@ export function ApiKeyTest() {
               )}
             />
 
-            {(form.watch("authMethod") === "apiKey" ||
-              form.watch("authMethod") === "both") && (
+            {(form.watch("authMethod") === "apiKey" || form.watch("authMethod") === "both") && (
               <FormField
                 control={form.control}
                 name="apiKey"
@@ -223,10 +196,7 @@ export function ApiKeyTest() {
                   <FormItem>
                     <FormLabel>{API_KEY_TEST.METHOD_LABEL}</FormLabel>
                     <FormControl>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
+                      <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -254,10 +224,7 @@ export function ApiKeyTest() {
                   <FormItem>
                     <FormLabel>{API_KEY_TEST.ENDPOINT_LABEL}</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={API_KEY_TEST.ENDPOINT_PLACEHOLDER}
-                        {...field}
-                      />
+                      <Input placeholder={API_KEY_TEST.ENDPOINT_PLACEHOLDER} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -288,11 +255,7 @@ export function ApiKeyTest() {
               />
             )}
 
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full"
-            >
+            <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -348,12 +311,8 @@ export function ApiKeyTest() {
 
             <Tabs defaultValue="response" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="response">
-                  {API_KEY_TEST.RESPONSE_LABEL}
-                </TabsTrigger>
-                <TabsTrigger value="headers">
-                  {API_KEY_TEST.HEADERS_LABEL}
-                </TabsTrigger>
+                <TabsTrigger value="response">{API_KEY_TEST.RESPONSE_LABEL}</TabsTrigger>
+                <TabsTrigger value="headers">{API_KEY_TEST.HEADERS_LABEL}</TabsTrigger>
               </TabsList>
               <TabsContent value="response" className="mt-4">
                 <div className="bg-muted p-4 rounded-lg border">
@@ -376,4 +335,3 @@ export function ApiKeyTest() {
     </Card>
   );
 }
-

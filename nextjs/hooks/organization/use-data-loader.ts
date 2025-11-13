@@ -5,10 +5,7 @@ import { useState, useCallback, useEffect } from "react";
 /**
  * Generic data loading hook with loading and error states
  */
-export function useDataLoader<T>(
-  loadFn: () => Promise<T>,
-  dependencies: unknown[] = [],
-) {
+export function useDataLoader<T>(loadFn: () => Promise<T>, dependencies: unknown[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -20,8 +17,7 @@ export function useDataLoader<T>(
       const result = await loadFn();
       setData(result);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load data";
+      const errorMessage = err instanceof Error ? err.message : "Failed to load data";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -44,4 +40,3 @@ export function useDataLoader<T>(
     reload,
   };
 }
-

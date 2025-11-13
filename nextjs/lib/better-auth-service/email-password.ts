@@ -47,7 +47,7 @@ export const emailPasswordService = {
     return withErrorHandling(
       "signInEmail",
       async () => {
-        const headersList = params.headers || await getHeaders();
+        const headersList = params.headers || (await getHeaders());
         return await auth.api.signInEmail({
           headers: headersList,
           body: {
@@ -68,7 +68,7 @@ export const emailPasswordService = {
    */
   async signOut(headers?: Headers) {
     return withErrorHandling("signOut", async () => {
-      const headersList = headers || await getHeaders();
+      const headersList = headers || (await getHeaders());
       return await auth.api.signOut({ headers: headersList });
     });
   },
@@ -77,15 +77,11 @@ export const emailPasswordService = {
    * Send email verification link
    * @param headers - Optional headers. If not provided, will use server headers (server-only)
    */
-  async sendVerificationEmail(params: {
-    email: string;
-    callbackURL?: string;
-    headers?: Headers;
-  }) {
+  async sendVerificationEmail(params: { email: string; callbackURL?: string; headers?: Headers }) {
     return withErrorHandling(
       "sendVerificationEmail",
       async () => {
-        const headersList = params.headers || await getHeaders();
+        const headersList = params.headers || (await getHeaders());
         return await auth.api.sendVerificationEmail({
           headers: headersList,
           body: {
@@ -101,10 +97,7 @@ export const emailPasswordService = {
   /**
    * Request password reset
    */
-  async requestPasswordReset(params: {
-    email: string;
-    redirectTo?: string;
-  }) {
+  async requestPasswordReset(params: { email: string; redirectTo?: string }) {
     return withErrorHandling(
       "requestPasswordReset",
       async () => {
@@ -122,10 +115,7 @@ export const emailPasswordService = {
   /**
    * Reset password with token
    */
-  async resetPassword(params: {
-    newPassword: string;
-    token: string;
-  }) {
+  async resetPassword(params: { newPassword: string; token: string }) {
     return withErrorHandling(
       "resetPassword",
       async () => {
@@ -153,7 +143,7 @@ export const emailPasswordService = {
     return withErrorHandling(
       "changePassword",
       async () => {
-        const headersList = params.headers || await getHeaders();
+        const headersList = params.headers || (await getHeaders());
         return await auth.api.changePassword({
           headers: headersList,
           body: {
@@ -167,4 +157,3 @@ export const emailPasswordService = {
     );
   },
 };
-

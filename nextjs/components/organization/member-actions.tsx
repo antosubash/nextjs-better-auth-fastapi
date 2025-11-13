@@ -72,8 +72,7 @@ export function MemberActions({
         setShowRoleModal(false);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : MEMBER_ERRORS.UPDATE_ROLE_FAILED;
+      const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.UPDATE_ROLE_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -104,8 +103,7 @@ export function MemberActions({
         onMemberRemoved();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : MEMBER_ERRORS.REMOVE_FAILED;
+      const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.REMOVE_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -130,8 +128,7 @@ export function MemberActions({
         window.location.href = "/admin/organizations";
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : MEMBER_ERRORS.LEAVE_FAILED;
+      const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.LEAVE_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -140,13 +137,7 @@ export function MemberActions({
 
   return (
     <>
-      {error && (
-        <ErrorToast
-          message={error}
-          onDismiss={() => setError(null)}
-          duration={5000}
-        />
-      )}
+      {error && <ErrorToast message={error} onDismiss={() => setError(null)} duration={5000} />}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" disabled={isLoading}>
@@ -154,10 +145,7 @@ export function MemberActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => setShowRoleModal(true)}
-            disabled={isLoading}
-          >
+          <DropdownMenuItem onClick={() => setShowRoleModal(true)} disabled={isLoading}>
             <Shield className="w-4 h-4 mr-2" />
             {MEMBER_LABELS.UPDATE_ROLE}
           </DropdownMenuItem>
@@ -190,14 +178,8 @@ export function MemberActions({
             <DialogTitle>{MEMBER_LABELS.UPDATE_ROLE}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <label className="block text-sm font-medium mb-2">
-              {MEMBER_LABELS.ROLE}
-            </label>
-            <MemberRoleSelector
-              value={newRole}
-              onChange={setNewRole}
-              disabled={isLoading}
-            />
+            <label className="block text-sm font-medium mb-2">{MEMBER_LABELS.ROLE}</label>
+            <MemberRoleSelector value={newRole} onChange={setNewRole} disabled={isLoading} />
           </div>
           <DialogFooter>
             <Button

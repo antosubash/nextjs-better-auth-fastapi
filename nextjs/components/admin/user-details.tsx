@@ -4,12 +4,7 @@ import { useState, useEffect } from "react";
 import { ADMIN_USER_DETAILS, ROLE_DISPLAY_NAMES, ADMIN_LABELS } from "@/lib/constants";
 import { UserPasswordDialog } from "./user-password-dialog";
 import { UserSessionsDialog } from "./user-sessions-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -89,9 +84,7 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
             <div className="flex items-center gap-3">
               <User className="w-5 h-5 text-muted-foreground" />
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  {ADMIN_USER_DETAILS.FULL_NAME}
-                </p>
+                <p className="text-sm text-muted-foreground">{ADMIN_USER_DETAILS.FULL_NAME}</p>
                 <p className="text-lg font-semibold">{user.name}</p>
               </div>
             </div>
@@ -101,9 +94,7 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
             <div className="flex items-center gap-3">
               <Mail className="w-5 h-5 text-muted-foreground" />
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  {ADMIN_USER_DETAILS.EMAIL_ADDRESS}
-                </p>
+                <p className="text-sm text-muted-foreground">{ADMIN_USER_DETAILS.EMAIL_ADDRESS}</p>
                 <p className="text-lg font-semibold">{user.email}</p>
               </div>
             </div>
@@ -113,13 +104,11 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
             <div className="flex items-center gap-3">
               <Shield className="w-5 h-5 text-muted-foreground" />
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  {ADMIN_USER_DETAILS.ROLE}
-                </p>
+                <p className="text-sm text-muted-foreground">{ADMIN_USER_DETAILS.ROLE}</p>
                 <Badge variant="secondary" className="mt-1">
-                  {ROLE_DISPLAY_NAMES[
-                    user.role as keyof typeof ROLE_DISPLAY_NAMES
-                  ] || user.role || ADMIN_LABELS.ROLE}
+                  {ROLE_DISPLAY_NAMES[user.role as keyof typeof ROLE_DISPLAY_NAMES] ||
+                    user.role ||
+                    ADMIN_LABELS.ROLE}
                 </Badge>
               </div>
             </div>
@@ -135,16 +124,9 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
                 )}
               </div>
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  {ADMIN_USER_DETAILS.STATUS}
-                </p>
-                <Badge
-                  variant={user.banned ? "destructive" : "default"}
-                  className="mt-1"
-                >
-                  {user.banned
-                    ? ADMIN_LABELS.BANNED
-                    : ADMIN_LABELS.ACTIVE}
+                <p className="text-sm text-muted-foreground">{ADMIN_USER_DETAILS.STATUS}</p>
+                <Badge variant={user.banned ? "destructive" : "default"} className="mt-1">
+                  {user.banned ? ADMIN_LABELS.BANNED : ADMIN_LABELS.ACTIVE}
                 </Badge>
               </div>
             </div>
@@ -154,12 +136,8 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
             <div className="flex items-center gap-3">
               <Calendar className="w-5 h-5 text-muted-foreground" />
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  {ADMIN_USER_DETAILS.CREATED_DATE}
-                </p>
-                <p className="text-lg font-semibold">
-                  {formatDate(user.createdAt)}
-                </p>
+                <p className="text-sm text-muted-foreground">{ADMIN_USER_DETAILS.CREATED_DATE}</p>
+                <p className="text-lg font-semibold">{formatDate(user.createdAt)}</p>
               </div>
             </div>
 
@@ -177,10 +155,7 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
                 <p className="text-sm text-muted-foreground">
                   {ADMIN_USER_DETAILS.EMAIL_VERIFICATION}
                 </p>
-                <Badge
-                  variant={user.emailVerified ? "default" : "secondary"}
-                  className="mt-1"
-                >
+                <Badge variant={user.emailVerified ? "default" : "secondary"} className="mt-1">
                   {user.emailVerified
                     ? ADMIN_USER_DETAILS.VERIFIED
                     : ADMIN_USER_DETAILS.NOT_VERIFIED}
@@ -194,9 +169,7 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <Ban className="w-5 h-5 text-destructive" />
-                    <p className="text-sm font-medium">
-                      {ADMIN_USER_DETAILS.BAN_INFORMATION}
-                    </p>
+                    <p className="text-sm font-medium">{ADMIN_USER_DETAILS.BAN_INFORMATION}</p>
                   </div>
 
                   <div className="pl-8 space-y-3">
@@ -205,8 +178,7 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
                         {ADMIN_USER_DETAILS.BAN_REASON}
                       </p>
                       <p className="text-sm font-medium mt-1">
-                        {user.banReason ||
-                          ADMIN_USER_DETAILS.NO_BAN_REASON}
+                        {user.banReason || ADMIN_USER_DETAILS.NO_BAN_REASON}
                       </p>
                     </div>
 
@@ -230,28 +202,19 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
             <Separator />
 
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                {ADMIN_USER_DETAILS.USER_ID}
-              </p>
-              <p className="text-sm font-mono bg-muted p-2 rounded">
-                {user.id}
-              </p>
+              <p className="text-sm text-muted-foreground">{ADMIN_USER_DETAILS.USER_ID}</p>
+              <p className="text-sm font-mono bg-muted p-2 rounded">{user.id}</p>
             </div>
           </div>
 
           <Separator />
 
           <div className="flex gap-2 justify-end pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowPasswordDialog(true)}
-            >
+            <Button variant="outline" onClick={() => setShowPasswordDialog(true)}>
               <Key className="w-4 h-4 mr-2" />
               {ADMIN_LABELS.RESET_PASSWORD}
             </Button>
-            <Button onClick={() => onOpenChange(false)}>
-              {ADMIN_USER_DETAILS.CLOSE}
-            </Button>
+            <Button onClick={() => onOpenChange(false)}>{ADMIN_USER_DETAILS.CLOSE}</Button>
           </div>
         </div>
       </DialogContent>
@@ -276,4 +239,3 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
     </Dialog>
   );
 }
-

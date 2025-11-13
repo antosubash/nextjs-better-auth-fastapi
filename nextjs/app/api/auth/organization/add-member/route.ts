@@ -34,10 +34,7 @@ export async function POST(request: NextRequest) {
         hasUserId: !!userId,
         hasRole: !!role,
       });
-      return NextResponse.json(
-        { error: MEMBER_ERRORS.ADD_FAILED },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: MEMBER_ERRORS.ADD_FAILED }, { status: 400 });
     }
 
     console.log(
@@ -51,9 +48,7 @@ export async function POST(request: NextRequest) {
       organizationId,
     });
 
-    console.log(
-      `[add-member] Successfully added user ${userId} to organization ${organizationId}`
-    );
+    console.log(`[add-member] Successfully added user ${userId} to organization ${organizationId}`);
     return NextResponse.json(data, { status: 201 });
   } catch (error: unknown) {
     console.error("[add-member] Error adding member:", error);
@@ -66,8 +61,7 @@ export async function POST(request: NextRequest) {
       status?: number;
       name?: string;
     };
-    const errorMessage =
-      errorObj?.message || errorObj?.body?.message || String(error);
+    const errorMessage = errorObj?.message || errorObj?.body?.message || String(error);
     const statusCode = errorObj?.statusCode || errorObj?.status || 500;
 
     console.log("[add-member] Error details:", {
@@ -77,12 +71,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Return appropriate status code based on error
-    const httpStatus =
-      statusCode >= 400 && statusCode < 600 ? statusCode : 500;
+    const httpStatus = statusCode >= 400 && statusCode < 600 ? statusCode : 500;
     return NextResponse.json(
       { error: errorMessage || MEMBER_ERRORS.ADD_FAILED },
       { status: httpStatus }
     );
   }
 }
-

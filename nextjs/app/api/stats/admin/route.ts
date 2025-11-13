@@ -5,7 +5,6 @@ import { eq, gt, desc, sql } from "drizzle-orm";
 import { STATS_ERRORS } from "@/lib/constants";
 import { requireAdmin } from "@/lib/permission-check-server";
 
- 
 export async function GET() {
   try {
     const adminCheck = await requireAdmin();
@@ -17,9 +16,7 @@ export async function GET() {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     // Count total users
-    const totalUsersResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(user);
+    const totalUsersResult = await db.select({ count: sql<number>`count(*)` }).from(user);
 
     const totalUsers = Number(totalUsersResult[0]?.count ?? 0);
 
@@ -104,10 +101,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Failed to fetch admin stats:", error);
-    return NextResponse.json(
-      { error: STATS_ERRORS.LOAD_ADMIN_STATS_FAILED },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: STATS_ERRORS.LOAD_ADMIN_STATS_FAILED }, { status: 500 });
   }
 }
-

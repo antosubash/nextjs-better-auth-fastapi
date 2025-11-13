@@ -8,8 +8,9 @@ backend_dir = Path(__file__).parent
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
-import uvicorn
-from core.app import create_app
+import uvicorn  # noqa: E402
+
+from core.app import create_app  # noqa: E402
 
 app = create_app()
 

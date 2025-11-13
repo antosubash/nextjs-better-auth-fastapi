@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import {
-  ORGANIZATION_LABELS,
-  ORGANIZATION_ERRORS,
-  ORGANIZATION_SUCCESS,
-} from "@/lib/constants";
+import { ORGANIZATION_LABELS, ORGANIZATION_ERRORS, ORGANIZATION_SUCCESS } from "@/lib/constants";
 import { MoreVertical, Trash2, Edit, CheckCircle2 } from "lucide-react";
 import { ErrorToast } from "@/components/ui/error-toast";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -51,9 +47,7 @@ export function OrganizationActions({
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ORGANIZATION_ERRORS.SET_ACTIVE_FAILED;
+        err instanceof Error ? err.message : ORGANIZATION_ERRORS.SET_ACTIVE_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -77,8 +71,7 @@ export function OrganizationActions({
         onDelete();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : ORGANIZATION_ERRORS.DELETE_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ORGANIZATION_ERRORS.DELETE_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -87,57 +80,44 @@ export function OrganizationActions({
 
   return (
     <>
-      {error && (
-        <ErrorToast
-          message={error}
-          onDismiss={() => setError(null)}
-          duration={5000}
-        />
-      )}
+      {error && <ErrorToast message={error} onDismiss={() => setError(null)} duration={5000} />}
       <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={isLoading}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-      >
-        <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-      </button>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={isLoading}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+        >
+          <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+        </button>
 
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
-            {!isActive && (
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
+              {!isActive && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    handleSetActive();
+                  }}
+                  disabled={isLoading}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isLoading ? <LoadingSpinner size="sm" /> : <CheckCircle2 className="w-4 h-4" />}
+                  {ORGANIZATION_LABELS.SET_ACTIVE}
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  handleSetActive();
+                  onEdit();
                 }}
-                disabled={isLoading}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50"
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
               >
-                {isLoading ? (
-                  <LoadingSpinner size="sm" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4" />
-                )}
-                {ORGANIZATION_LABELS.SET_ACTIVE}
+                <Edit className="w-4 h-4" />
+                {ORGANIZATION_LABELS.EDIT_ORGANIZATION}
               </button>
-            )}
-
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onEdit();
-              }}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-            >
-              <Edit className="w-4 h-4" />
-              {ORGANIZATION_LABELS.EDIT_ORGANIZATION}
-            </button>
 
               <button
                 onClick={() => {
@@ -147,17 +127,13 @@ export function OrganizationActions({
                 disabled={isLoading}
                 className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50"
               >
-                {isLoading ? (
-                  <LoadingSpinner size="sm" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
+                {isLoading ? <LoadingSpinner size="sm" /> : <Trash2 className="w-4 h-4" />}
                 {ORGANIZATION_LABELS.DELETE_ORGANIZATION}
               </button>
-          </div>
-        </>
-      )}
-    </div>
+            </div>
+          </>
+        )}
+      </div>
     </>
   );
 }

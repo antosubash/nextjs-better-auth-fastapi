@@ -4,12 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/lib/hooks/use-toast";
-import {
-  ADMIN_LABELS,
-  ADMIN_PLACEHOLDERS,
-  ADMIN_ERRORS,
-  ADMIN_SUCCESS,
-} from "@/lib/constants";
+import { ADMIN_LABELS, ADMIN_PLACEHOLDERS, ADMIN_ERRORS, ADMIN_SUCCESS } from "@/lib/constants";
 import {
   Dialog,
   DialogContent,
@@ -84,10 +79,7 @@ export function UserPasswordDialog({
         onSuccess?.();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ADMIN_ERRORS.PASSWORD_RESET_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.PASSWORD_RESET_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -169,4 +161,3 @@ export function UserPasswordDialog({
     </Dialog>
   );
 }
-

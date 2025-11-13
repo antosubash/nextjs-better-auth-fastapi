@@ -57,13 +57,11 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         const expiresDate = new Date(apiKey.expiresAt);
         const now = new Date();
         const daysUntilExpiry = Math.ceil(
-          (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+          (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
         );
         setExpiresIn(daysUntilExpiry > 0 ? daysUntilExpiry.toString() : "");
       }
-      setMetadata(
-        apiKey.metadata ? JSON.stringify(apiKey.metadata, null, 2) : "",
-      );
+      setMetadata(apiKey.metadata ? JSON.stringify(apiKey.metadata, null, 2) : "");
       setPermissions(apiKey.permissions || {});
       setRemaining(apiKey.remaining?.toString() || "");
       setRefillAmount(apiKey.refillAmount?.toString() || "");
@@ -140,7 +138,7 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         } else {
           onSuccess();
         }
-        } else {
+      } else {
         const createData: {
           name?: string;
           expiresIn?: number;
@@ -160,8 +158,7 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           }
           createData.expiresIn = days * 24 * 60 * 60;
         } else {
-          createData.expiresIn =
-            API_KEY_CONFIG.DEFAULT_EXPIRATION_DAYS * 24 * 60 * 60;
+          createData.expiresIn = API_KEY_CONFIG.DEFAULT_EXPIRATION_DAYS * 24 * 60 * 60;
         }
 
         if (prefix) createData.prefix = prefix;
@@ -270,22 +267,22 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           />
         </div>
 
-        <PermissionsEditor
-          value={permissions}
-          onChange={setPermissions}
-        />
+        <PermissionsEditor value={permissions} onChange={setPermissions} />
 
         {isEditing && (
           <>
             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>Note:</strong> The following fields are read-only and can only be modified from the server: Remaining, Refill Amount, Refill Interval, and Rate Limiting settings.
+                <strong>Note:</strong> The following fields are read-only and can only be modified
+                from the server: Remaining, Refill Amount, Refill Interval, and Rate Limiting
+                settings.
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {API_KEY_LABELS.REMAINING} <span className="text-xs text-gray-500">(read-only)</span>
+                {API_KEY_LABELS.REMAINING}{" "}
+                <span className="text-xs text-gray-500">(read-only)</span>
               </label>
               <input
                 type="number"
@@ -298,7 +295,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {API_KEY_LABELS.REFILL_AMOUNT} <span className="text-xs text-gray-500">(read-only)</span>
+                {API_KEY_LABELS.REFILL_AMOUNT}{" "}
+                <span className="text-xs text-gray-500">(read-only)</span>
               </label>
               <input
                 type="number"
@@ -311,7 +309,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {API_KEY_LABELS.REFILL_INTERVAL} <span className="text-xs text-gray-500">(read-only)</span>
+                {API_KEY_LABELS.REFILL_INTERVAL}{" "}
+                <span className="text-xs text-gray-500">(read-only)</span>
               </label>
               <input
                 type="number"
@@ -334,7 +333,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
                 htmlFor="rateLimitEnabled"
                 className="text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                {API_KEY_LABELS.RATE_LIMIT_ENABLED} <span className="text-xs text-gray-500">(read-only)</span>
+                {API_KEY_LABELS.RATE_LIMIT_ENABLED}{" "}
+                <span className="text-xs text-gray-500">(read-only)</span>
               </label>
             </div>
 
@@ -342,7 +342,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW} <span className="text-xs text-gray-500">(read-only)</span>
+                    {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}{" "}
+                    <span className="text-xs text-gray-500">(read-only)</span>
                   </label>
                   <input
                     type="number"
@@ -355,7 +356,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {API_KEY_LABELS.RATE_LIMIT_MAX} <span className="text-xs text-gray-500">(read-only)</span>
+                    {API_KEY_LABELS.RATE_LIMIT_MAX}{" "}
+                    <span className="text-xs text-gray-500">(read-only)</span>
                   </label>
                   <input
                     type="number"
@@ -391,4 +393,3 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
     </div>
   );
 }
-

@@ -17,14 +17,7 @@ import { UserActions } from "./user-actions";
 import { UserDetails } from "./user-details";
 import { UserFilters } from "./user-filters";
 import { UserBulkActions } from "./user-bulk-actions";
-import {
-  Search,
-  Plus,
-  Users,
-  ChevronsLeft,
-  ChevronsRight,
-  Download,
-} from "lucide-react";
+import { Search, Plus, Users, ChevronsLeft, ChevronsRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -105,7 +98,7 @@ export function UserList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
-  
+
   const [filterRole, setFilterRole] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
@@ -155,8 +148,7 @@ export function UserList() {
         applyFilters(processedUsers);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : ADMIN_ERRORS.LOAD_USERS_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.LOAD_USERS_FAILED;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -286,8 +278,7 @@ export function UserList() {
   const pageEnd = pageStart + itemsPerPage;
   const paginatedUsers = users.slice(pageStart, pageEnd);
   const allPageSelected =
-    paginatedUsers.length > 0 &&
-    paginatedUsers.every((u) => selectedUserIds.has(u.id));
+    paginatedUsers.length > 0 && paginatedUsers.every((u) => selectedUserIds.has(u.id));
 
   const getPageNumbers = () => {
     const pages: (number | "ellipsis")[] = [];
@@ -329,15 +320,10 @@ export function UserList() {
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Users className="w-8 h-8" />
-          <h1 className="text-3xl font-bold">
-            {ADMIN_LABELS.TITLE}
-          </h1>
+          <h1 className="text-3xl font-bold">{ADMIN_LABELS.TITLE}</h1>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowExportDialog(true)}
-          >
+          <Button variant="outline" onClick={() => setShowExportDialog(true)}>
             <Download className="w-5 h-5 mr-2" />
             {ADMIN_LABELS.EXPORT_USERS}
           </Button>
@@ -365,10 +351,7 @@ export function UserList() {
           <DialogHeader>
             <DialogTitle>{ADMIN_LABELS.CREATE_USER}</DialogTitle>
           </DialogHeader>
-          <UserForm
-            onSuccess={handleUserCreated}
-            onCancel={() => setShowCreateForm(false)}
-          />
+          <UserForm onSuccess={handleUserCreated} onCancel={() => setShowCreateForm(false)} />
         </DialogContent>
       </Dialog>
 
@@ -437,9 +420,7 @@ export function UserList() {
               <Skeleton className="h-8 w-48 mx-auto" />
             </div>
           ) : paginatedUsers.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              {ADMIN_LABELS.NO_USERS}
-            </div>
+            <div className="p-8 text-center text-muted-foreground">{ADMIN_LABELS.NO_USERS}</div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -447,10 +428,7 @@ export function UserList() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <Checkbox
-                          checked={allPageSelected}
-                          onCheckedChange={handleSelectAll}
-                        />
+                        <Checkbox checked={allPageSelected} onCheckedChange={handleSelectAll} />
                       </TableHead>
                       <TableHead>{ADMIN_LABELS.NAME}</TableHead>
                       <TableHead>{ADMIN_LABELS.EMAIL}</TableHead>
@@ -476,26 +454,20 @@ export function UserList() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="font-medium">
-                          {user.name}
-                        </TableCell>
+                        <TableCell className="font-medium">{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           <Badge variant="secondary">
-                            {ROLE_DISPLAY_NAMES[
-                              user.role as keyof typeof ROLE_DISPLAY_NAMES
-                            ] || user.role || USER_ROLES.USER}
+                            {ROLE_DISPLAY_NAMES[user.role as keyof typeof ROLE_DISPLAY_NAMES] ||
+                              user.role ||
+                              USER_ROLES.USER}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           {user.banned ? (
-                            <Badge variant="destructive">
-                              {ADMIN_LABELS.BANNED}
-                            </Badge>
+                            <Badge variant="destructive">{ADMIN_LABELS.BANNED}</Badge>
                           ) : (
-                            <Badge variant="default">
-                              {ADMIN_LABELS.ACTIVE}
-                            </Badge>
+                            <Badge variant="default">{ADMIN_LABELS.ACTIVE}</Badge>
                           )}
                         </TableCell>
                         <TableCell>{formatDate(user.createdAt)}</TableCell>
@@ -562,11 +534,7 @@ export function UserList() {
                             e.preventDefault();
                             setCurrentPage(1);
                           }}
-                          className={
-                            currentPage === 1
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                         >
                           <ChevronsLeft className="w-4 h-4" />
                         </PaginationLink>
@@ -578,11 +546,7 @@ export function UserList() {
                             e.preventDefault();
                             setCurrentPage((p) => Math.max(1, p - 1));
                           }}
-                          className={
-                            currentPage === 1
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                         />
                       </PaginationItem>
                       {getPageNumbers().map((page, idx) => (
@@ -608,14 +572,10 @@ export function UserList() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            setCurrentPage((p) =>
-                              Math.min(totalPages, p + 1)
-                            );
+                            setCurrentPage((p) => Math.min(totalPages, p + 1));
                           }}
                           className={
-                            currentPage === totalPages
-                              ? "pointer-events-none opacity-50"
-                              : ""
+                            currentPage === totalPages ? "pointer-events-none opacity-50" : ""
                           }
                         />
                       </PaginationItem>
@@ -627,9 +587,7 @@ export function UserList() {
                             setCurrentPage(totalPages);
                           }}
                           className={
-                            currentPage === totalPages
-                              ? "pointer-events-none opacity-50"
-                              : ""
+                            currentPage === totalPages ? "pointer-events-none opacity-50" : ""
                           }
                         >
                           <ChevronsRight className="w-4 h-4" />
@@ -670,10 +628,7 @@ export function UserList() {
             </p>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowExportDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowExportDialog(false)}>
               {ADMIN_LABELS.CANCEL}
             </Button>
             <Button onClick={handleExport}>

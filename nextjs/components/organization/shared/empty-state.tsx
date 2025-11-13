@@ -5,10 +5,7 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({
-  message,
-  className = "",
-}: EmptyStateProps) {
+export function EmptyState({ message, className = "" }: EmptyStateProps) {
   return (
     <div
       className={`p-8 text-center text-gray-600 dark:text-gray-400 ${className}`}
@@ -19,4 +16,3 @@ export function EmptyState({
     </div>
   );
 }
-

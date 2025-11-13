@@ -1,5 +1,10 @@
 import { statement } from "./permissions";
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, ROLE_DISPLAY_NAMES, ROLE_DESCRIPTIONS } from "./constants";
+import {
+  PERMISSION_RESOURCES,
+  PERMISSION_ACTIONS,
+  ROLE_DISPLAY_NAMES,
+  ROLE_DESCRIPTIONS,
+} from "./constants";
 
 export interface Permission {
   resource: string;
@@ -20,12 +25,7 @@ export interface RoleInfo {
 /**
  * System roles that are built-in and cannot be deleted
  */
-const SYSTEM_ROLES = new Set([
-  "user",
-  "admin",
-  "member",
-  "owner",
-]);
+const SYSTEM_ROLES = new Set(["user", "admin", "member", "owner"]);
 
 /**
  * Format permission key from resource and action
@@ -208,10 +208,7 @@ const roleDefinitions: Record<string, Record<string, string[]>> = {
       PERMISSION_ACTIONS.VIEW,
       PERMISSION_ACTIONS.UPDATE,
     ],
-    [PERMISSION_RESOURCES.SETTINGS]: [
-      PERMISSION_ACTIONS.READ,
-      PERMISSION_ACTIONS.UPDATE,
-    ],
+    [PERMISSION_RESOURCES.SETTINGS]: [PERMISSION_ACTIONS.READ, PERMISSION_ACTIONS.UPDATE],
   },
 };
 
@@ -224,9 +221,7 @@ export function getRolePermissions(roleName: string): Permission[] {
   return roleDefinitionToPermissions(rolePermissions);
 }
 
-export function getUserEffectivePermissions(
-  userRole: string | null | undefined
-): Permission[] {
+export function getUserEffectivePermissions(userRole: string | null | undefined): Permission[] {
   if (!userRole) {
     return [];
   }
@@ -273,14 +268,10 @@ export function getRole(roleName: string): RoleInfo | null {
   };
 }
 
-
-export function getRolePermissionsFromStore(
-  roleName: string
-): Record<string, string[]> {
+export function getRolePermissionsFromStore(roleName: string): Record<string, string[]> {
   return roleDefinitions[roleName] || {};
 }
 
 export function roleExists(roleName: string): boolean {
   return roleName in roleDefinitions;
 }
-

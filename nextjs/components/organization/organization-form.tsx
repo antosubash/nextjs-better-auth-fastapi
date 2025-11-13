@@ -87,17 +87,17 @@ export function OrganizationForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     // Validate form
     const nameErr = validateName(name);
     const slugErr = validateSlug(slug);
     setNameError(nameErr);
     setSlugError(slugErr);
-    
+
     if (nameErr || slugErr) {
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
@@ -143,7 +143,13 @@ export function OrganizationForm({
   };
 
   return (
-    <div className={hideHeader ? "space-y-4" : "bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6"}>
+    <div
+      className={
+        hideHeader
+          ? "space-y-4"
+          : "bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6"
+      }
+    >
       {!hideHeader && (
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -184,11 +190,7 @@ export function OrganizationForm({
                 : "border-gray-300 dark:border-gray-700 focus:ring-gray-900 dark:focus:ring-white"
             }`}
           />
-          {nameError && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-              {nameError}
-            </p>
-          )}
+          {nameError && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{nameError}</p>}
         </div>
 
         <div>
@@ -207,11 +209,7 @@ export function OrganizationForm({
                 : "border-gray-300 dark:border-gray-700 focus:ring-gray-900 dark:focus:ring-white"
             }`}
           />
-          {slugError && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-              {slugError}
-            </p>
-          )}
+          {slugError && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{slugError}</p>}
           {!slugError && slug && (
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               {ORGANIZATION_PLACEHOLDERS.SLUG_HINT}
@@ -240,12 +238,7 @@ export function OrganizationForm({
           >
             {isLoading ? ORGANIZATION_LABELS.SAVING : ORGANIZATION_LABELS.SAVE}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
             {ORGANIZATION_LABELS.CANCEL}
           </Button>
         </div>

@@ -3,10 +3,7 @@ export interface ApiError {
   status?: number;
 }
 
-export async function callFastApi<T>(
-  endpoint: string,
-  options: RequestInit = {},
-): Promise<T> {
+export async function callFastApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const endpointPath = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
   const url = `/api/proxy/${endpointPath}`;
 
@@ -16,6 +13,7 @@ export async function callFastApi<T>(
   const response = await fetch(url, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   if (!response.ok) {

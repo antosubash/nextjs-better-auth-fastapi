@@ -1,24 +1,27 @@
 """FastAPI application factory."""
 
+import logging
+
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import logging
+
 from core.config import (
     CORS_ORIGINS,
     RATE_LIMIT_ENABLED,
     RATE_LIMIT_REQUESTS_PER_MINUTE,
 )
+from core.constants import ErrorMessages
+from core.database import close_db, init_db
+from core.exceptions import AppException
 from core.logging import setup_logging
 from core.middleware import (
-    RequestIDMiddleware,
     JWTAuthMiddleware,
     RateLimitMiddleware,
+    RequestIDMiddleware,
 )
-from core.exceptions import AppException
-from core.constants import ErrorMessages
-from routers import example, health
-from dependencies import get_http_client, close_http_client
+from dependencies import close_http_client, get_http_client
+from routers import example, health, tasks
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +29,13 @@ logger = logging.getLogger(__name__)
 def create_app() -> FastAPI:
     """
     Create and configure FastAPI application.
-    
+
     Returns:
         Configured FastAPI application instance
     """
     # Setup logging
     setup_logging()
-    
+
     # Create FastAPI app
     app = FastAPI(
         title="Better Auth FastAPI Backend",
@@ -41,7 +44,7 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
     )
-    
+
     # Setup CORS
     app.add_middleware(
         CORSMiddleware,
@@ -51,10 +54,10 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         expose_headers=["*"],
     )
-    
+
     # Add request ID middleware (first, so all requests get IDs)
     app.add_middleware(RequestIDMiddleware)
-    
+
     # Add rate limiting middleware
     if RATE_LIMIT_ENABLED:
         app.add_middleware(
@@ -63,61 +66,50 @@ def create_app() -> FastAPI:
             enabled=True,
         )
         logger.info(f"Rate limiting enabled: {RATE_LIMIT_REQUESTS_PER_MINUTE} requests/minute")
-    
+
     # Add JWT authentication middleware
     app.add_middleware(JWTAuthMiddleware)
-    
+
     # Include routers
     app.include_router(example.router)
     app.include_router(health.router)
-    
+    app.include_router(tasks.router)
+
     # Store HTTP client in app state
     @app.on_event("startup")
     async def startup_event():
-        """Initialize shared HTTP client on startup."""
+        """Initialize shared HTTP client and database on startup."""
         http_client = await get_http_client()
         app.state.http_client = http_client
+        await init_db()
         logger.info("Application startup complete")
-    
+
     @app.on_event("shutdown")
     async def shutdown_event():
-        """Close shared HTTP client on shutdown."""
+        """Close shared HTTP client and database connections on shutdown."""
         await close_http_client()
+        await close_db()
         logger.info("Application shutdown complete")
-    
+
     # Global exception handlers
     @app.exception_handler(AppException)
     async def app_exception_handler(request: Request, exc: AppException):
         """Handle application-specific exceptions."""
         request_id = getattr(request.state, "request_id", None)
-        logger.error(
-            f"Application exception: {exc.detail}",
-            exc_info=True
-        )
+        logger.error(f"Application exception: {exc.detail}", exc_info=True)
         return JSONResponse(
-            status_code=exc.status_code,
-            content={
-                "detail": exc.detail,
-                "request_id": request_id
-            }
+            status_code=exc.status_code, content={"detail": exc.detail, "request_id": request_id}
         )
-    
+
     @app.exception_handler(Exception)
     async def general_exception_handler(request: Request, exc: Exception):
         """Handle unexpected exceptions."""
         request_id = getattr(request.state, "request_id", None)
-        logger.error(
-            f"Unexpected error: {str(exc)}",
-            exc_info=True
-        )
+        logger.error(f"Unexpected error: {exc!s}", exc_info=True)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "detail": ErrorMessages.INTERNAL_SERVER_ERROR,
-                "request_id": request_id
-            }
+            content={"detail": ErrorMessages.INTERNAL_SERVER_ERROR, "request_id": request_id},
         )
-    
+
     logger.info("FastAPI application created successfully")
     return app
-

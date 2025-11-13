@@ -5,10 +5,7 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export function LoadingState({
-  message = "Loading...",
-  className = "",
-}: LoadingStateProps) {
+export function LoadingState({ message = "Loading...", className = "" }: LoadingStateProps) {
   return (
     <div
       className={`p-8 text-center text-gray-600 dark:text-gray-400 ${className}`}
@@ -19,4 +16,3 @@ export function LoadingState({
     </div>
   );
 }
-

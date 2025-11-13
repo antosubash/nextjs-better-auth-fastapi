@@ -6,10 +6,10 @@ import base64
 def base64url_decode(data: str) -> bytes:
     """
     Decode base64url string to bytes.
-    
+
     Args:
         data: Base64url encoded string
-        
+
     Returns:
         Decoded bytes
     """
@@ -20,4 +20,3 @@ def base64url_decode(data: str) -> bytes:
     # Replace URL-safe characters
     data = data.replace("-", "+").replace("_", "/")
     return base64.b64decode(data)
-

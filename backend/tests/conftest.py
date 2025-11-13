@@ -1,7 +1,11 @@
 """Pytest configuration and fixtures."""
 
+import asyncio
+import contextlib
+
 import pytest
 from fastapi.testclient import TestClient
+
 from core.app import create_app
 from dependencies import close_http_client
 
@@ -12,11 +16,8 @@ def app():
     app = create_app()
     yield app
     # Cleanup
-    import asyncio
-    try:
+    with contextlib.suppress(Exception):
         asyncio.run(close_http_client())
-    except Exception:
-        pass
 
 
 @pytest.fixture(scope="function")
@@ -38,6 +39,5 @@ def mock_token_payload():
         "sub": "user123",
         "id": "user123",
         "iss": "http://localhost:3000",
-        "aud": "http://localhost:3000"
+        "aud": "http://localhost:3000",
     }
-

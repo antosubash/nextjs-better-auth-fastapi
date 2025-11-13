@@ -3,9 +3,19 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { bearer, jwt, admin, organization, apiKey } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "./database";
-import * as schema from "../auth-schema"
+import * as schema from "../auth-schema";
 import { BETTER_AUTH_CONFIG, USER_ROLES } from "./constants";
-import { accessControl, memberRole, adminRole, ownerRole, myCustomRole, moderatorRole, editorRole, viewerRole, supportRole } from "./permissions";
+import {
+  accessControl,
+  memberRole,
+  adminRole,
+  ownerRole,
+  myCustomRole,
+  moderatorRole,
+  editorRole,
+  viewerRole,
+  supportRole,
+} from "./permissions";
 
 const secret = process.env.BETTER_AUTH_SECRET || "change-me-in-production";
 
@@ -47,7 +57,7 @@ export const auth = betterAuth({
       },
       teams: {
         enabled: true,
-      }
+      },
     }),
     apiKey(),
     nextCookies(),

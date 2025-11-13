@@ -5,20 +5,13 @@ import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, PROFILE } from "@/lib/constants";
 import { User, Mail, LogOut, CheckCircle2 } from "lucide-react";
 import { ApiData } from "./api-data";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function UserProfile() {
-  const [user, setUser] = useState<{ name?: string; email?: string } | null>(
-    null
-  );
+  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -83,14 +76,8 @@ export function UserProfile() {
             {getInitials(user.name, user.email)}
           </AvatarFallback>
         </Avatar>
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">
-          {PROFILE.WELCOME_BACK}
-        </h1>
-        {user.name && (
-          <p className="text-xl text-muted-foreground font-medium">
-            {user.name}
-          </p>
-        )}
+        <h1 className="text-3xl md:text-4xl font-bold mb-2">{PROFILE.WELCOME_BACK}</h1>
+        {user.name && <p className="text-xl text-muted-foreground font-medium">{user.name}</p>}
       </div>
 
       {/* Account Information Card */}
@@ -112,9 +99,7 @@ export function UserProfile() {
                 <label className="text-sm font-medium text-muted-foreground mb-1 block">
                   {PROFILE.EMAIL_LABEL}
                 </label>
-                <p className="text-base font-medium">
-                  {user.email}
-                </p>
+                <p className="text-base font-medium">{user.email}</p>
               </div>
             </div>
 
@@ -128,9 +113,7 @@ export function UserProfile() {
                   <label className="text-sm font-medium text-muted-foreground mb-1 block">
                     {PROFILE.NAME_LABEL}
                   </label>
-                  <p className="text-base font-medium">
-                    {user.name}
-                  </p>
+                  <p className="text-base font-medium">{user.name}</p>
                 </div>
               </div>
             )}
@@ -144,15 +127,10 @@ export function UserProfile() {
       </div>
 
       {/* Logout Button */}
-      <Button
-        onClick={handleLogout}
-        variant="default"
-        className="w-full"
-      >
+      <Button onClick={handleLogout} variant="default" className="w-full">
         <LogOut className="w-5 h-5 mr-2" />
         {AUTH_LABELS.LOGOUT}
       </Button>
     </div>
   );
 }
-

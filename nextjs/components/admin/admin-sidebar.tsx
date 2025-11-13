@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Building2, Key, Stethoscope } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Key, Stethoscope, CheckSquare2 } from "lucide-react";
 import { ADMIN_NAVIGATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -37,6 +37,11 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       icon: Key,
     },
     {
+      href: "/admin/tasks",
+      label: ADMIN_NAVIGATION.TASKS,
+      icon: CheckSquare2,
+    },
+    {
       href: "/admin/doctor",
       label: ADMIN_NAVIGATION.DOCTOR,
       icon: Stethoscope,
@@ -58,6 +63,9 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     }
     if (href === "/admin/doctor") {
       return pathname?.startsWith("/admin/doctor");
+    }
+    if (href === "/admin/tasks") {
+      return pathname?.startsWith("/admin/tasks");
     }
     if (href === "/admin/users") {
       return pathname === "/admin/users";
@@ -86,7 +94,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                     "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                     active
                       ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground",
+                      : "hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
                   <Icon className="w-5 h-5" />
@@ -118,7 +126,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                     "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                     active
                       ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground",
+                      : "hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
                   <Icon className="w-5 h-5" />

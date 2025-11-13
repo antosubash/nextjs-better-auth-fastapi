@@ -18,10 +18,7 @@ export async function getHeaders() {
  * Throws an error if permission is denied
  * Server-only function
  */
-export async function requirePermission(
-  resource: string,
-  action: string
-): Promise<void> {
+export async function requirePermission(resource: string, action: string): Promise<void> {
   const headersList = await getHeaders();
   const sessionData = await auth.api.getSession({ headers: headersList });
 
@@ -38,4 +35,3 @@ export async function requirePermission(
     throw new Error(result.error || PERMISSION_ERRORS.INSUFFICIENT_PERMISSIONS);
   }
 }
-

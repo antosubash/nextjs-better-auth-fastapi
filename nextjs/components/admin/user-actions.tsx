@@ -4,7 +4,11 @@ import { useState, useCallback } from "react";
 import { authClient } from "@/lib/auth-client";
 import { getAssignableUserRoles } from "@/lib/permissions-api";
 import { RoleInfo } from "@/lib/permissions-utils";
-import { getValidAssignableRole, canBanRole, isAssignableUserRole } from "@/lib/utils/role-validation";
+import {
+  getValidAssignableRole,
+  canBanRole,
+  isAssignableUserRole,
+} from "@/lib/utils/role-validation";
 import { useToast } from "@/lib/hooks/use-toast";
 import {
   ADMIN_LABELS,
@@ -78,12 +82,7 @@ interface UserActionsProps {
   onActionSuccess: (message: string) => void;
 }
 
-export function UserActions({
-  user,
-  onEdit,
-  onDelete,
-  onActionSuccess,
-}: UserActionsProps) {
+export function UserActions({ user, onEdit, onDelete, onActionSuccess }: UserActionsProps) {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
@@ -149,8 +148,7 @@ export function UserActions({
       setBanReason("");
     } catch (err) {
       console.error("Ban user exception:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : ADMIN_ERRORS.BAN_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.BAN_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -171,8 +169,7 @@ export function UserActions({
         onActionSuccess(ADMIN_SUCCESS.USER_UNBANNED);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : ADMIN_ERRORS.UNBAN_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.UNBAN_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -200,8 +197,7 @@ export function UserActions({
         setShowRoleDialog(false);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : ADMIN_ERRORS.SET_ROLE_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.SET_ROLE_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -222,8 +218,7 @@ export function UserActions({
         onDelete();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : ADMIN_ERRORS.DELETE_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.DELETE_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -244,10 +239,7 @@ export function UserActions({
         window.location.href = "/";
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ADMIN_ERRORS.IMPERSONATION_FAILED;
+      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.IMPERSONATION_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -262,9 +254,7 @@ export function UserActions({
       toast.info("Verification email functionality needs to be implemented");
     } catch (err) {
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : ADMIN_ERRORS.EMAIL_VERIFICATION_FAILED;
+        err instanceof Error ? err.message : ADMIN_ERRORS.EMAIL_VERIFICATION_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -322,18 +312,12 @@ export function UserActions({
             {ADMIN_LABELS.IMPERSONATE_USER}
           </DropdownMenuItem>
 
-          <DropdownMenuItem
-            onClick={handleResendVerificationEmail}
-            disabled={isLoading}
-          >
+          <DropdownMenuItem onClick={handleResendVerificationEmail} disabled={isLoading}>
             <Mail className="w-4 h-4 mr-2" />
             {ADMIN_LABELS.RESEND_VERIFICATION_EMAIL}
           </DropdownMenuItem>
 
-          <DropdownMenuItem
-            onClick={() => setShowDeleteDialog(true)}
-            variant="destructive"
-          >
+          <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} variant="destructive">
             <Trash2 className="w-4 h-4 mr-2" />
             {ADMIN_LABELS.DELETE_USER}
           </DropdownMenuItem>
@@ -347,9 +331,7 @@ export function UserActions({
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="banReason">
-                {ADMIN_LABELS.BAN_REASON} (optional)
-              </Label>
+              <Label htmlFor="banReason">{ADMIN_LABELS.BAN_REASON} (optional)</Label>
               <Input
                 id="banReason"
                 value={banReason}
@@ -370,11 +352,7 @@ export function UserActions({
             >
               {ADMIN_LABELS.CANCEL}
             </Button>
-            <Button
-              onClick={handleBan}
-              disabled={isLoading}
-              variant="destructive"
-            >
+            <Button onClick={handleBan} disabled={isLoading} variant="destructive">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -407,20 +385,15 @@ export function UserActions({
               {isLoadingRoles ? (
                 <Skeleton className="h-10 w-full mt-2" />
               ) : (
-                <Select
-                  value={newRole}
-                  onValueChange={setNewRole}
-                  disabled={isLoadingRoles}
-                >
+                <Select value={newRole} onValueChange={setNewRole} disabled={isLoadingRoles}>
                   <SelectTrigger className="mt-2">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableRoles.map((roleInfo) => (
                       <SelectItem key={roleInfo.name} value={roleInfo.name}>
-                        {ROLE_DISPLAY_NAMES[
-                          roleInfo.name as keyof typeof ROLE_DISPLAY_NAMES
-                        ] || roleInfo.name}
+                        {ROLE_DISPLAY_NAMES[roleInfo.name as keyof typeof ROLE_DISPLAY_NAMES] ||
+                          roleInfo.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -457,14 +430,10 @@ export function UserActions({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {ADMIN_LABELS.CONFIRM_DELETE}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{ADMIN_LABELS.CONFIRM_DELETE}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>
-              {ADMIN_LABELS.CANCEL}
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isLoading}>{ADMIN_LABELS.CANCEL}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isLoading}
