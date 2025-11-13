@@ -4,6 +4,8 @@ import enum
 from datetime import datetime
 from uuid import UUID, uuid4
 
+from sqlalchemy import Column
+from sqlalchemy import Enum as SQLEnum
 from sqlmodel import Field, SQLModel
 
 from core.config import DB_SCHEMA
@@ -26,7 +28,11 @@ class Task(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True, description="Unique task identifier")
     title: str = Field(..., min_length=1, max_length=255, description="Task title")
     description: str | None = Field(default=None, max_length=5000, description="Task description")
-    status: TaskStatus = Field(default=TaskStatus.PENDING, description="Task status")
+    status: TaskStatus = Field(
+        default=TaskStatus.PENDING,
+        sa_column=Column(SQLEnum(TaskStatus, native_enum=False, length=20)),
+        description="Task status",
+    )
     user_id: str = Field(..., index=True, description="User ID who owns the task")
     created_at: datetime = Field(
         default_factory=datetime.utcnow, description="Task creation timestamp"

@@ -123,8 +123,10 @@ class TaskService:
             # Build query
             where_clauses = [Task.user_id == user_id]
             if status_filter:
-                # Use col() for proper enum comparison with SQLModel
-                where_clauses.append(col(Task.status) == status_filter.value)
+                # The model is configured with native_enum=False, so SQLAlchemy will
+                # automatically handle the enum-to-string conversion for VARCHAR columns
+                logger.debug(f"Filtering tasks by status: {status_filter}")
+                where_clauses.append(Task.status == status_filter)
 
             # Count total
             count_statement = select(func.count()).select_from(Task).where(*where_clauses)
