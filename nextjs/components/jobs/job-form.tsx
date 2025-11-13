@@ -1,0 +1,499 @@
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { JOB_LABELS, JOB_PLACEHOLDERS, JOB_ERRORS } from "@/lib/constants";
+import type { JobCreate, JobTriggerType } from "@/lib/types/job";
+import { useEffect } from "react";
+
+const jobSchema = z
+  .object({
+    job_id: z.string().min(1, JOB_ERRORS.JOB_ID_REQUIRED),
+    function: z.string().min(1, JOB_ERRORS.FUNCTION_REQUIRED),
+    trigger_type: z.enum(["cron", "interval", "once"]),
+    cron_expression: z.string().optional().nullable(),
+    weeks: z.number().min(0).default(0),
+    days: z.number().min(0).default(0),
+    hours: z.number().min(0).default(0),
+    minutes: z.number().min(0).default(0),
+    seconds: z.number().min(0).default(0),
+    run_date: z.string().optional().nullable(),
+    start_date: z.string().optional().nullable(),
+    end_date: z.string().optional().nullable(),
+    args: z.string().optional(),
+    kwargs: z.string().optional(),
+    replace_existing: z.boolean().default(true),
+  })
+  .refine(
+    (data) => {
+      if (data.trigger_type === "cron") {
+        return !!data.cron_expression;
+      }
+      return true;
+    },
+    {
+      message: JOB_ERRORS.CRON_EXPRESSION_REQUIRED,
+      path: ["cron_expression"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.trigger_type === "interval") {
+        return (
+          data.weeks > 0 || data.days > 0 || data.hours > 0 || data.minutes > 0 || data.seconds > 0
+        );
+      }
+      return true;
+    },
+    {
+      message: JOB_ERRORS.INTERVAL_REQUIRED,
+      path: ["seconds"],
+    }
+  );
+
+type JobFormValues = z.infer<typeof jobSchema>;
+
+interface JobFormProps {
+  onSubmit: (data: JobCreate) => Promise<void>;
+  onCancel: () => void;
+  isSubmitting?: boolean;
+  initialValues?: Partial<JobCreate>;
+}
+
+export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValues }: JobFormProps) {
+  const getDefaultValues = (): JobFormValues => {
+    if (initialValues) {
+      return {
+        job_id: initialValues.job_id || "",
+        function: initialValues.function || "",
+        trigger_type: initialValues.trigger_type || "cron",
+        cron_expression: initialValues.cron_expression || "",
+        weeks: initialValues.weeks || 0,
+        days: initialValues.days || 0,
+        hours: initialValues.hours || 0,
+        minutes: initialValues.minutes || 0,
+        seconds: initialValues.seconds || 0,
+        run_date: initialValues.run_date || null,
+        start_date: initialValues.start_date || null,
+        end_date: initialValues.end_date || null,
+        args: initialValues.args ? JSON.stringify(initialValues.args) : "",
+        kwargs: initialValues.kwargs ? JSON.stringify(initialValues.kwargs) : "",
+        replace_existing: initialValues.replace_existing ?? true,
+      };
+    }
+    return {
+      job_id: "",
+      function: "",
+      trigger_type: "cron",
+      cron_expression: "",
+      weeks: 0,
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      run_date: null,
+      start_date: null,
+      end_date: null,
+      args: "",
+      kwargs: "",
+      replace_existing: true,
+    };
+  };
+
+  const form = useForm<JobFormValues>({
+    resolver: zodResolver(jobSchema),
+    defaultValues: getDefaultValues(),
+  });
+
+  useEffect(() => {
+    if (initialValues) {
+      form.reset(getDefaultValues());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValues]);
+
+  const triggerType = form.watch("trigger_type");
+
+  const handleSubmit = async (values: JobFormValues) => {
+    let args: unknown[] = [];
+    let kwargs: Record<string, unknown> = {};
+
+    try {
+      if (values.args) {
+        args = JSON.parse(values.args);
+      }
+    } catch {
+      throw new Error(JOB_ERRORS.INVALID_ARGS);
+    }
+
+    try {
+      if (values.kwargs) {
+        kwargs = JSON.parse(values.kwargs);
+      }
+    } catch {
+      throw new Error(JOB_ERRORS.INVALID_KWARGS);
+    }
+
+    const jobData: JobCreate = {
+      job_id: values.job_id,
+      function: values.function,
+      trigger_type: values.trigger_type as JobTriggerType,
+      cron_expression: values.trigger_type === "cron" ? values.cron_expression || null : null,
+      weeks: values.trigger_type === "interval" ? values.weeks : undefined,
+      days: values.trigger_type === "interval" ? values.days : undefined,
+      hours: values.trigger_type === "interval" ? values.hours : undefined,
+      minutes: values.trigger_type === "interval" ? values.minutes : undefined,
+      seconds: values.trigger_type === "interval" ? values.seconds : undefined,
+      run_date: values.trigger_type === "once" ? values.run_date || null : null,
+      start_date: values.start_date || null,
+      end_date: values.end_date || null,
+      args: args.length > 0 ? args : undefined,
+      kwargs: Object.keys(kwargs).length > 0 ? kwargs : undefined,
+      replace_existing: values.replace_existing,
+    };
+
+    await onSubmit(jobData);
+  };
+
+  const formatDateTimeForInput = (dateString: string | null | undefined): string => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="job_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{JOB_LABELS.JOB_ID}</FormLabel>
+              <FormControl>
+                <Input placeholder={JOB_PLACEHOLDERS.JOB_ID} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="function"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{JOB_LABELS.FUNCTION}</FormLabel>
+              <FormControl>
+                <Input placeholder={JOB_PLACEHOLDERS.FUNCTION} {...field} />
+              </FormControl>
+              <FormDescription>e.g., jobs.example_jobs:function_name</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="trigger_type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{JOB_LABELS.TRIGGER_TYPE}</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={JOB_PLACEHOLDERS.TRIGGER_TYPE} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="cron">{JOB_LABELS.CRON}</SelectItem>
+                  <SelectItem value="interval">{JOB_LABELS.INTERVAL}</SelectItem>
+                  <SelectItem value="once">{JOB_LABELS.ONCE}</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {triggerType === "cron" && (
+          <FormField
+            control={form.control}
+            name="cron_expression"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{JOB_LABELS.CRON_EXPRESSION}</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={JOB_PLACEHOLDERS.CRON_EXPRESSION}
+                    {...field}
+                    value={field.value || ""}
+                  />
+                </FormControl>
+                <FormDescription>e.g., 0 0 * * * (daily at midnight)</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {triggerType === "interval" && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <FormField
+              control={form.control}
+              name="weeks"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{JOB_LABELS.WEEKS}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={JOB_PLACEHOLDERS.WEEKS}
+                      {...field}
+                      value={field.value || 0}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="days"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{JOB_LABELS.DAYS}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={JOB_PLACEHOLDERS.DAYS}
+                      {...field}
+                      value={field.value || 0}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="hours"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{JOB_LABELS.HOURS}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={JOB_PLACEHOLDERS.HOURS}
+                      {...field}
+                      value={field.value || 0}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="minutes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{JOB_LABELS.MINUTES}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={JOB_PLACEHOLDERS.MINUTES}
+                      {...field}
+                      value={field.value || 0}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="seconds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{JOB_LABELS.SECONDS}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={JOB_PLACEHOLDERS.SECONDS}
+                      {...field}
+                      value={field.value || 0}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {triggerType === "once" && (
+          <FormField
+            control={form.control}
+            name="run_date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{JOB_LABELS.RUN_DATE}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="datetime-local"
+                    {...field}
+                    value={field.value ? formatDateTimeForInput(field.value) : ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value ? new Date(value).toISOString() : null);
+                    }}
+                  />
+                </FormControl>
+                <FormDescription>Leave empty for immediate execution</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <FormField
+          control={form.control}
+          name="start_date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{JOB_LABELS.START_DATE}</FormLabel>
+              <FormControl>
+                <Input
+                  type="datetime-local"
+                  {...field}
+                  value={field.value ? formatDateTimeForInput(field.value) : ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value ? new Date(value).toISOString() : null);
+                  }}
+                />
+              </FormControl>
+              <FormDescription>Optional: When to start the job</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="end_date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{JOB_LABELS.END_DATE}</FormLabel>
+              <FormControl>
+                <Input
+                  type="datetime-local"
+                  {...field}
+                  value={field.value ? formatDateTimeForInput(field.value) : ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value ? new Date(value).toISOString() : null);
+                  }}
+                />
+              </FormControl>
+              <FormDescription>Optional: When to end the job</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="args"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{JOB_LABELS.ARGS}</FormLabel>
+              <FormControl>
+                <Input placeholder={JOB_PLACEHOLDERS.ARGS} {...field} value={field.value || ""} />
+              </FormControl>
+              <FormDescription>JSON array format</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="kwargs"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{JOB_LABELS.KWARGS}</FormLabel>
+              <FormControl>
+                <Input placeholder={JOB_PLACEHOLDERS.KWARGS} {...field} value={field.value || ""} />
+              </FormControl>
+              <FormDescription>JSON object format</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="replace_existing"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>{JOB_LABELS.REPLACE_EXISTING}</FormLabel>
+                <FormDescription>Replace existing job with the same ID</FormDescription>
+              </div>
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            {JOB_LABELS.CANCEL}
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? JOB_LABELS.CREATING : JOB_LABELS.SAVE}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}

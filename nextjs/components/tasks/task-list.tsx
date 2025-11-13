@@ -148,7 +148,10 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
         ))}
       </div>
 
-      <AlertDialog open={deleteTaskId !== null} onOpenChange={(open) => !open && setDeleteTaskId(null)}>
+      <AlertDialog
+        open={deleteTaskId !== null}
+        onOpenChange={(open) => !open && setDeleteTaskId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{TASK_LABELS.DELETE_TASK}</AlertDialogTitle>
@@ -169,4 +172,3 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
     </>
   );
 }
-

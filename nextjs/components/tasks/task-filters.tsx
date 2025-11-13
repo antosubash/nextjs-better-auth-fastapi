@@ -32,4 +32,3 @@ export function TaskFilters({ statusFilter, onStatusFilterChange }: TaskFiltersP
     </div>
   );
 }
-

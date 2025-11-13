@@ -14,6 +14,7 @@ from core.config import (
 from core.constants import ErrorMessages
 from core.database import close_db, init_db
 from core.exceptions import AppException
+from core.jobs import init_scheduler, shutdown_scheduler, start_scheduler
 from core.logging import setup_logging
 from core.middleware import (
     JWTAuthMiddleware,
@@ -21,7 +22,7 @@ from core.middleware import (
     RequestIDMiddleware,
 )
 from dependencies import close_http_client, get_http_client
-from routers import example, health, tasks
+from routers import example, health, jobs, tasks
 
 logger = logging.getLogger(__name__)
 
@@ -74,19 +75,24 @@ def create_app() -> FastAPI:
     app.include_router(example.router)
     app.include_router(health.router)
     app.include_router(tasks.router)
+    app.include_router(jobs.router)
 
     # Store HTTP client in app state
     @app.on_event("startup")
     async def startup_event():
-        """Initialize shared HTTP client and database on startup."""
+        """Initialize shared HTTP client, database, and job scheduler on startup."""
         http_client = await get_http_client()
         app.state.http_client = http_client
         await init_db()
+        # Initialize and start job scheduler
+        init_scheduler()
+        await start_scheduler()
         logger.info("Application startup complete")
 
     @app.on_event("shutdown")
     async def shutdown_event():
-        """Close shared HTTP client and database connections on shutdown."""
+        """Close shared HTTP client, database connections, and job scheduler on shutdown."""
+        await shutdown_scheduler()
         await close_http_client()
         await close_db()
         logger.info("Application shutdown complete")

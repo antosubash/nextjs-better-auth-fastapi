@@ -57,7 +57,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.excluded_paths = excluded_paths or PUBLIC_ROUTES
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next):  # noqa: PLR0911, PLR0912, PLR0915
         """
         Validate JWT token or API key for protected routes.
 

@@ -20,47 +20,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TaskList } from "@/components/tasks/task-list";
-import { TaskDialog } from "@/components/tasks/task-dialog";
-import { TaskFilters } from "@/components/tasks/task-filters";
-import { TASK_LABELS, TASK_ERRORS, TASK_SUCCESS, PAGE_CONTAINER } from "@/lib/constants";
-import { getTasks, createTask, updateTask, deleteTask } from "@/lib/api/tasks";
-import type { Task, TaskCreate, TaskStatus } from "@/lib/types/task";
+import { JobList } from "@/components/jobs/job-list";
+import { JobDialog } from "@/components/jobs/job-dialog";
+import { JobDetailsDialog } from "@/components/jobs/job-details-dialog";
+import { JOB_LABELS, JOB_ERRORS, JOB_SUCCESS, PAGE_CONTAINER } from "@/lib/constants";
+import { getJobs, createJob, deleteJob, pauseJob, resumeJob, getJob } from "@/lib/api/jobs";
+import type { Job, JobCreate } from "@/lib/types/job";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
-export function TasksPageContent() {
+export function JobsPageContent() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const loadTasks = async () => {
+  const loadJobs = async () => {
     try {
       setIsLoading(true);
       setError("");
-      const response = await getTasks(page, pageSize, statusFilter || undefined);
-      setTasks(response.items);
+      const response = await getJobs(page, pageSize);
+      setJobs(response.items);
       setTotal(response.total);
     } catch (err) {
-      console.error("Failed to load tasks:", err);
-      setError(err instanceof Error ? err.message : TASK_ERRORS.LOAD_TASKS_FAILED);
-      toast.error(TASK_ERRORS.LOAD_TASKS_FAILED);
+      console.error("Failed to load jobs:", err);
+      setError(err instanceof Error ? err.message : JOB_ERRORS.LOAD_JOBS_FAILED);
+      toast.error(JOB_ERRORS.LOAD_JOBS_FAILED);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    const checkAuthAndLoadTasks = async () => {
+    const checkAuthAndLoadJobs = async () => {
       try {
         const session = await authClient.getSession();
         if (!session?.data?.session) {
@@ -69,77 +69,93 @@ export function TasksPageContent() {
         }
 
         setIsAuthorized(true);
-        await loadTasks();
+        await loadJobs();
       } catch (err) {
-        console.error("Failed to load tasks:", err);
-        setError(err instanceof Error ? err.message : TASK_ERRORS.LOAD_TASKS_FAILED);
+        console.error("Failed to load jobs:", err);
+        setError(err instanceof Error ? err.message : JOB_ERRORS.LOAD_JOBS_FAILED);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuthAndLoadTasks();
+    checkAuthAndLoadJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   useEffect(() => {
     if (isAuthorized) {
-      loadTasks();
+      loadJobs();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, statusFilter, isAuthorized]);
+  }, [page, pageSize, isAuthorized]);
 
   const handleCreateClick = () => {
-    setEditingTask(undefined);
     setIsDialogOpen(true);
   };
 
-  const handleEditClick = (task: Task) => {
-    setEditingTask(task);
-    setIsDialogOpen(true);
-  };
-
-  const handleSubmit = async (data: TaskCreate) => {
+  const handleSubmit = async (data: JobCreate) => {
     try {
       setIsSubmitting(true);
       setError("");
-
-      if (editingTask) {
-        await updateTask(editingTask.id, data);
-        toast.success(TASK_SUCCESS.TASK_UPDATED);
-      } else {
-        await createTask(data);
-        toast.success(TASK_SUCCESS.TASK_CREATED);
-      }
-
+      await createJob(data);
+      toast.success(JOB_SUCCESS.JOB_CREATED);
       setIsDialogOpen(false);
-      setEditingTask(undefined);
-      await loadTasks();
+      await loadJobs();
     } catch (err) {
-      console.error("Failed to save task:", err);
-      const errorMessage = editingTask ? TASK_ERRORS.UPDATE_FAILED : TASK_ERRORS.CREATE_FAILED;
-      setError(err instanceof Error ? err.message : errorMessage);
+      console.error("Failed to create job:", err);
+      const errorMessage = err instanceof Error ? err.message : JOB_ERRORS.CREATE_FAILED;
+      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (taskId: string) => {
+  const handleDelete = async (jobId: string) => {
     try {
-      await deleteTask(taskId);
-      toast.success(TASK_SUCCESS.TASK_DELETED);
-      await loadTasks();
+      await deleteJob(jobId);
+      toast.success(JOB_SUCCESS.JOB_DELETED);
+      await loadJobs();
     } catch (err) {
-      console.error("Failed to delete task:", err);
-      toast.error(TASK_ERRORS.DELETE_FAILED);
+      console.error("Failed to delete job:", err);
+      toast.error(JOB_ERRORS.DELETE_FAILED);
       throw err;
     }
   };
 
-  const handleStatusFilterChange = (status: TaskStatus | null) => {
-    setStatusFilter(status);
-    setPage(1);
+  const handlePause = async (jobId: string) => {
+    try {
+      await pauseJob(jobId);
+      toast.success(JOB_SUCCESS.JOB_PAUSED);
+      await loadJobs();
+    } catch (err) {
+      console.error("Failed to pause job:", err);
+      toast.error(JOB_ERRORS.PAUSE_FAILED);
+      throw err;
+    }
+  };
+
+  const handleResume = async (jobId: string) => {
+    try {
+      await resumeJob(jobId);
+      toast.success(JOB_SUCCESS.JOB_RESUMED);
+      await loadJobs();
+    } catch (err) {
+      console.error("Failed to resume job:", err);
+      toast.error(JOB_ERRORS.RESUME_FAILED);
+      throw err;
+    }
+  };
+
+  const handleViewDetails = async (job: Job) => {
+    try {
+      const fullJob = await getJob(job.id);
+      setSelectedJob(fullJob);
+      setIsDetailsDialogOpen(true);
+    } catch (err) {
+      console.error("Failed to load job details:", err);
+      toast.error(JOB_ERRORS.LOAD_JOB_FAILED);
+    }
   };
 
   const totalPages = Math.ceil(total / pageSize) || 0;
@@ -147,7 +163,7 @@ export function TasksPageContent() {
   if (isLoading && !isAuthorized) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg text-gray-600 dark:text-gray-400">{TASK_LABELS.LOADING}</div>
+        <div className="text-lg text-gray-600 dark:text-gray-400">{JOB_LABELS.LOADING}</div>
       </div>
     );
   }
@@ -162,24 +178,17 @@ export function TasksPageContent() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              {TASK_LABELS.TITLE}
+              {JOB_LABELS.TITLE}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              {TASK_LABELS.SHOWING} {Math.min((page - 1) * pageSize + 1, total)} {TASK_LABELS.TO}{" "}
-              {Math.min(page * pageSize, total)} {TASK_LABELS.OF} {total} {TASK_LABELS.TASKS}
+              {JOB_LABELS.SHOWING} {Math.min((page - 1) * pageSize + 1, total)} {JOB_LABELS.TO}{" "}
+              {Math.min(page * pageSize, total)} {JOB_LABELS.OF} {total} {JOB_LABELS.JOBS}
             </p>
           </div>
           <Button onClick={handleCreateClick}>
             <Plus className="h-4 w-4 mr-2" />
-            {TASK_LABELS.CREATE_TASK}
+            {JOB_LABELS.CREATE_JOB}
           </Button>
-        </div>
-
-        <div className="mb-6">
-          <TaskFilters
-            statusFilter={statusFilter}
-            onStatusFilterChange={handleStatusFilterChange}
-          />
         </div>
       </div>
 
@@ -191,10 +200,12 @@ export function TasksPageContent() {
         </Card>
       )}
 
-      <TaskList
-        tasks={tasks}
-        onEdit={handleEditClick}
+      <JobList
+        jobs={jobs}
+        onPause={handlePause}
+        onResume={handleResume}
         onDelete={handleDelete}
+        onViewDetails={handleViewDetails}
         isLoading={isLoading}
       />
 
@@ -203,7 +214,7 @@ export function TasksPageContent() {
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{TASK_LABELS.ITEMS_PER_PAGE}:</span>
+                <span className="text-sm text-muted-foreground">{JOB_LABELS.ITEMS_PER_PAGE}:</span>
                 <Select
                   value={pageSize.toString()}
                   onValueChange={(value) => setPageSize(Number(value))}
@@ -278,12 +289,17 @@ export function TasksPageContent() {
         </Card>
       )}
 
-      <TaskDialog
+      <JobDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        task={editingTask}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
+      />
+
+      <JobDetailsDialog
+        job={selectedJob}
+        open={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
       />
     </main>
   );

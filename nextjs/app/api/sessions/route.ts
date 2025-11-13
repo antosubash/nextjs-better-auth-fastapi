@@ -30,8 +30,10 @@ export async function GET(_request: NextRequest) {
           [key: string]: unknown;
         };
 
-        const createdAt = s.createdAt instanceof Date ? s.createdAt.getTime() : (s.createdAt as number) || 0;
-        const expiresAt = s.expiresAt instanceof Date ? s.expiresAt.getTime() : (s.expiresAt as number) || 0;
+        const createdAt =
+          s.createdAt instanceof Date ? s.createdAt.getTime() : (s.createdAt as number) || 0;
+        const expiresAt =
+          s.expiresAt instanceof Date ? s.expiresAt.getTime() : (s.expiresAt as number) || 0;
 
         return {
           id: s.id || s.token || "",
@@ -48,7 +50,8 @@ export async function GET(_request: NextRequest) {
     return NextResponse.json({ sessions });
   } catch (error) {
     console.error("Failed to fetch sessions:", error);
-    const errorMessage = error instanceof Error ? error.message : SESSION_ERRORS.LOAD_SESSIONS_FAILED;
+    const errorMessage =
+      error instanceof Error ? error.message : SESSION_ERRORS.LOAD_SESSIONS_FAILED;
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
@@ -87,8 +90,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Session revoked" });
   } catch (error) {
     console.error("Failed to revoke session:", error);
-    const errorMessage = error instanceof Error ? error.message : SESSION_ERRORS.REVOKE_SESSION_FAILED;
+    const errorMessage =
+      error instanceof Error ? error.message : SESSION_ERRORS.REVOKE_SESSION_FAILED;
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-

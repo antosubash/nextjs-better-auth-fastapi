@@ -41,4 +41,3 @@ export async function deleteTask(id: string): Promise<void> {
     method: "DELETE",
   });
 }
-

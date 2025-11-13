@@ -84,7 +84,7 @@ export const sessionService = {
           },
         });
 
-        const sessions = ((sessionsResult as { sessions?: unknown[] })?.sessions || []);
+        const sessions = (sessionsResult as { sessions?: unknown[] })?.sessions || [];
         const sessionExists = sessions.some(
           (s: unknown) => (s as { token?: string }).token === params.sessionToken
         );
@@ -130,7 +130,7 @@ export const sessionService = {
           },
         });
 
-        const sessions = ((sessionsResult as { sessions?: unknown[] })?.sessions || []);
+        const sessions = (sessionsResult as { sessions?: unknown[] })?.sessions || [];
         const revokedTokens: string[] = [];
 
         // Revoke all sessions except the current one

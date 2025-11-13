@@ -78,6 +78,15 @@ class ErrorMessages:
     TASK_DELETE_ERROR = "Failed to delete task"
     TASK_ACCESS_DENIED = "Access denied to this task"
 
+    # Job errors
+    JOB_NOT_FOUND = "Job not found"
+    JOB_CREATE_ERROR = "Failed to create job"
+    JOB_UPDATE_ERROR = "Failed to update job"
+    JOB_DELETE_ERROR = "Failed to delete job"
+    JOB_FUNCTION_NOT_FOUND = "Job function not found"
+    JOB_INVALID_SCHEDULE = "Invalid job schedule"
+    JOB_ALREADY_EXISTS = "Job with this ID already exists"
+
     # General errors
     INTERNAL_SERVER_ERROR = "Internal server error"
     SERVICE_UNAVAILABLE = "Service unavailable"
@@ -92,6 +101,11 @@ class SuccessMessages:
     TASK_CREATED = "Task created successfully"
     TASK_UPDATED = "Task updated successfully"
     TASK_DELETED = "Task deleted successfully"
+    JOB_CREATED = "Job created successfully"
+    JOB_UPDATED = "Job updated successfully"
+    JOB_DELETED = "Job deleted successfully"
+    JOB_PAUSED = "Job paused successfully"
+    JOB_RESUMED = "Job resumed successfully"
 
 
 # API response messages

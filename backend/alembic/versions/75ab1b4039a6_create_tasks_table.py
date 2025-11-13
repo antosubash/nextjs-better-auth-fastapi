@@ -6,16 +6,15 @@ Create Date: 2025-11-13 20:45:12.231782
 
 """
 
+# Import DB_SCHEMA from config
+import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 from alembic import op
-
-# Import DB_SCHEMA from config
-import sys
-from pathlib import Path
 
 backend_dir = Path(__file__).parent.parent.parent
 if str(backend_dir) not in sys.path:

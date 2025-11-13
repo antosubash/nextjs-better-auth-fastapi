@@ -107,7 +107,8 @@ export function UserSessions() {
         loadSessions();
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : SESSION_ERRORS.REVOKE_SESSION_FAILED;
+      const errorMessage =
+        err instanceof Error ? err.message : SESSION_ERRORS.REVOKE_SESSION_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsRevoking(null);
@@ -134,7 +135,8 @@ export function UserSessions() {
         setShowRevokeAllDialog(false);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : SESSION_ERRORS.REVOKE_SESSION_FAILED;
+      const errorMessage =
+        err instanceof Error ? err.message : SESSION_ERRORS.REVOKE_SESSION_FAILED;
       toast.error(errorMessage);
     } finally {
       setIsRevokingAll(false);
@@ -218,7 +220,10 @@ export function UserSessions() {
                       return (
                         <TableRow key={session.id || session.token}>
                           <TableCell>{session.ipAddress || "N/A"}</TableCell>
-                          <TableCell className="max-w-lg truncate" title={session.userAgent || "N/A"}>
+                          <TableCell
+                            className="max-w-lg truncate"
+                            title={session.userAgent || "N/A"}
+                          >
                             {session.userAgent || "N/A"}
                           </TableCell>
                           <TableCell>{formatDate(session.createdAt)}</TableCell>
@@ -270,9 +275,7 @@ export function UserSessions() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{PROFILE.CONFIRM_REVOKE_ALL_SESSIONS}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {PROFILE.CONFIRM_REVOKE_ALL_SESSIONS}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{PROFILE.CONFIRM_REVOKE_ALL_SESSIONS}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isRevokingAll}>Cancel</AlertDialogCancel>
@@ -296,4 +299,3 @@ export function UserSessions() {
     </>
   );
 }
-

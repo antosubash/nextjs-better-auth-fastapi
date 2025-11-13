@@ -59,3 +59,12 @@ MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_USE_SSL = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
 MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "better-auth-storage")
 MINIO_REGION = os.getenv("MINIO_REGION", "us-east-1")
+
+# Job scheduler configuration
+# Use sync database URL (without +asyncpg) for APScheduler job store
+JOB_STORE_URL = os.getenv("JOB_STORE_URL", DATABASE_URL_SYNC)
+JOB_STORE_TABLE_NAME = os.getenv("JOB_STORE_TABLE_NAME", "apscheduler_jobs")
+JOB_EXECUTOR_MAX_WORKERS = int(os.getenv("JOB_EXECUTOR_MAX_WORKERS", "10"))
+# Misfire grace time in seconds - how long after a missed run time a job can still be executed
+# Default: 1 hour (3600 seconds) to handle cases where scheduler is down temporarily
+JOB_MISFIRE_GRACE_TIME_SECONDS = int(os.getenv("JOB_MISFIRE_GRACE_TIME_SECONDS", "3600"))

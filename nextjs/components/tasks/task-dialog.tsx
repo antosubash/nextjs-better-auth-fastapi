@@ -46,9 +46,13 @@ export function TaskDialog({
               : `${TASK_LABELS.CREATE_TASK.toLowerCase()} a new task`}
           </DialogDescription>
         </DialogHeader>
-        <TaskForm task={task} onSubmit={handleSubmit} onCancel={handleCancel} isSubmitting={isSubmitting} />
+        <TaskForm
+          task={task}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          isSubmitting={isSubmitting}
+        />
       </DialogContent>
     </Dialog>
   );
 }
-

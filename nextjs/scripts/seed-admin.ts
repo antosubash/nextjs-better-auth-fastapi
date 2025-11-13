@@ -89,7 +89,7 @@ const SEED_USERS = [
     password: "user1234",
     name: "George Wilson",
     role: USER_ROLES.USER,
-  }
+  },
 ];
 
 async function seedUsers() {

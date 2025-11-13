@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Building2, Key, Stethoscope, CheckSquare2 } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  Key,
+  Stethoscope,
+  CheckSquare2,
+  Clock,
+} from "lucide-react";
 import { ADMIN_NAVIGATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -42,6 +50,11 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       icon: CheckSquare2,
     },
     {
+      href: "/admin/jobs",
+      label: ADMIN_NAVIGATION.JOBS,
+      icon: Clock,
+    },
+    {
       href: "/admin/doctor",
       label: ADMIN_NAVIGATION.DOCTOR,
       icon: Stethoscope,
@@ -66,6 +79,9 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     }
     if (href === "/admin/tasks") {
       return pathname?.startsWith("/admin/tasks");
+    }
+    if (href === "/admin/jobs") {
+      return pathname?.startsWith("/admin/jobs");
     }
     if (href === "/admin/users") {
       return pathname === "/admin/users";

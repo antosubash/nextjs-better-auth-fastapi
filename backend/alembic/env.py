@@ -14,6 +14,7 @@ if str(backend_dir) not in sys.path:
 # Import SQLModel and models
 from sqlmodel import SQLModel  # noqa: E402
 
+from models.job_history import JobHistory  # noqa: F401, E402
 from models.task import Task  # noqa: F401, E402
 
 # this is the Alembic Config object, which provides
