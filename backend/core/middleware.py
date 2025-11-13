@@ -180,6 +180,26 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                 content={"detail": ErrorMessages.AUTH_HEADER_MISSING, "request_id": request_id},
             )
 
+        # Extract and store unified user_id from either authentication method
+        user_id = None
+        if has_api_key:
+            api_key_data = request.state.api_key_data
+            user_id = api_key_data.get("user_id")
+        elif has_jwt:
+            token_data = request.state.token_data
+            user_id = token_data.get("sub") or token_data.get("id")
+
+        if user_id:
+            request.state.user_id = str(user_id)
+        else:
+            logger.error(
+                f"User ID not found in authentication data for {method} {path} from {client_ip}"
+            )
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"detail": ErrorMessages.USER_ID_NOT_FOUND, "request_id": request_id},
+            )
+
         # Continue with the request
         auth_methods = []
         if has_api_key:
@@ -189,7 +209,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
 
         logger.debug(
             f"Request proceeding to handler for {method} {path} "
-            f"(authenticated via: {', '.join(auth_methods)})",
+            f"(authenticated via: {', '.join(auth_methods)}, user_id: {user_id})",
             extra={"request_id": request_id},
         )
         return await call_next(request)

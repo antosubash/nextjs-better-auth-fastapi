@@ -54,6 +54,7 @@ class ErrorMessages:
     AUTH_TOKEN_INVALID = "Invalid authentication token"
     AUTH_TOKEN_VERIFICATION_FAILED = "Token verification failed"
     AUTH_TOKEN_VERIFICATION_ERROR = "Token verification error"
+    USER_ID_NOT_FOUND = "User ID not found in token"
 
     # API key errors
     API_KEY_MISSING = "API key missing"
