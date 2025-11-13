@@ -43,6 +43,9 @@ DATABASE_URL = os.getenv(
 # Synchronous database URL for Alembic migrations
 DATABASE_URL_SYNC = DATABASE_URL.replace("+asyncpg", "")
 
+# Database schema configuration
+DB_SCHEMA = os.getenv("DB_SCHEMA", "api")
+
 # Database connection pool settings
 DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "5"))
 DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "10"))

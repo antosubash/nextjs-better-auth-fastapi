@@ -6,6 +6,8 @@ from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
+from core.config import DB_SCHEMA
+
 
 class TaskStatus(str, enum.Enum):
     """Task status enumeration."""
@@ -19,6 +21,7 @@ class Task(SQLModel, table=True):
     """Task database model."""
 
     __tablename__ = "tasks"
+    __table_args__ = {"schema": DB_SCHEMA}
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, description="Unique task identifier")
     title: str = Field(..., min_length=1, max_length=255, description="Task title")

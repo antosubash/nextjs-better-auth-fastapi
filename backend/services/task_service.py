@@ -123,7 +123,8 @@ class TaskService:
             # Build query
             where_clauses = [Task.user_id == user_id]
             if status_filter:
-                where_clauses.append(Task.status == status_filter)
+                # Use col() for proper enum comparison with SQLModel
+                where_clauses.append(col(Task.status) == status_filter.value)
 
             # Count total
             count_statement = select(func.count()).select_from(Task).where(*where_clauses)

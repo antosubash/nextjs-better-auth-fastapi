@@ -3,6 +3,7 @@
 import logging
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import Session, SQLModel, create_engine
@@ -14,6 +15,7 @@ from core.config import (
     DB_POOL_RECYCLE,
     DB_POOL_SIZE,
     DB_POOL_TIMEOUT,
+    DB_SCHEMA,
 )
 
 logger = logging.getLogger(__name__)
@@ -26,6 +28,7 @@ async_engine = create_async_engine(
     max_overflow=DB_MAX_OVERFLOW,
     pool_timeout=DB_POOL_TIMEOUT,
     pool_recycle=DB_POOL_RECYCLE,
+    connect_args={"server_settings": {"search_path": DB_SCHEMA}},
 )
 
 # Sync engine for Alembic migrations
@@ -36,6 +39,7 @@ sync_engine = create_engine(
     max_overflow=DB_MAX_OVERFLOW,
     pool_timeout=DB_POOL_TIMEOUT,
     pool_recycle=DB_POOL_RECYCLE,
+    connect_args={"options": f"-csearch_path={DB_SCHEMA}"},
 )
 
 # Async session factory
@@ -64,6 +68,8 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """
     async with AsyncSessionLocal() as session:
         try:
+            # Ensure search_path is set for this session
+            await session.execute(text(f'SET search_path TO "{DB_SCHEMA}"'))
             yield session
         except Exception:
             await session.rollback()
@@ -84,17 +90,21 @@ def get_sync_session() -> Session:
 
 async def init_db() -> None:
     """
-    Initialize database tables.
-    Creates all tables defined in SQLModel models.
+    Initialize database schema and tables.
+    Creates the schema if it doesn't exist, then creates all tables defined in SQLModel models.
     """
     try:
         async with async_engine.begin() as conn:
+            # Create schema if it doesn't exist
+            await conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{DB_SCHEMA}"'))
+            # Set search_path for this connection
+            await conn.execute(text(f'SET search_path TO "{DB_SCHEMA}"'))
             # Import all models to ensure they're registered
             from models import task  # noqa: F401, PLC0415
 
             # Create all tables
             await conn.run_sync(SQLModel.metadata.create_all)
-        logger.info("Database tables initialized successfully")
+        logger.info(f"Database schema '{DB_SCHEMA}' and tables initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e!s}", exc_info=True)
         raise
