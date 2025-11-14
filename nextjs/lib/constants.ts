@@ -208,6 +208,7 @@ export const ADMIN_LABELS = {
   EXPORT_CSV: "CSV",
   EXPORT_JSON: "JSON",
   SAVING: "Saving...",
+  BACK_TO_USERS: "Back to Users",
 } as const;
 
 export const ADMIN_PLACEHOLDERS = {

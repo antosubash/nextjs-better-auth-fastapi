@@ -92,7 +92,6 @@ export function UserList() {
   const [success, setSuccess] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
@@ -207,13 +206,6 @@ export function UserList() {
   const handleUserCreated = () => {
     setShowCreateForm(false);
     setSuccess(ADMIN_SUCCESS.USER_CREATED);
-    setTimeout(() => setSuccess(""), 3000);
-    loadUsers();
-  };
-
-  const handleUserUpdated = () => {
-    setEditingUser(null);
-    setSuccess(ADMIN_SUCCESS.USER_UPDATED);
     setTimeout(() => setSuccess(""), 3000);
     loadUsers();
   };
@@ -355,21 +347,6 @@ export function UserList() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{ADMIN_LABELS.EDIT_USER}</DialogTitle>
-          </DialogHeader>
-          {editingUser && (
-            <UserForm
-              user={editingUser}
-              onSuccess={handleUserUpdated}
-              onCancel={() => setEditingUser(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       <UserDetails
         user={selectedUser}
         open={!!selectedUser}
@@ -485,12 +462,7 @@ export function UserList() {
                           )}
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
-                          <UserActions
-                            user={user}
-                            onEdit={() => setEditingUser(user)}
-                            onDelete={handleUserDeleted}
-                            onActionSuccess={handleActionSuccess}
-                          />
+                          <UserActions user={user} />
                         </TableCell>
                       </TableRow>
                     ))}
