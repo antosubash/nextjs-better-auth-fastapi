@@ -1,11 +1,20 @@
-import "dotenv/config";
-import { USER_ROLES } from "../lib/constants";
-import { auth } from "../lib/auth";
-import { db } from "../lib/database";
-import { user } from "../auth-schema";
-import { eq } from "drizzle-orm";
+// Load .env from project root directory BEFORE any imports
+import { config } from "dotenv";
+import { resolve } from "node:path";
 
-const SEED_USERS = [
+// This must execute before any other imports that depend on env vars
+config({ path: resolve(process.cwd(), "../.env") });
+
+// Wrap everything in an async IIFE to use dynamic imports
+(async () => {
+  // Now we can safely import modules that depend on environment variables
+  const { USER_ROLES } = await import("../lib/constants");
+  const { auth } = await import("../lib/auth");
+  const { db } = await import("../lib/database");
+  const { user } = await import("../auth-schema");
+  const { eq } = await import("drizzle-orm");
+
+  const SEED_USERS = [
   {
     email: "admin@example.com",
     password: "admin123",
@@ -153,11 +162,12 @@ async function seedUsers() {
   console.log("User seeding completed!");
 }
 
-seedUsers()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("Seeding failed:", error);
-    process.exit(1);
-  });
+  seedUsers()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("Seeding failed:", error);
+      process.exit(1);
+    });
+})();

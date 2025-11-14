@@ -183,7 +183,7 @@ export default function AdminDashboardPage() {
           <p className="text-gray-600 dark:text-gray-400">{ADMIN_DASHBOARD.WELCOME}</p>
         </div>
         <Link
-          href="/admin"
+          href="/admin/users"
           className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
         >
           {ADMIN_DASHBOARD.VIEW_ALL_USERS}
@@ -274,7 +274,7 @@ export default function AdminDashboardPage() {
               {ADMIN_DASHBOARD.RECENT_USERS}
             </h3>
             <Link
-              href="/admin"
+              href="/admin/users"
               className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             >
               {ADMIN_DASHBOARD.VIEW_ALL_USERS} →

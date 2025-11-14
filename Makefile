@@ -1,4 +1,4 @@
-.PHONY: help install backend frontend dev clean lint lint-backend lint-frontend format format-backend format-frontend check check-backend check-frontend type-check build build-backend build-frontend migrate migrate-backend migrate-frontend
+.PHONY: help install backend frontend dev clean lint lint-backend lint-frontend format format-backend format-frontend check check-backend check-frontend type-check build build-backend build-frontend migrate migrate-backend migrate-frontend seed
 
 # Default target
 help:
@@ -33,6 +33,7 @@ help:
 	@echo "  make migrate         - Run database migrations for both frontend and backend"
 	@echo "  make migrate-backend - Run backend database migrations (Alembic)"
 	@echo "  make migrate-frontend - Run frontend database migrations (Drizzle)"
+	@echo "  make seed            - Seed database with initial data"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean           - Clean up generated files"
@@ -72,6 +73,11 @@ migrate-frontend:
 # Run both backend and frontend migrations
 migrate: migrate-backend migrate-frontend
 	@echo "Database migrations complete!"
+
+# Seed database with initial data
+seed:
+	@echo "Seeding database with initial data..."
+	cd nextjs && pnpm seed
 
 # Clean generated files
 clean:
