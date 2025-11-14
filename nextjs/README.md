@@ -1,36 +1,180 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js Frontend
+
+This is the Next.js 16 frontend application with Better Auth integration.
+
+## Overview
+
+The frontend provides:
+- User authentication (signup, login) via Better Auth
+- Organization and team management
+- API key management
+- JWT token generation
+- Proxy routes to backend API
+
+## Tech Stack
+
+- **Next.js 16** - React framework with App Router
+- **Better Auth** - Authentication library
+- **Drizzle ORM** - TypeScript ORM for database operations
+- **PostgreSQL** - Database (shared with backend)
+- **Tailwind CSS** - Styling
+- **TypeScript** - Type safety
+
+## Database
+
+The frontend uses PostgreSQL (shared with the backend) via Drizzle ORM. Better Auth is configured to use the same PostgreSQL database.
+
+**Important**: The frontend and backend share the same database but manage different schemas/tables.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+- PostgreSQL running (shared with backend)
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy environment variables from the project root `.env` file. The frontend automatically loads from the root `.env` file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Key variables:
+- `BETTER_AUTH_SECRET` - Secret key for Better Auth
+- `BETTER_AUTH_URL` - Base URL (default: http://localhost:3000)
+- `DATABASE_URL` - PostgreSQL connection string
+- `NEXT_PUBLIC_API_URL` - Backend API URL (default: http://localhost:8000)
 
-## Learn More
+### Database Migrations
 
-To learn more about Next.js, take a look at the following resources:
+Run migrations to set up the database schema:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Better Auth migrations
+npx @better-auth/cli migrate
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Drizzle migrations (if you've made custom schema changes)
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
 
-## Deploy on Vercel
+Or use the Make command from project root:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+make migrate-frontend
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Development
+
+Start the development server:
+
+```bash
+pnpm dev
+```
+
+The application will be available at `http://localhost:3000`.
+
+### Build
+
+Build for production:
+
+```bash
+pnpm build
+```
+
+### Start Production Server
+
+```bash
+pnpm start
+```
+
+## Project Structure
+
+```
+nextjs/
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   │   ├── auth/          # Better Auth endpoints
+│   │   └── proxy/         # Proxy routes to backend
+│   └── page.tsx           # Pages
+├── components/            # React components
+├── lib/                   # Utilities and configuration
+│   ├── auth.ts           # Better Auth configuration
+│   ├── constants.ts      # All constants (IMPORTANT)
+│   └── database.ts       # Database connection
+├── drizzle/              # Database migrations
+├── auth-schema.ts        # Database schema definitions
+└── package.json          # Dependencies
+```
+
+## Key Files
+
+- `lib/auth.ts` - Better Auth configuration
+- `lib/constants.ts` - All UI strings and constants (never hardcode strings)
+- `lib/database.ts` - Database connection
+- `auth-schema.ts` - Database schema definitions
+- `app/api/auth/` - Better Auth API routes
+
+## Code Conventions
+
+### Constants
+
+**CRITICAL**: Never hardcode strings. Always use constants from `lib/constants.ts`:
+
+```typescript
+// ✅ Good
+import { AUTH_LABELS } from "@/lib/constants";
+<button>{AUTH_LABELS.LOGIN}</button>
+
+// ❌ Bad
+<button>Log in</button>
+```
+
+### Better Auth APIs
+
+**CRITICAL**: Always use Better Auth APIs for authentication, organization, team, and permission operations. Never query the database directly:
+
+```typescript
+// ✅ Good - Use Better Auth APIs
+import { auth } from "@/lib/auth";
+const session = await auth.api.getSession({ headers });
+const organizations = await auth.api.listOrganizations({ headers });
+
+// ❌ Bad - Direct database access
+import { db } from "@/lib/database";
+const user = await db.select().from(users).where(eq(users.id, userId));
+```
+
+## Development Commands
+
+```bash
+# Development
+pnpm dev              # Start development server
+
+# Code Quality
+pnpm lint             # Lint code
+pnpm format           # Format code
+pnpm check            # Check code (lint + format)
+pnpm type-check       # Type check TypeScript
+
+# Build
+pnpm build            # Build for production
+pnpm start            # Start production server
+
+# Database
+npx drizzle-kit generate  # Generate migration
+npx drizzle-kit migrate   # Run migrations
+```
+
+## Related Documentation
+
+- [Project README](../README.md) - Main project overview
+- [Getting Started](../docs/getting-started.md) - Setup guide
+- [Development Guide](../docs/development.md) - Development patterns
+- [Authentication Guide](../docs/authentication.md) - Authentication details

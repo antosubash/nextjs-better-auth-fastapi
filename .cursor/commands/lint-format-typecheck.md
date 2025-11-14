@@ -1,0 +1,1 @@
+lint, format and typecheck

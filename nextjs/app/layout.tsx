@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { MainLayoutWrapper } from "@/components/layout/main-layout-wrapper";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Better Auth - Secure Authentication",
-  description: "Secure, fast, and easy authentication for your applications. Built with Next.js and FastAPI.",
+  description:
+    "Secure, fast, and easy authentication for your applications. Built with Next.js and FastAPI.",
 };
 
 export default function RootLayout({
@@ -24,10 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <MainLayoutWrapper>{children}</MainLayoutWrapper>
+        <Toaster />
       </body>
     </html>
   );
