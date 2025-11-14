@@ -35,3 +35,28 @@ export interface JobListResponse {
   page_size: number;
   total_pages: number;
 }
+
+export interface JobHistory {
+  id: string;
+  job_id: string;
+  function: string;
+  func_ref: string;
+  trigger: string;
+  trigger_type: string;
+  status: string;
+  args: Record<string, unknown> | null;
+  kwargs: Record<string, unknown> | null;
+  next_run_time: string | null;
+  error_message: string | null;
+  logs: string | null;
+  user_id: string | null;
+  created_at: string;
+}
+
+export interface JobHistoryListResponse {
+  items: JobHistory[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}

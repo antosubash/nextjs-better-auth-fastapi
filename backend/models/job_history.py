@@ -58,6 +58,7 @@ class JobHistory(SQLModel, table=True):
     error_message: str | None = Field(
         default=None, sa_column=Column(Text), description="Error message if job failed"
     )
+    logs: str | None = Field(default=None, sa_column=Column(Text), description="Job execution logs")
     user_id: str | None = Field(
         default=None, index=True, description="User ID who performed the action"
     )

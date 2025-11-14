@@ -1000,6 +1000,22 @@ export const JOB_LABELS = {
   INTERVAL: "Interval",
   ONCE: "Once",
   IMMEDIATE: "Immediate",
+  HISTORY: "History",
+  EXECUTION_LOGS: "Execution Logs",
+  ERROR_MESSAGE: "Error Message",
+  NO_LOGS: "No logs available",
+  NO_ERRORS: "No errors",
+  CREATED: "Created",
+  COMPLETED: "Completed",
+  FAILED: "Failed",
+  REMOVED: "Removed",
+  RESUMED: "Resumed",
+  MISFIRED: "Misfired",
+  VIEW_HISTORY: "View History",
+  NO_HISTORY: "No history records found",
+  LOADING_HISTORY: "Loading history...",
+  EXECUTED_AT: "Executed At",
+  EXECUTION_STATUS: "Execution Status",
 } as const;
 
 export const JOB_PLACEHOLDERS = {

@@ -94,6 +94,7 @@ class JobService:
         status: JobHistoryStatus,
         user_id: str | None = None,
         error_message: str | None = None,
+        logs: str | None = None,
         trigger_type: str | None = None,
     ) -> None:
         """
@@ -105,6 +106,7 @@ class JobService:
             status: Job history status
             user_id: User ID who performed the action
             error_message: Error message if job failed
+            logs: Job execution logs
             trigger_type: Trigger type (cron, interval, once)
         """
         try:
@@ -143,6 +145,7 @@ class JobService:
                 kwargs=kwargs_dict,
                 next_run_time=job.next_run_time,
                 error_message=error_message,
+                logs=logs,
                 user_id=user_id,
             )
             session.add(history)
@@ -167,7 +170,7 @@ class JobService:
             AppException: If job creation fails
         """
         try:
-            # Get the function
+            # Get the function - wrapping happens when adding to scheduler
             func = get_job_function(job_data.function)
 
             # Convert args and kwargs
@@ -494,6 +497,7 @@ class JobService:
                     kwargs=record.kwargs,
                     next_run_time=record.next_run_time,
                     error_message=record.error_message,
+                    logs=record.logs,
                     user_id=record.user_id,
                     created_at=record.created_at,
                 )

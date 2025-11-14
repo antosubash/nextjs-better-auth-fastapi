@@ -18,6 +18,7 @@ from core.config import (
     JOB_STORE_TABLE_NAME,
     JOB_STORE_URL,
 )
+from utils.job_wrapper import create_job_wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,12 @@ def init_scheduler() -> AsyncIOScheduler:
     )
 
     logger.info("Job scheduler initialized with PostgreSQL job store")
+
+    # Setup job execution listeners for capturing logs and errors
+    from utils.job_listeners import setup_job_listeners  # noqa: PLC0415
+
+    setup_job_listeners(scheduler)
+
     return scheduler
 
 
@@ -142,8 +149,11 @@ def add_scheduled_job(
     if isinstance(trigger, str):
         trigger = CronTrigger.from_crontab(trigger)
 
+    # Wrap the function to capture logs
+    wrapped_func = create_job_wrapper(job_id, func)
+
     job = sched.add_job(
-        func=func,
+        func=wrapped_func,
         trigger=trigger,
         id=job_id,
         args=args or (),
@@ -216,8 +226,11 @@ def add_one_time_job(
 
     trigger = DateTrigger(run_date=run_date)
 
+    # Wrap the function to capture logs
+    wrapped_func = create_job_wrapper(job_id, func)
+
     job = sched.add_job(
-        func=func,
+        func=wrapped_func,
         trigger=trigger,
         id=job_id,
         args=args or (),
@@ -279,8 +292,11 @@ def add_interval_job(
         end_date=end_date,
     )
 
+    # Wrap the function to capture logs
+    wrapped_func = create_job_wrapper(job_id, func)
+
     job = sched.add_job(
-        func=func,
+        func=wrapped_func,
         trigger=trigger,
         id=job_id,
         args=args or (),

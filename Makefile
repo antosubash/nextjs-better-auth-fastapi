@@ -1,4 +1,4 @@
-.PHONY: help install backend frontend dev clean lint lint-backend lint-frontend format format-backend format-frontend check check-backend check-frontend type-check build build-backend build-frontend
+.PHONY: help install backend frontend dev clean lint lint-backend lint-frontend format format-backend format-frontend check check-backend check-frontend type-check build build-backend build-frontend migrate migrate-backend migrate-frontend
 
 # Default target
 help:
@@ -30,7 +30,9 @@ help:
 	@echo "  make build-frontend  - Build frontend Next.js app"
 	@echo ""
 	@echo "Database:"
-	@echo "  make migrate         - Run database migrations"
+	@echo "  make migrate         - Run database migrations for both frontend and backend"
+	@echo "  make migrate-backend - Run backend database migrations (Alembic)"
+	@echo "  make migrate-frontend - Run frontend database migrations (Drizzle)"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean           - Clean up generated files"
@@ -57,9 +59,19 @@ dev:
 	@echo "Starting both backend and frontend servers..."
 	@make -j2 backend frontend
 
-migrate:
-	@echo "Running database migrations..."
+# Run backend database migrations
+migrate-backend:
+	@echo "Running backend database migrations..."
 	cd backend && uv run alembic upgrade head
+
+# Run frontend database migrations
+migrate-frontend:
+	@echo "Running frontend database migrations..."
+	cd nextjs && pnpm drizzle-kit migrate
+
+# Run both backend and frontend migrations
+migrate: migrate-backend migrate-frontend
+	@echo "Database migrations complete!"
 
 # Clean generated files
 clean:

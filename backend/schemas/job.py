@@ -141,6 +141,7 @@ class JobHistoryResponse(BaseModel):
     kwargs: dict[str, Any] | None = Field(None, description="Job keyword arguments")
     next_run_time: datetime | None = Field(None, description="Next scheduled run time")
     error_message: str | None = Field(None, description="Error message if job failed")
+    logs: str | None = Field(None, description="Job execution logs")
     user_id: str | None = Field(None, description="User ID who performed the action")
     created_at: datetime = Field(..., description="History record creation timestamp")
 
@@ -159,6 +160,7 @@ class JobHistoryResponse(BaseModel):
                 "kwargs": None,
                 "next_run_time": "2024-01-02T00:00:00Z",
                 "error_message": None,
+                "logs": None,
                 "user_id": "user123",
                 "created_at": "2024-01-02T10:00:00Z",
             }
