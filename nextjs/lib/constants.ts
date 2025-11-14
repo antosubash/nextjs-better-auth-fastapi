@@ -34,6 +34,26 @@ export const PROFILE = {
   EXPIRED: "Expired",
 } as const;
 
+export const PROFILE_PICTURE = {
+  TITLE: "Profile Picture",
+  UPLOAD: "Upload Picture",
+  CHANGE: "Change Picture",
+  DELETE: "Delete Picture",
+  UPLOADING: "Uploading...",
+  DELETING: "Deleting...",
+  DRAG_DROP: "Drag and drop an image here, or click to select",
+  SELECT_FILE: "Select File",
+  MAX_SIZE: "Maximum file size: 5MB",
+  ALLOWED_TYPES: "Allowed types: JPG, PNG, WebP",
+  UPLOAD_SUCCESS: "Profile picture uploaded successfully",
+  DELETE_SUCCESS: "Profile picture deleted successfully",
+  UPLOAD_FAILED: "Failed to upload profile picture",
+  DELETE_FAILED: "Failed to delete profile picture",
+  FILE_TOO_LARGE: "File size exceeds 5MB",
+  INVALID_FILE_TYPE: "Invalid file type. Only image files are allowed",
+  NO_FILE_SELECTED: "No file selected",
+} as const;
+
 export const AUTH_PLACEHOLDERS = {
   EMAIL: "Enter your email",
   PASSWORD: "Enter your password",

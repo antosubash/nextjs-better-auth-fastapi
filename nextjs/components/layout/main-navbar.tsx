@@ -8,7 +8,7 @@ import { AUTH_LABELS, DASHBOARD } from "@/lib/constants";
 import { LogIn, LogOut, Menu } from "lucide-react";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -17,7 +17,9 @@ export function MainNavbar() {
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+  const [user, setUser] = useState<{ name?: string; email?: string; image?: string | null } | null>(
+    null
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -106,6 +108,7 @@ export function MainNavbar() {
                 <OrganizationSwitcher />
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
                   <Avatar className="w-8 h-8">
+                    {user.image ? <AvatarImage src={user.image} alt={user.name || "User"} /> : null}
                     <AvatarFallback className="text-sm">
                       {getInitials(user.name, user.email)}
                     </AvatarFallback>
@@ -158,6 +161,9 @@ export function MainNavbar() {
                     </div>
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
                       <Avatar className="w-10 h-10">
+                        {user.image ? (
+                          <AvatarImage src={user.image} alt={user.name || "User"} />
+                        ) : null}
                         <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
                       </Avatar>
                       <div>

@@ -8,11 +8,13 @@ import { ApiData } from "./api-data";
 import { UserSessions } from "./user-sessions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function UserProfile() {
-  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+  const [user, setUser] = useState<{ name?: string; email?: string; image?: string | null } | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -73,6 +75,7 @@ export function UserProfile() {
       {/* Welcome Header */}
       <div className="text-center mb-8">
         <Avatar className="w-20 h-20 mx-auto mb-4">
+          {user.image ? <AvatarImage src={user.image} alt={user.name || "User"} /> : null}
           <AvatarFallback className="text-3xl font-bold">
             {getInitials(user.name, user.email)}
           </AvatarFallback>

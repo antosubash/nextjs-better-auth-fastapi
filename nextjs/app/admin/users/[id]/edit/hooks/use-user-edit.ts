@@ -14,6 +14,7 @@ interface User {
   banned?: boolean;
   createdAt?: number;
   emailVerified?: boolean;
+  image?: string | null;
 }
 
 export function useUserEdit(userId: string) {

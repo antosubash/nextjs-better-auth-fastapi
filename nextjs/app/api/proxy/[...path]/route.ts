@@ -68,7 +68,18 @@ async function handleProxyRequest(request: NextRequest, pathSegments: string[], 
     const fullUrl = searchParams ? `${url}?${searchParams}` : url;
 
     const requestHeaders = new Headers();
-    requestHeaders.set("Content-Type", "application/json");
+    
+    // Check if this is a multipart/form-data request (file upload)
+    const contentType = request.headers.get("content-type") || "";
+    const isMultipart = contentType.includes("multipart/form-data");
+    
+    // Only set Content-Type to JSON if it's not multipart
+    if (!isMultipart) {
+      requestHeaders.set("Content-Type", "application/json");
+    } else {
+      // For multipart, preserve the original Content-Type with boundary
+      requestHeaders.set("Content-Type", contentType);
+    }
 
     // Check for API key first (allows API key authentication without session)
     const apiKey = request.headers.get("X-API-Key");
@@ -103,9 +114,16 @@ async function handleProxyRequest(request: NextRequest, pathSegments: string[], 
     };
 
     if (method !== "GET" && method !== "DELETE") {
-      const body = await request.text();
-      if (body) {
+      if (isMultipart) {
+        // For multipart/form-data, use arrayBuffer to preserve binary data
+        const body = await request.arrayBuffer();
         requestOptions.body = body;
+      } else {
+        // For JSON, use text
+        const body = await request.text();
+        if (body) {
+          requestOptions.body = body;
+        }
       }
     }
 

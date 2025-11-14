@@ -20,6 +20,7 @@ interface User {
   banned?: boolean;
   createdAt?: number;
   emailVerified?: boolean;
+  image?: string | null;
 }
 
 interface UserEditTabsProps {

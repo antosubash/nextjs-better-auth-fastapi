@@ -62,6 +62,13 @@ MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_USE_SSL = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
 MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "better-auth-storage")
 MINIO_REGION = os.getenv("MINIO_REGION", "us-east-1")
+MINIO_PUBLIC_URL = os.getenv("MINIO_PUBLIC_URL", f"http://{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}")
+
+# Profile picture configuration
+PROFILE_PICTURE_MAX_SIZE = int(os.getenv("PROFILE_PICTURE_MAX_SIZE", "5242880"))  # 5MB default
+PROFILE_PICTURE_ALLOWED_TYPES = os.getenv(
+    "PROFILE_PICTURE_ALLOWED_TYPES", "image/jpeg,image/jpg,image/png,image/webp"
+).split(",")
 
 # Job scheduler configuration
 # Use sync database URL (without +asyncpg) for APScheduler job store

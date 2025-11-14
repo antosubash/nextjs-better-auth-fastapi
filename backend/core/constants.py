@@ -80,6 +80,14 @@ class ErrorMessages:
     FILE_WRITE_ERROR = "Failed to write to file"
     FILE_READ_ERROR = "Failed to read from file"
 
+    # Storage errors
+    STORAGE_UPLOAD_ERROR = "Failed to upload file"
+    STORAGE_DELETE_ERROR = "Failed to delete file"
+    STORAGE_FILE_TOO_LARGE = "File size exceeds maximum allowed size"
+    STORAGE_INVALID_FILE_TYPE = "Invalid file type. Only image files are allowed"
+    STORAGE_FILE_REQUIRED = "File is required"
+    STORAGE_BUCKET_ERROR = "Failed to initialize storage bucket"
+
     # Task errors
     TASK_NOT_FOUND = "Task not found"
     TASK_CREATE_ERROR = "Failed to create task"
@@ -115,6 +123,8 @@ class SuccessMessages:
     JOB_DELETED = "Job deleted successfully"
     JOB_PAUSED = "Job paused successfully"
     JOB_RESUMED = "Job resumed successfully"
+    PROFILE_PICTURE_UPLOADED = "Profile picture uploaded successfully"
+    PROFILE_PICTURE_DELETED = "Profile picture deleted successfully"
 
 
 # API response messages

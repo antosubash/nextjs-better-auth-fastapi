@@ -35,12 +35,14 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
+import { ProfilePictureUpload } from "./profile-picture-upload";
 
 interface User {
   id: string;
   name: string;
   email: string;
   role?: string;
+  image?: string | null;
 }
 
 interface UserFormProps {
@@ -121,6 +123,48 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, availableRoles]);
 
+  const handleProfilePictureUpload = async (imageUrl: string) => {
+    if (!isEditing || !user) return;
+
+    try {
+      const result = await authClient.admin.updateUser({
+        userId: user.id,
+        data: {
+          image: imageUrl,
+        },
+      });
+
+      if (result.error) {
+        setError(result.error.message || ADMIN_ERRORS.UPDATE_FAILED);
+      } else {
+        onSuccess();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : ADMIN_ERRORS.UPDATE_FAILED);
+    }
+  };
+
+  const handleProfilePictureDelete = async () => {
+    if (!isEditing || !user) return;
+
+    try {
+      const result = await authClient.admin.updateUser({
+        userId: user.id,
+        data: {
+          image: null,
+        },
+      });
+
+      if (result.error) {
+        setError(result.error.message || ADMIN_ERRORS.UPDATE_FAILED);
+      } else {
+        onSuccess();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : ADMIN_ERRORS.UPDATE_FAILED);
+    }
+  };
+
   const handleSubmit = async (values: UserFormValues) => {
     setError("");
     setIsLoading(true);
@@ -194,6 +238,19 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+
+      {isEditing && (
+        <div className="space-y-2">
+          <ProfilePictureUpload
+            currentImageUrl={user?.image}
+            onUploadSuccess={handleProfilePictureUpload}
+            onDeleteSuccess={handleProfilePictureDelete}
+            disabled={isLoading}
+            userName={user?.name}
+            userEmail={user?.email}
+          />
+        </div>
       )}
 
       <Form {...form}>

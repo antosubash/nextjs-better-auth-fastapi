@@ -22,7 +22,8 @@ from core.middleware import (
     RequestIDMiddleware,
 )
 from dependencies import close_http_client, get_http_client
-from routers import example, health, jobs, tasks
+from routers import example, health, jobs, storage, tasks
+from services.storage_service import StorageService
 
 logger = logging.getLogger(__name__)
 
@@ -76,17 +77,21 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(tasks.router)
     app.include_router(jobs.router)
+    app.include_router(storage.router)
 
     # Store HTTP client in app state
     @app.on_event("startup")
     async def startup_event():
-        """Initialize shared HTTP client, database, and job scheduler on startup."""
+        """Initialize shared HTTP client, database, job scheduler, and storage on startup."""
         http_client = await get_http_client()
         app.state.http_client = http_client
         await init_db()
         # Initialize and start job scheduler
         init_scheduler()
         await start_scheduler()
+        # Initialize MinIO bucket
+        storage_service = StorageService()
+        await storage_service.ensure_bucket_exists()
         logger.info("Application startup complete")
 
     @app.on_event("shutdown")
