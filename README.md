@@ -1,5 +1,7 @@
 # Next.js Better Auth FastAPI
 
+> **Note**: This is a vibe coded app.
+
 A full-stack authentication system combining Next.js with Better Auth for the frontend and FastAPI for the backend, featuring JWT token verification using JWKS (JSON Web Key Set).
 
 ## Overview
