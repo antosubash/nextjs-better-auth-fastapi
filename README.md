@@ -77,57 +77,26 @@ This will install:
 
 ## Configuration
 
-### Frontend Environment Variables
+### Environment Variables
 
-Create a `.env.local` file in the `nextjs` directory:
+All environment variables for both frontend and backend are configured in a single `.env` file at the project root.
 
-```env
-BETTER_AUTH_SECRET=your-secret-key-here
-BETTER_AUTH_URL=http://localhost:3000
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
+1. **Copy the example environment file:**
+   ```bash
+   cp env.example .env
+   ```
 
-### Backend Environment Variables
+2. **Update the `.env` file with your configuration:**
+   - Set `BETTER_AUTH_SECRET` to a secure secret key for production
+   - Update database credentials if different from defaults
+   - Adjust other settings as needed
 
-Create a `.env` file in the `backend` directory:
+The `.env` file contains all necessary environment variables for:
+- **Frontend (Next.js)**: Better Auth configuration, API URLs, database connection
+- **Backend (FastAPI)**: Authentication, logging, CORS, database, rate limiting, MinIO/S3, job scheduler
+- **Docker Compose**: PostgreSQL, MinIO, and pgWeb configuration
 
-```env
-# Better Auth Configuration
-BETTER_AUTH_URL=http://localhost:3000
-
-# Logging Configuration
-LOG_LEVEL=INFO
-LOG_FORMAT_JSON=false
-
-# CORS Configuration
-CORS_ORIGINS=http://localhost:3000
-
-# Database Configuration
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/better_auth_db
-DB_SCHEMA=api
-DB_POOL_SIZE=5
-DB_MAX_OVERFLOW=10
-DB_POOL_TIMEOUT=30
-DB_POOL_RECYCLE=3600
-
-# Rate Limiting Configuration
-RATE_LIMIT_ENABLED=true
-RATE_LIMIT_REQUESTS_PER_MINUTE=60
-
-# JWKS Cache Configuration
-JWKS_CACHE_TTL_SECONDS=3600
-
-# MinIO/S3 Configuration
-MINIO_ENDPOINT=localhost:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET_NAME=better-auth-storage
-MINIO_USE_SSL=false
-MINIO_REGION=us-east-1
-
-# HTTP Client Configuration
-HTTP_CLIENT_TIMEOUT=5.0
-```
+Both the frontend and backend automatically load environment variables from the root `.env` file.
 
 ### Docker Compose Setup (PostgreSQL, MinIO, and pgWeb)
 
@@ -167,7 +136,7 @@ The project includes a `docker-compose.yml` file for running PostgreSQL, MinIO, 
    docker-compose down -v
    ```
 
-The `env.example` file contains all necessary environment variables for PostgreSQL, MinIO, and pgWeb configuration. Update the `.env` file with your preferred values before starting the services.
+The `env.example` file in the project root contains all necessary environment variables for PostgreSQL, MinIO, pgWeb, frontend, and backend configuration. After copying to `.env`, update it with your preferred values before starting the services.
 
 ## Running the Project
 

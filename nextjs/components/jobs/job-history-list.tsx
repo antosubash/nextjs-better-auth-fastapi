@@ -32,7 +32,9 @@ interface JobHistoryListProps {
   showJobFilter?: boolean;
 }
 
-function getStatusBadgeVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+function getStatusBadgeVariant(
+  status: string
+): "default" | "secondary" | "destructive" | "outline" {
   switch (status.toLowerCase()) {
     case "completed":
       return "default";
@@ -62,7 +64,10 @@ function getStatusLabel(status: string): string {
   return statusMap[status.toLowerCase()] || status;
 }
 
-export function JobHistoryList({ jobId: initialJobId, showJobFilter = false }: JobHistoryListProps) {
+export function JobHistoryList({
+  jobId: initialJobId,
+  showJobFilter = false,
+}: JobHistoryListProps) {
   const [history, setHistory] = useState<JobHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -205,10 +210,12 @@ export function JobHistoryList({ jobId: initialJobId, showJobFilter = false }: J
                       <span className="font-medium">{JOB_LABELS.JOB_ID}:</span> {item.job_id}
                     </div>
                     <div>
-                      <span className="font-medium">{JOB_LABELS.FUNCTION_NAME}:</span> {item.function}
+                      <span className="font-medium">{JOB_LABELS.FUNCTION_NAME}:</span>{" "}
+                      {item.function}
                     </div>
                     <div>
-                      <span className="font-medium">{JOB_LABELS.TRIGGER_TYPE}:</span> {item.trigger_type}
+                      <span className="font-medium">{JOB_LABELS.TRIGGER_TYPE}:</span>{" "}
+                      {item.trigger_type}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
@@ -406,4 +413,3 @@ export function JobHistoryList({ jobId: initialJobId, showJobFilter = false }: J
     </div>
   );
 }
-

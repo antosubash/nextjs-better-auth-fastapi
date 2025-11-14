@@ -9,4 +9,3 @@ interface JobHistoryProps {
 export function JobHistoryComponent({ jobId }: JobHistoryProps) {
   return <JobHistoryList jobId={jobId} showJobFilter={false} />;
 }
-

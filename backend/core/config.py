@@ -1,10 +1,13 @@
 """Application configuration from environment variables."""
 
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from project root directory
+root_dir = Path(__file__).parent.parent.parent
+load_dotenv(dotenv_path=root_dir / ".env")
 
 # Better Auth configuration
 BETTER_AUTH_URL = os.getenv("BETTER_AUTH_URL", "http://localhost:3000")

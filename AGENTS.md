@@ -188,12 +188,15 @@ cd backend && uv run ruff check .
 
 ### Environment Variables
 
-**Frontend** (`.env.local` in `nextjs/`):
+All environment variables for both frontend and backend are configured in a single `.env` file at the project root. Both applications automatically load from this file.
+
+**Frontend Variables:**
 - `BETTER_AUTH_SECRET` - Secret key for Better Auth
 - `BETTER_AUTH_URL` - Base URL (default: http://localhost:3000)
 - `NEXT_PUBLIC_API_URL` - Backend API URL (default: http://localhost:8000)
+- `DATABASE_URL` - PostgreSQL connection string (shared with backend)
 
-**Backend** (`.env` in `backend/`):
+**Backend Variables:**
 - `BETTER_AUTH_URL` - Better Auth base URL (default: http://localhost:3000)
 - `LOG_LEVEL` - Logging level (default: INFO)
 - `LOG_FORMAT_JSON` - Use JSON logging format (default: false)
@@ -207,6 +210,8 @@ cd backend && uv run ruff check .
 - `MINIO_ACCESS_KEY` - MinIO access key (default: minioadmin)
 - `MINIO_SECRET_KEY` - MinIO secret key (default: minioadmin)
 - `MINIO_BUCKET_NAME` - MinIO bucket name (default: better-auth-storage)
+
+See `env.example` in the project root for a complete list of all environment variables.
 
 ## Authentication Flow
 

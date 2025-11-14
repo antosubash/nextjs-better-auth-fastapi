@@ -5,4 +5,3 @@ import { JobHistoryPageContent } from "@/components/jobs/job-history-page-conten
 export default function JobHistoryPage() {
   return <JobHistoryPageContent />;
 }
-

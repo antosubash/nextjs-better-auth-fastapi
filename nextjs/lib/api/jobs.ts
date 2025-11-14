@@ -1,10 +1,5 @@
 import { callFastApi } from "@/lib/api-client";
-import type {
-  Job,
-  JobCreate,
-  JobHistoryListResponse,
-  JobListResponse,
-} from "@/lib/types/job";
+import type { Job, JobCreate, JobHistoryListResponse, JobListResponse } from "@/lib/types/job";
 
 export async function getJobs(page: number = 1, pageSize: number = 10): Promise<JobListResponse> {
   const params = new URLSearchParams({

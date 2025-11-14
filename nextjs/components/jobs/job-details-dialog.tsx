@@ -40,9 +40,7 @@ export function JobDetailsDialog({ job, open, onOpenChange }: JobDetailsDialogPr
               <h3 className="font-semibold mb-2">{JOB_LABELS.STATUS}</h3>
               <div className="flex gap-2">
                 <Badge variant={job.paused ? "outline" : "default"}>{JOB_LABELS.PAUSED}</Badge>
-                <Badge variant={job.pending ? "secondary" : "default"}>
-                  {JOB_LABELS.PENDING}
-                </Badge>
+                <Badge variant={job.pending ? "secondary" : "default"}>{JOB_LABELS.PENDING}</Badge>
               </div>
             </div>
 
