@@ -2,75 +2,22 @@
 
 import asyncio
 import importlib
-import io
 import logging
 from collections.abc import Callable
-from contextlib import redirect_stderr, redirect_stdout
 from functools import partial
 from typing import Any
 
 from sqlalchemy import text
 
 from core.config import DB_SCHEMA
+from core.constants import JobTriggerTypes
 from core.database import AsyncSessionLocal
 from models.job_history import JobHistoryStatus
-from utils.job_listeners import store_job_logs
+from services.job_history_service import JobHistoryService
+from utils.job_log_storage import store_job_logs
+from utils.job_utils import LogCapture, MinimalJob
 
 logger = logging.getLogger(__name__)
-
-
-class LogCapture:
-    """Context manager to capture stdout and stderr."""
-
-    def __init__(self) -> None:
-        """Initialize log capture."""
-        self.stdout_buffer = io.StringIO()
-        self.stderr_buffer = io.StringIO()
-        self.log_buffer = io.StringIO()
-
-    def __enter__(self) -> "LogCapture":
-        """Enter context manager."""
-        # Capture stdout and stderr
-        self.stdout_context = redirect_stdout(self.stdout_buffer)
-        self.stderr_context = redirect_stderr(self.stderr_buffer)
-        self.stdout_context.__enter__()
-        self.stderr_context.__enter__()
-
-        # Also capture logging output
-        self.log_handler = logging.StreamHandler(self.log_buffer)
-        self.log_handler.setLevel(logging.DEBUG)
-        root_logger = logging.getLogger()
-        root_logger.addHandler(self.log_handler)
-
-        return self
-
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Exit context manager."""
-        self.stdout_context.__exit__(None, None, None)
-        self.stderr_context.__exit__(None, None, None)
-        root_logger = logging.getLogger()
-        root_logger.removeHandler(self.log_handler)
-
-    def get_logs(self) -> str:
-        """
-        Get captured logs.
-
-        Returns:
-            Combined logs from stdout, stderr, and logging
-        """
-        logs = []
-        stdout_content = self.stdout_buffer.getvalue()
-        stderr_content = self.stderr_buffer.getvalue()
-        log_content = self.log_buffer.getvalue()
-
-        if stdout_content:
-            logs.append(f"STDOUT:\n{stdout_content}")
-        if stderr_content:
-            logs.append(f"STDERR:\n{stderr_content}")
-        if log_content:
-            logs.append(f"LOGS:\n{log_content}")
-
-        return "\n\n".join(logs) if logs else ""
 
 
 def create_job_wrapper(
@@ -158,7 +105,7 @@ def create_job_wrapper(
     return wrapped_func
 
 
-async def execute_job_with_logging(
+async def execute_job_with_logging(  # noqa: PLR0912, PLR0915
     job_id: str,
     func_ref: str,
     *args: Any,
@@ -190,7 +137,7 @@ async def execute_job_with_logging(
         original_func = getattr(module, func_name)
     else:
         # Try to get from registered functions
-        from services.job_service import get_job_function  # noqa: PLC0415
+        from utils.job_registry import get_job_function  # noqa: PLC0415
 
         original_func = get_job_function(func_ref)
 
@@ -205,7 +152,7 @@ async def execute_job_with_logging(
     async def _verify_job_in_store() -> None:
         """Verify job exists in job store before execution."""
         try:
-            from core.jobs import get_job, list_all_jobs_from_store  # noqa: PLC0415
+            from core.job_operations import get_job, list_all_jobs_from_store  # noqa: PLC0415
 
             job = get_job(job_id)
 
@@ -233,7 +180,10 @@ async def execute_job_with_logging(
                             result = await session.execute(stmt)
                             history_record = result.scalar_one_or_none()
 
-                            if history_record and history_record.trigger_type == "once":
+                            if (
+                                history_record
+                                and history_record.trigger_type == JobTriggerTypes.ONCE
+                            ):
                                 # One-time jobs are removed from store before execution - this is normal
                                 logger.debug(
                                     f"Job {job_id} is a one-time job removed from store before execution "
@@ -279,36 +229,31 @@ async def execute_job_with_logging(
     async def _mark_job_running() -> None:
         """Mark job as RUNNING in history."""
         try:
-            from core.jobs import get_job  # noqa: PLC0415
-            from services.job_service import JobService  # noqa: PLC0415
+            from core.job_operations import get_job  # noqa: PLC0415
 
             job = get_job(job_id)
 
             # If job not found (e.g., one-time jobs removed before execution),
             # create a minimal job-like object from available info
             if not job:
-                # Create a minimal job object with available info
-                class MinimalJob:
-                    def __init__(self, job_id: str, func_ref: str, args: tuple, kwargs: dict):
-                        self.id = job_id
-                        self.func_ref = func_ref
-                        self.args = args
-                        self.kwargs = kwargs
-                        self.trigger = "date[one-time]"
-                        self.next_run_time = None
-
-                job = MinimalJob(job_id, func_ref, args, kwargs)
+                job = MinimalJob(
+                    job_id=job_id,
+                    func_ref=func_ref,
+                    args=args,
+                    kwargs=kwargs,
+                    trigger="date[one-time]",
+                )
                 logger.debug(f"Using minimal job object for {job_id} (job removed from scheduler)")
 
             async with AsyncSessionLocal() as session:
                 try:
                     await session.execute(text(f'SET search_path TO "{DB_SCHEMA}"'))
-                    job_service = JobService()
-                    await job_service._save_job_history(
+                    history_service = JobHistoryService()
+                    await history_service.save_job_history(
                         session=session,
                         job=job,
                         status=JobHistoryStatus.RUNNING,
-                        trigger_type="once",  # One-time jobs are typically "once"
+                        trigger_type=JobTriggerTypes.ONCE,  # One-time jobs are typically "once"
                     )
                     await session.commit()
                     logger.debug(f"Job {job_id} marked as RUNNING")

@@ -42,6 +42,15 @@ class PermissionActions:
     CANCEL = "cancel"
 
 
+# Job trigger types
+class JobTriggerTypes:
+    """Job trigger type constants."""
+
+    CRON = "cron"
+    INTERVAL = "interval"
+    ONCE = "once"
+
+
 # Error messages
 class ErrorMessages:
     """Error message constants."""

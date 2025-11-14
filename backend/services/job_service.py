@@ -1,15 +1,12 @@
 """Job service for job management operations."""
 
-import importlib
 import logging
-from collections.abc import Callable
 from typing import Any
 
 from fastapi import status
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.constants import ErrorMessages
+from core.constants import ErrorMessages, JobTriggerTypes
 from core.exceptions import AppException
 from core.jobs import (
     add_interval_job,
@@ -22,161 +19,19 @@ from core.jobs import (
     remove_job,
     resume_job,
 )
-from models.job_history import JobHistory, JobHistoryStatus
-from schemas.job import (
-    JobCreate,
-    JobHistoryResponse,
-    JobResponse,
-)
+from models.job_history import JobHistoryStatus
+from schemas.job import JobCreate, JobHistoryResponse, JobResponse
+from services.job_history_service import JobHistoryService
 
 logger = logging.getLogger(__name__)
-
-# Registry of available job functions
-_job_functions: dict[str, Callable[..., Any]] = {}
-
-
-def register_job_function(name: str, func: Callable[..., Any]) -> None:
-    """
-    Register a job function.
-
-    Args:
-        name: Function name identifier
-        func: Function to register
-    """
-    _job_functions[name] = func
-    logger.debug(f"Registered job function: {name}")
-
-
-def get_job_function(name: str) -> Callable[..., Any]:
-    """
-    Get a registered job function by name.
-
-    Args:
-        name: Function name identifier
-
-    Returns:
-        Registered function
-
-    Raises:
-        AppException: If function not found
-    """
-    # Try direct lookup first
-    if name in _job_functions:
-        return _job_functions[name]
-
-    # Try importing from module path (e.g., "jobs.example_jobs:function_name")
-    if ":" in name:
-        module_path, func_name = name.rsplit(":", 1)
-        try:
-            module = importlib.import_module(module_path)
-            func = getattr(module, func_name)
-            if callable(func):
-                return func
-        except (ImportError, AttributeError) as e:
-            logger.exception("Failed to import job function %s", name)
-            raise AppException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ErrorMessages.JOB_FUNCTION_NOT_FOUND,
-            ) from e
-
-    raise AppException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail=ErrorMessages.JOB_FUNCTION_NOT_FOUND,
-    )
 
 
 class JobService:
     """Service for job management operations."""
 
-    async def _save_job_history(
-        self,
-        session: AsyncSession,
-        job: Any,
-        status: JobHistoryStatus,
-        user_id: str | None = None,
-        error_message: str | None = None,
-        logs: str | None = None,
-        trigger_type: str | None = None,
-    ) -> None:
-        """
-        Save job history record.
-
-        Args:
-            session: Database session
-            job: APScheduler job object
-            status: Job history status
-            user_id: User ID who performed the action
-            error_message: Error message if job failed
-            logs: Job execution logs
-            trigger_type: Trigger type (cron, interval, once)
-        """
-        try:
-            # Validate status is provided
-            if status is None:
-                logger.error(f"Cannot save job history for {job.id}: status is None")
-                return
-
-            # Validate job object has required attributes
-            if not hasattr(job, "id"):
-                logger.error("Job object missing 'id' attribute")
-                return
-
-            # Extract function name from func_ref
-            func_ref_str = str(job.func_ref)
-            function_name = func_ref_str.split(":")[-1] if ":" in func_ref_str else func_ref_str
-
-            # Determine trigger type from trigger string if not provided
-            if not trigger_type:
-                trigger_str = str(job.trigger).lower()
-                if "cron" in trigger_str:
-                    trigger_type = "cron"
-                elif "interval" in trigger_str:
-                    trigger_type = "interval"
-                elif "date" in trigger_str:
-                    trigger_type = "once"
-                else:
-                    trigger_type = "unknown"
-
-            # Convert args and kwargs to dict format
-            args_dict = None
-            kwargs_dict = None
-            if hasattr(job, "args") and job.args:
-                args_dict = {"args": list(job.args)}
-            if hasattr(job, "kwargs") and job.kwargs:
-                kwargs_dict = job.kwargs
-
-            # Normalize logs: convert empty string to None for consistency
-            normalized_logs = logs if logs else None
-
-            # Validate error_message is set for FAILED status
-            if status == JobHistoryStatus.FAILED and not error_message:
-                logger.warning(f"Job {job.id} marked as FAILED but no error_message provided")
-
-            history = JobHistory(
-                job_id=job.id,
-                function=function_name,
-                func_ref=func_ref_str,
-                trigger=str(job.trigger),
-                trigger_type=trigger_type,
-                status=status,
-                args=args_dict,
-                kwargs=kwargs_dict,
-                next_run_time=job.next_run_time,
-                error_message=error_message,
-                logs=normalized_logs,
-                user_id=user_id,
-            )
-            session.add(history)
-            logger.debug(
-                f"Job history saved: {job.id} - {status.value} "
-                f"(logs: {'present' if normalized_logs else 'none'})"
-            )
-        except Exception as e:
-            # Don't fail the main operation if history saving fails
-            logger.error(
-                f"Failed to save job history for {getattr(job, 'id', 'unknown')}: {e!s}",
-                exc_info=True,
-            )
+    def __init__(self) -> None:
+        """Initialize job service with history service."""
+        self._history_service = JobHistoryService()
 
     async def create_job(
         self, job_data: JobCreate, session: AsyncSession, user_id: str | None = None
@@ -203,7 +58,7 @@ class JobService:
             kwargs_dict = job_data.kwargs or {}
 
             # Create job based on trigger type
-            if job_data.trigger_type == "cron":
+            if job_data.trigger_type == JobTriggerTypes.CRON:
                 if not job_data.cron_expression:
                     raise AppException(
                         status_code=status.HTTP_400_BAD_REQUEST,
@@ -217,7 +72,7 @@ class JobService:
                     kwargs=kwargs_dict,
                     replace_existing=job_data.replace_existing,
                 )
-            elif job_data.trigger_type == "interval":
+            elif job_data.trigger_type == JobTriggerTypes.INTERVAL:
                 add_interval_job(
                     func_ref=func_ref,
                     job_id=job_data.job_id,
@@ -232,7 +87,7 @@ class JobService:
                     kwargs=kwargs_dict,
                     replace_existing=job_data.replace_existing,
                 )
-            elif job_data.trigger_type == "once":
+            elif job_data.trigger_type == JobTriggerTypes.ONCE:
                 add_one_time_job(
                     func_ref=func_ref,
                     job_id=job_data.job_id,
@@ -258,7 +113,7 @@ class JobService:
             logger.info(f"Job created: {job_data.job_id}")
 
             # Save history
-            await self._save_job_history(
+            await self._history_service.save_job_history(
                 session=session,
                 job=job,
                 status=JobHistoryStatus.CREATED,
@@ -393,7 +248,7 @@ class JobService:
                 )
 
             # Save history before removing
-            await self._save_job_history(
+            await self._history_service.save_job_history(
                 session=session,
                 job=job,
                 status=JobHistoryStatus.REMOVED,
@@ -436,7 +291,7 @@ class JobService:
             pause_job(job_id)
 
             # Save history
-            await self._save_job_history(
+            await self._history_service.save_job_history(
                 session=session,
                 job=job,
                 status=JobHistoryStatus.PAUSED,
@@ -478,7 +333,7 @@ class JobService:
             resume_job(job_id)
 
             # Save history
-            await self._save_job_history(
+            await self._history_service.save_job_history(
                 session=session,
                 job=job,
                 status=JobHistoryStatus.RESUMED,
@@ -514,58 +369,20 @@ class JobService:
 
         Returns:
             Tuple of (history list, total count)
+
+        Raises:
+            AppException: If listing fails
         """
         try:
-            query = select(JobHistory)
-
-            if job_id:
-                query = query.where(JobHistory.job_id == job_id)
-
-            # Order by created_at descending (newest first)
-            query = query.order_by(JobHistory.created_at.desc())
-
-            # Get total count
-            count_query = select(func.count(JobHistory.id))
-            if job_id:
-                count_query = count_query.where(JobHistory.job_id == job_id)
-            total_result = await session.execute(count_query)
-            total = total_result.scalar() or 0
-
-            # Paginate
-            offset = (page - 1) * page_size
-            query = query.offset(offset).limit(page_size)
-
-            result = await session.execute(query)
-            history_records = result.scalars().all()
-
-            history_responses = [
-                JobHistoryResponse(
-                    id=str(record.id),
-                    job_id=record.job_id,
-                    function=record.function,
-                    func_ref=record.func_ref,
-                    trigger=record.trigger,
-                    trigger_type=record.trigger_type,
-                    status=record.status.value,
-                    args=record.args,
-                    kwargs=record.kwargs,
-                    next_run_time=record.next_run_time,
-                    error_message=record.error_message,
-                    logs=record.logs,
-                    user_id=record.user_id,
-                    created_at=record.created_at,
-                )
-                for record in history_records
-            ]
-
+            return await self._history_service.list_job_history(
+                session=session, job_id=job_id, page=page, page_size=page_size
+            )
         except Exception as e:
             logger.error(f"Failed to list job history: {e!s}", exc_info=True)
             raise AppException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=ErrorMessages.INTERNAL_SERVER_ERROR,
             ) from e
-        else:
-            return history_responses, total
 
     def _job_to_response(self, job: Any) -> JobResponse:
         """

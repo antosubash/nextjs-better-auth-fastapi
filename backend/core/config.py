@@ -68,3 +68,11 @@ JOB_EXECUTOR_MAX_WORKERS = int(os.getenv("JOB_EXECUTOR_MAX_WORKERS", "10"))
 # Misfire grace time in seconds - how long after a missed run time a job can still be executed
 # Default: 1 hour (3600 seconds) to handle cases where scheduler is down temporarily
 JOB_MISFIRE_GRACE_TIME_SECONDS = int(os.getenv("JOB_MISFIRE_GRACE_TIME_SECONDS", "3600"))
+# Job persistence verification settings
+JOB_PERSISTENCE_VERIFY_MAX_RETRIES = int(os.getenv("JOB_PERSISTENCE_VERIFY_MAX_RETRIES", "5"))
+JOB_PERSISTENCE_VERIFY_RETRY_DELAY_SECONDS = float(
+    os.getenv("JOB_PERSISTENCE_VERIFY_RETRY_DELAY_SECONDS", "0.2")
+)
+# Log retrieval retry settings
+LOG_RETRY_MAX_ATTEMPTS = int(os.getenv("LOG_RETRY_MAX_ATTEMPTS", "3"))
+LOG_RETRY_DELAY_SECONDS = float(os.getenv("LOG_RETRY_DELAY_SECONDS", "0.1"))
