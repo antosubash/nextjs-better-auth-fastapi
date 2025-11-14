@@ -18,7 +18,7 @@ This project demonstrates a secure authentication architecture where:
 - **Next.js 16** - React framework
 - **Better Auth** - Authentication library with JWT support
 - **Drizzle ORM** - TypeScript ORM for database operations
-- **SQLite** - Database (via better-sqlite3)
+- **PostgreSQL** - Database (shared with backend, via Drizzle ORM)
 - **Tailwind CSS** - Styling
 - **TypeScript** - Type safety
 
@@ -98,16 +98,18 @@ The `.env` file contains all necessary environment variables for:
 
 Both the frontend and backend automatically load environment variables from the root `.env` file.
 
-### Docker Compose Setup (PostgreSQL, MinIO, and pgWeb)
+### Docker Compose Setup (Optional - PostgreSQL, MinIO, and pgWeb)
 
-The project includes a `docker-compose.yml` file for running PostgreSQL, MinIO, and pgWeb services.
+**Note**: The project assumes PostgreSQL, MinIO, and other services are already running in your system. Docker Compose is provided as an optional convenience for setting up these services if needed.
+
+The project includes a `docker-compose.yml` file for running PostgreSQL, MinIO, and pgWeb services:
 
 1. **Copy the example environment file:**
    ```bash
    cp env.example .env
    ```
 
-2. **Start the services:**
+2. **Start the services (if needed):**
    ```bash
    docker-compose up -d
    ```
@@ -246,7 +248,8 @@ nextjs-better-auth-fastapi/
 ### Backend (FastAPI)
 
 **Public Endpoints** (no authentication required):
-- `GET /` - Health check endpoint
+- `GET /` - Root endpoint
+- `GET /health` - Health check endpoint (checks Better Auth connectivity)
 - `GET /docs` - API documentation (Swagger UI)
 - `GET /openapi.json` - OpenAPI schema
 - `GET /redoc` - Alternative API documentation
@@ -416,7 +419,7 @@ make type-check    # Type check frontend
 - **Never hardcode strings**: Always use constants from `nextjs/lib/constants.ts` (frontend) or `backend/core/config.py`/`backend/core/constants.py` (backend)
 - **Better Auth APIs First**: Always use Better Auth APIs for authentication, organization, team, and permission operations. Never query the database directly for these operations.
 - **File Size**: Keep files under 500 lines - split large files into smaller, focused modules
-- **Database**: Frontend uses SQLite (via Better Auth), backend uses PostgreSQL
+- **Database**: Both frontend and backend use PostgreSQL (shared database)
 - **Docker Services**: PostgreSQL, MinIO, and pgWeb can be run via Docker Compose, but assume they're already running when developing
 
 ## License

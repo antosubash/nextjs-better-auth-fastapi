@@ -15,7 +15,7 @@ This is a full-stack authentication system combining:
 - **Location**: `nextjs/` directory
 - **Framework**: Next.js 16 with App Router
 - **Auth Library**: Better Auth with JWT plugin
-- **Database**: SQLite via Drizzle ORM
+- **Database**: PostgreSQL via Drizzle ORM (shared with backend)
 - **Styling**: Tailwind CSS
 - **Language**: TypeScript
 
