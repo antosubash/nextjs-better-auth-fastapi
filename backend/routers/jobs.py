@@ -98,6 +98,49 @@ async def list_jobs(
 
 
 @router.get(
+    "/history",
+    response_model=JobHistoryListResponse,
+    summary="List job history",
+    description="List job history records with pagination.",
+)
+async def list_job_history(
+    _request: Request,
+    job_id: str | None = Query(None, description="Filter by job ID"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Items per page"),
+    session: AsyncSession = Depends(get_session),
+    job_service: JobService = Depends(get_job_service),
+) -> JobHistoryListResponse:
+    """
+    List job history with pagination.
+
+    Args:
+        _request: FastAPI request object (unused, kept for consistency)
+        job_id: Optional job ID to filter by
+        page: Page number
+        page_size: Items per page
+        session: Database session
+        job_service: Job service dependency
+
+    Returns:
+        Paginated job history list
+    """
+    history, total = await job_service.list_job_history(
+        session=session, job_id=job_id, page=page, page_size=page_size
+    )
+
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+
+    return JobHistoryListResponse(
+        items=history,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
+
+
+@router.get(
     "/{job_id}",
     response_model=JobResponse,
     summary="Get job",
@@ -206,46 +249,3 @@ async def resume_job(
     await job_service.resume_job_by_id(job_id, session, user_id=user_id)
     logger.info(f"Job resumed: {job_id} by user {user_id}")
     return job_service.get_job_by_id(job_id)
-
-
-@router.get(
-    "/history",
-    response_model=JobHistoryListResponse,
-    summary="List job history",
-    description="List job history records with pagination.",
-)
-async def list_job_history(
-    _request: Request,
-    job_id: str | None = Query(None, description="Filter by job ID"),
-    page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(10, ge=1, le=100, description="Items per page"),
-    session: AsyncSession = Depends(get_session),
-    job_service: JobService = Depends(get_job_service),
-) -> JobHistoryListResponse:
-    """
-    List job history with pagination.
-
-    Args:
-        _request: FastAPI request object (unused, kept for consistency)
-        job_id: Optional job ID to filter by
-        page: Page number
-        page_size: Items per page
-        session: Database session
-        job_service: Job service dependency
-
-    Returns:
-        Paginated job history list
-    """
-    history, total = await job_service.list_job_history(
-        session=session, job_id=job_id, page=page, page_size=page_size
-    )
-
-    total_pages = (total + page_size - 1) // page_size if total > 0 else 0
-
-    return JobHistoryListResponse(
-        items=history,
-        total=total,
-        page=page,
-        page_size=page_size,
-        total_pages=total_pages,
-    )

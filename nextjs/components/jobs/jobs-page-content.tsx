@@ -26,8 +26,9 @@ import { JobDetailsDialog } from "@/components/jobs/job-details-dialog";
 import { JOB_LABELS, JOB_ERRORS, JOB_SUCCESS, PAGE_CONTAINER } from "@/lib/constants";
 import { getJobs, createJob, deleteJob, pauseJob, resumeJob, getJob } from "@/lib/api/jobs";
 import type { Job, JobCreate } from "@/lib/types/job";
-import { Plus } from "lucide-react";
+import { Plus, History } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export function JobsPageContent() {
   const router = useRouter();
@@ -185,10 +186,18 @@ export function JobsPageContent() {
               {Math.min(page * pageSize, total)} {JOB_LABELS.OF} {total} {JOB_LABELS.JOBS}
             </p>
           </div>
-          <Button onClick={handleCreateClick}>
-            <Plus className="h-4 w-4 mr-2" />
-            {JOB_LABELS.CREATE_JOB}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/jobs/history">
+              <Button variant="outline">
+                <History className="h-4 w-4 mr-2" />
+                {JOB_LABELS.VIEW_HISTORY}
+              </Button>
+            </Link>
+            <Button onClick={handleCreateClick}>
+              <Plus className="h-4 w-4 mr-2" />
+              {JOB_LABELS.CREATE_JOB}
+            </Button>
+          </div>
         </div>
       </div>
 

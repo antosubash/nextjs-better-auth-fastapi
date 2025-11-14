@@ -17,6 +17,7 @@ class JobHistoryStatus(str, enum.Enum):
     """Job history status enumeration."""
 
     CREATED = "created"
+    RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     REMOVED = "removed"

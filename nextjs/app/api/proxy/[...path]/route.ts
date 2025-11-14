@@ -111,6 +111,14 @@ async function handleProxyRequest(request: NextRequest, pathSegments: string[], 
 
     const response = await fetch(fullUrl, requestOptions);
 
+    // Handle 204 No Content responses (no body allowed)
+    if (response.status === 204) {
+      return new NextResponse(null, {
+        status: 204,
+        statusText: response.statusText,
+      });
+    }
+
     const responseData = await response.text();
     let jsonData;
     try {

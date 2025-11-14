@@ -16,6 +16,7 @@ from core.jobs import (
     add_one_time_job,
     add_scheduled_job,
     get_job,
+    list_all_jobs_from_store,
     list_jobs,
     pause_job,
     remove_job,
@@ -110,6 +111,16 @@ class JobService:
             trigger_type: Trigger type (cron, interval, once)
         """
         try:
+            # Validate status is provided
+            if status is None:
+                logger.error(f"Cannot save job history for {job.id}: status is None")
+                return
+
+            # Validate job object has required attributes
+            if not hasattr(job, "id"):
+                logger.error("Job object missing 'id' attribute")
+                return
+
             # Extract function name from func_ref
             func_ref_str = str(job.func_ref)
             function_name = func_ref_str.split(":")[-1] if ":" in func_ref_str else func_ref_str
@@ -134,6 +145,13 @@ class JobService:
             if hasattr(job, "kwargs") and job.kwargs:
                 kwargs_dict = job.kwargs
 
+            # Normalize logs: convert empty string to None for consistency
+            normalized_logs = logs if logs else None
+
+            # Validate error_message is set for FAILED status
+            if status == JobHistoryStatus.FAILED and not error_message:
+                logger.warning(f"Job {job.id} marked as FAILED but no error_message provided")
+
             history = JobHistory(
                 job_id=job.id,
                 function=function_name,
@@ -145,14 +163,20 @@ class JobService:
                 kwargs=kwargs_dict,
                 next_run_time=job.next_run_time,
                 error_message=error_message,
-                logs=logs,
+                logs=normalized_logs,
                 user_id=user_id,
             )
             session.add(history)
-            logger.debug(f"Job history saved: {job.id} - {status}")
+            logger.debug(
+                f"Job history saved: {job.id} - {status.value} "
+                f"(logs: {'present' if normalized_logs else 'none'})"
+            )
         except Exception as e:
             # Don't fail the main operation if history saving fails
-            logger.error(f"Failed to save job history: {e!s}", exc_info=True)
+            logger.error(
+                f"Failed to save job history for {getattr(job, 'id', 'unknown')}: {e!s}",
+                exc_info=True,
+            )
 
     async def create_job(
         self, job_data: JobCreate, session: AsyncSession, user_id: str | None = None
@@ -170,8 +194,9 @@ class JobService:
             AppException: If job creation fails
         """
         try:
-            # Get the function - wrapping happens when adding to scheduler
-            func = get_job_function(job_data.function)
+            # Get function reference - use the provided function name directly
+            # If it's already a module:function format, use it; otherwise it's a registered name
+            func_ref = job_data.function
 
             # Convert args and kwargs
             args_tuple = tuple(job_data.args) if job_data.args else ()
@@ -185,7 +210,7 @@ class JobService:
                         detail=ErrorMessages.JOB_INVALID_SCHEDULE,
                     )
                 add_scheduled_job(
-                    func=func,
+                    func_ref=func_ref,
                     job_id=job_data.job_id,
                     trigger=job_data.cron_expression,
                     args=args_tuple,
@@ -194,7 +219,7 @@ class JobService:
                 )
             elif job_data.trigger_type == "interval":
                 add_interval_job(
-                    func=func,
+                    func_ref=func_ref,
                     job_id=job_data.job_id,
                     weeks=job_data.weeks,
                     days=job_data.days,
@@ -209,7 +234,7 @@ class JobService:
                 )
             elif job_data.trigger_type == "once":
                 add_one_time_job(
-                    func=func,
+                    func_ref=func_ref,
                     job_id=job_data.job_id,
                     run_date=job_data.run_date,
                     args=args_tuple,
@@ -291,6 +316,10 @@ class JobService:
         """
         List all jobs with pagination.
 
+        This method retrieves jobs from APScheduler's get_jobs() method.
+        If jobs seem to be missing, it also queries the database directly
+        to ensure all jobs are visible.
+
         Args:
             page: Page number (1-indexed)
             page_size: Number of items per page
@@ -299,7 +328,32 @@ class JobService:
             Tuple of (jobs list, total count)
         """
         try:
+            # Get jobs from APScheduler
             all_jobs = list_jobs()
+            scheduler_job_ids = {job.id for job in all_jobs}
+
+            # Also query the database directly to see if there are more jobs
+            db_jobs = list_all_jobs_from_store()
+            db_job_ids = {job["id"] for job in db_jobs}
+
+            # Log comparison for debugging
+            if db_job_ids != scheduler_job_ids:
+                missing_in_scheduler = db_job_ids - scheduler_job_ids
+                if missing_in_scheduler:
+                    logger.warning(
+                        f"Found {len(missing_in_scheduler)} jobs in database "
+                        f"but not in scheduler: {missing_in_scheduler}"
+                    )
+                    # Try to get these jobs individually - they might be paused or in error state
+                    for job_id in missing_in_scheduler:
+                        try:
+                            job = get_job(job_id)
+                            if job:
+                                all_jobs.append(job)
+                                logger.info(f"Retrieved missing job {job_id} directly")
+                        except Exception as e:
+                            logger.debug(f"Could not retrieve job {job_id}: {e!s}")
+
             total = len(all_jobs)
 
             # Paginate

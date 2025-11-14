@@ -2,7 +2,6 @@ import { callFastApi } from "@/lib/api-client";
 import type {
   Job,
   JobCreate,
-  JobHistory,
   JobHistoryListResponse,
   JobListResponse,
 } from "@/lib/types/job";
