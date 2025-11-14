@@ -1133,3 +1133,20 @@ export const PREDEFINED_JOBS = {
     },
   ],
 } as const;
+
+export const PAGE_LOADING = {
+  DEFAULT: "Loading...",
+  HOME: "Loading...",
+  ADMIN: "Loading admin panel...",
+  ADMIN_USERS: "Loading users...",
+  ADMIN_USER_EDIT: "Loading user...",
+  ADMIN_JOBS: "Loading jobs...",
+  ADMIN_JOB_HISTORY: "Loading job history...",
+  ADMIN_TASKS: "Loading tasks...",
+  ADMIN_DOCTOR: "Loading diagnostics...",
+  ADMIN_ORGANIZATIONS: "Loading organizations...",
+  ADMIN_ORGANIZATION_DETAILS: "Loading organization...",
+  ADMIN_ORGANIZATION_INVITATION: "Loading invitation...",
+  ADMIN_API_KEYS: "Loading API keys...",
+  DASHBOARD_TASKS: "Loading tasks...",
+} as const;
