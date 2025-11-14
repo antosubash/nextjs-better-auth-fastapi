@@ -12,6 +12,10 @@ This project demonstrates a secure authentication architecture where:
 - **Authentication Flow**: JWT tokens are signed with Ed25519 and verified using public keys fetched from the Better Auth JWKS endpoint
 - **Dual Authentication**: Supports both JWT tokens and API keys for flexible authentication
 
+## Motivation
+
+This is a sample application I'm building using vibe coding to learn more about AI software development. I specifically chose this tech stack because it aligns with my use case: I need a React frontend with solid authentication and a Python backend to handle GIS-related operations along with AI and ML workloads. The project serves as a hands-on exploration of how AI-powered development tools can assist in building full-stack applications, from architecture design to implementation details. Through this project, I'm experimenting with modern authentication patterns, exploring the integration between different technologies (Next.js, FastAPI, Better Auth), and learning how to effectively collaborate with AI coding assistants to create production-quality code.
+
 ## Tech Stack
 
 ### Frontend
