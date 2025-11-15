@@ -1,16 +1,15 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { authClient } from "@/lib/auth-client";
-import { useToast } from "@/lib/hooks/use-toast";
-import { ADMIN_LABELS, ADMIN_PLACEHOLDERS, ADMIN_ERRORS, ADMIN_SUCCESS } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -21,8 +20,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { ADMIN_ERRORS, ADMIN_LABELS, ADMIN_PLACEHOLDERS, ADMIN_SUCCESS } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
 
 interface UserPasswordDialogProps {
   userId: string;

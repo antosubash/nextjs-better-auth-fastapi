@@ -1,10 +1,7 @@
 "use client";
 
+import { MoreVertical, RotateCcw, X } from "lucide-react";
 import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
-import { INVITATION_LABELS, INVITATION_ERRORS, INVITATION_SUCCESS } from "@/lib/constants";
-import { MoreVertical, X, RotateCcw } from "lucide-react";
-import { ErrorToast } from "@/components/ui/error-toast";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ErrorToast } from "@/components/ui/error-toast";
+import { authClient } from "@/lib/auth-client";
+import { INVITATION_ERRORS, INVITATION_LABELS, INVITATION_SUCCESS } from "@/lib/constants";
 
 interface Invitation {
   id: string;

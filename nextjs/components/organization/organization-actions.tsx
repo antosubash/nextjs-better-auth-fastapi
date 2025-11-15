@@ -1,11 +1,11 @@
 "use client";
 
+import { CheckCircle2, Edit, MoreVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
-import { ORGANIZATION_LABELS, ORGANIZATION_ERRORS, ORGANIZATION_SUCCESS } from "@/lib/constants";
-import { MoreVertical, Trash2, Edit, CheckCircle2 } from "lucide-react";
 import { ErrorToast } from "@/components/ui/error-toast";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { authClient } from "@/lib/auth-client";
+import { ORGANIZATION_ERRORS, ORGANIZATION_LABELS, ORGANIZATION_SUCCESS } from "@/lib/constants";
 
 interface Organization {
   id: string;

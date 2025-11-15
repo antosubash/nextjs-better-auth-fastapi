@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Loader2, LogOut, Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Menu, LogOut } from "lucide-react";
-import { ADMIN_NAVIGATION, AUTH_LABELS } from "@/lib/constants";
+import { useState } from "react";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { ADMIN_NAVIGATION, AUTH_LABELS } from "@/lib/constants";
 
 interface AdminHeaderProps {
   onMenuToggle: () => void;

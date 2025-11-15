@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { betterAuthService } from "@/lib/better-auth-service/index";
 import { ORGANIZATION_ERRORS } from "@/lib/constants";
 import { requireAdmin } from "@/lib/permission-check-server";

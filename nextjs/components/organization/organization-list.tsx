@@ -1,24 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
-import { useRouter, usePathname } from "next/navigation";
-import { ORGANIZATION_LABELS, ORGANIZATION_ERRORS, ORGANIZATION_SUCCESS } from "@/lib/constants";
-import { OrganizationForm } from "./organization-form";
-import { OrganizationActions } from "./organization-actions";
-import { Plus, Building2 } from "lucide-react";
-import { formatDate } from "@/lib/utils/date";
+import { Building2, Plus } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useErrorMessage } from "@/hooks/organization/use-error-message";
 import { useSearch } from "@/hooks/organization/use-search";
 import { useSuccessMessage } from "@/hooks/organization/use-success-message";
-import { useErrorMessage } from "@/hooks/organization/use-error-message";
-import { SearchInput } from "./shared/search-input";
-import { SuccessMessage } from "./shared/success-message";
+import { authClient } from "@/lib/auth-client";
+import { ORGANIZATION_ERRORS, ORGANIZATION_LABELS, ORGANIZATION_SUCCESS } from "@/lib/constants";
+import { useOrganizationSafe } from "@/lib/contexts/organization-context";
+import { formatDate } from "@/lib/utils/date";
+import { extractOrganizations, normalizeOrganizations } from "@/lib/utils/organization-data";
+import type { NormalizedOrganization } from "@/lib/utils/organization-types";
+import { OrganizationActions } from "./organization-actions";
+import { OrganizationForm } from "./organization-form";
+import { EmptyState } from "./shared/empty-state";
 import { ErrorMessage } from "./shared/error-message";
 import { LoadingState } from "./shared/loading-state";
-import { EmptyState } from "./shared/empty-state";
-import { normalizeOrganizations, extractOrganizations } from "@/lib/utils/organization-data";
-import type { NormalizedOrganization } from "@/lib/utils/organization-types";
-import { useOrganizationSafe } from "@/lib/contexts/organization-context";
+import { SearchInput } from "./shared/search-input";
+import { SuccessMessage } from "./shared/success-message";
 
 export function OrganizationList() {
   const router = useRouter();
@@ -95,7 +109,7 @@ export function OrganizationList() {
   useEffect(() => {
     loadOrganizations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdminContext, orgContext?.organization?.id, orgContext?.organizations]);
+  }, [loadOrganizations]);
 
   const handleOrganizationCreated = () => {
     setShowCreateForm(false);
@@ -146,13 +160,10 @@ export function OrganizationList() {
             {ORGANIZATION_LABELS.TITLE}
           </h1>
         </div>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-        >
+        <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="w-5 h-5" />
           {ORGANIZATION_LABELS.CREATE_ORGANIZATION}
-        </button>
+        </Button>
       </div>
 
       <ErrorMessage message={error} onDismiss={clearError} className="mb-4" />
@@ -177,6 +188,8 @@ export function OrganizationList() {
         </div>
       )}
 
+      <Separator className="my-6" />
+
       <div className="mb-4">
         <SearchInput
           placeholder={ORGANIZATION_LABELS.SEARCH_ORGANIZATIONS}
@@ -185,82 +198,89 @@ export function OrganizationList() {
         />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {isLoading ? (
-          <LoadingState message={ORGANIZATION_LABELS.LOADING} />
-        ) : filteredOrganizations.length === 0 ? (
-          <EmptyState message={ORGANIZATION_LABELS.NO_ORGANIZATIONS} />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {ORGANIZATION_LABELS.NAME}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {ORGANIZATION_LABELS.SLUG}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {ORGANIZATION_LABELS.CREATED_AT}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {ORGANIZATION_LABELS.STATUS}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {ORGANIZATION_LABELS.ACTIONS}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredOrganizations.map((org) => {
-                  const isActive = org.id === activeOrganizationId;
-                  return (
-                    <tr
-                      key={org.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-900/50 cursor-pointer"
-                      onClick={() => router.push(`/admin/organizations/${org.id}`)}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        {org.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                        {org.slug}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                        {formatDate(org.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {isActive ? (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-                            {ORGANIZATION_LABELS.ACTIVE}
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200">
-                            {ORGANIZATION_LABELS.INACTIVE}
-                          </span>
-                        )}
-                      </td>
-                      <td
-                        className="px-6 py-4 whitespace-nowrap text-sm"
-                        onClick={(e) => e.stopPropagation()}
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <LoadingState message={ORGANIZATION_LABELS.LOADING} />
+          ) : filteredOrganizations.length === 0 ? (
+            <EmptyState message={ORGANIZATION_LABELS.NO_ORGANIZATIONS} />
+          ) : (
+            <ScrollArea className="w-full">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{ORGANIZATION_LABELS.NAME}</TableHead>
+                    <TableHead>{ORGANIZATION_LABELS.SLUG}</TableHead>
+                    <TableHead>{ORGANIZATION_LABELS.CREATED_AT}</TableHead>
+                    <TableHead>{ORGANIZATION_LABELS.STATUS}</TableHead>
+                    <TableHead>{ORGANIZATION_LABELS.ACTIONS}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrganizations.map((org) => {
+                    const isActive = org.id === activeOrganizationId;
+                    return (
+                      <TableRow
+                        key={org.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/admin/organizations/${org.id}`)}
                       >
-                        <OrganizationActions
-                          organization={org}
-                          onEdit={() => setEditingOrganization(org)}
-                          onDelete={handleOrganizationDeleted}
-                          onActionSuccess={handleActionSuccess}
-                          isActive={isActive}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                        <TableCell>
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <span className="font-medium cursor-pointer hover:underline">
+                                {org.name}
+                              </span>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80">
+                              <div className="space-y-2">
+                                <div>
+                                  <h4 className="text-sm font-semibold">{org.name}</h4>
+                                  <p className="text-sm text-muted-foreground">{org.slug}</p>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  <p>
+                                    <span className="font-medium">Created:</span>{" "}
+                                    {formatDate(org.createdAt)}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium">Status:</span>{" "}
+                                    {isActive
+                                      ? ORGANIZATION_LABELS.ACTIVE
+                                      : ORGANIZATION_LABELS.INACTIVE}
+                                  </p>
+                                </div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </TableCell>
+                        <TableCell>{org.slug}</TableCell>
+                        <TableCell>{formatDate(org.createdAt)}</TableCell>
+                        <TableCell>
+                          {isActive ? (
+                            <Badge variant="default">{ORGANIZATION_LABELS.ACTIVE}</Badge>
+                          ) : (
+                            <Badge variant="secondary">{ORGANIZATION_LABELS.INACTIVE}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <OrganizationActions
+                            organization={org}
+                            onEdit={() => setEditingOrganization(org)}
+                            onDelete={handleOrganizationDeleted}
+                            onActionSuccess={handleActionSuccess}
+                            isActive={isActive}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

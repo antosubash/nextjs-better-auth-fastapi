@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { API_KEY_ERRORS } from "@/lib/constants";
 
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
 
       // Better Auth returns the key data directly if valid
       // Format the response to match what the backend expects
-      if (result && result.key) {
+      if (result?.key) {
         return NextResponse.json({
           valid: true,
           key: result.key,

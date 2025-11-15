@@ -1,8 +1,8 @@
 "use client";
 
+import { CheckCircle, X, XCircle } from "lucide-react";
 import { useState } from "react";
-import { API_KEY_LABELS, API_KEY_PLACEHOLDERS, API_KEY_ERRORS } from "@/lib/constants";
-import { X, CheckCircle, XCircle } from "lucide-react";
+import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 
 interface ApiKeyVerifyProps {
   onClose: () => void;
@@ -33,7 +33,7 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
     setIsLoading(true);
 
     try {
-      let parsedPermissions: Record<string, string[]> | undefined = undefined;
+      let parsedPermissions: Record<string, string[]> | undefined;
 
       if (permissions.trim()) {
         try {
@@ -87,6 +87,7 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
             {API_KEY_LABELS.VERIFY_API_KEY}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
@@ -102,10 +103,14 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
 
         <form onSubmit={handleVerify} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="verify-api-key"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               {API_KEY_LABELS.KEY_TO_VERIFY}
             </label>
             <input
+              id="verify-api-key"
               type="text"
               value={key}
               onChange={(e) => setKey(e.target.value)}
@@ -116,10 +121,14 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="verify-permissions"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               {API_KEY_LABELS.VERIFY_PERMISSIONS}
             </label>
             <textarea
+              id="verify-permissions"
               value={permissions}
               onChange={(e) => setPermissions(e.target.value)}
               placeholder={API_KEY_PLACEHOLDERS.VERIFY_PERMISSIONS}

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
-import { useToast } from "@/lib/hooks/use-toast";
-import { ADMIN_LABELS, ADMIN_ERRORS, ADMIN_SUCCESS } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
+import { ADMIN_ERRORS, ADMIN_LABELS, ADMIN_SUCCESS } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
 
 export function ImpersonationIndicator() {
   const toast = useToast();
@@ -16,7 +16,7 @@ export function ImpersonationIndicator() {
     email: string;
   } | null>(null);
 
-  const checkImpersonationStatus = async () => {
+  const checkImpersonationStatus = useCallback(async () => {
     try {
       const session = await authClient.getSession();
       // Check if session indicates impersonation
@@ -36,15 +36,12 @@ export function ImpersonationIndicator() {
     } catch (err) {
       console.error("Failed to check impersonation status:", err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Check if we're impersonating by checking session or API
-    const checkStatus = async () => {
-      await checkImpersonationStatus();
-    };
-    void checkStatus();
-  }, []);
+    void checkImpersonationStatus();
+  }, [checkImpersonationStatus]);
 
   const handleStopImpersonating = async () => {
     try {

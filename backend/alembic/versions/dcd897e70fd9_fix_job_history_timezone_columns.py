@@ -9,11 +9,10 @@ Create Date: 2025-11-13 23:45:00.000000
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Union
 
 import sqlalchemy as sa
+
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 backend_dir = Path(__file__).parent.parent.parent
 if str(backend_dir) not in sys.path:
@@ -23,9 +22,9 @@ from core.config import DB_SCHEMA  # noqa: E402
 
 # revision identifiers, used by Alembic.
 revision: str = "dcd897e70fd9"
-down_revision: Union[str, Sequence[str], None] = "1ea20e3a0ec8"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "1ea20e3a0ec8"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

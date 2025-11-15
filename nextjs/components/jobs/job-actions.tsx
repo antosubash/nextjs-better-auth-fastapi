@@ -1,7 +1,7 @@
 "use client";
 
+import { Pause, Play, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,9 +12,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { JOB_LABELS } from "@/lib/constants";
 import type { Job } from "@/lib/types/job";
-import { Pause, Play, Trash2 } from "lucide-react";
 
 interface JobActionsProps {
   job: Job;
@@ -73,34 +74,49 @@ export function JobActions({ job, onPause, onResume, onDelete }: JobActionsProps
     <>
       <div className="flex items-center gap-2">
         {job.paused ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleResume}
-            disabled={isResuming}
-            aria-label={JOB_LABELS.RESUME_JOB}
-          >
-            <Play className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleResume}
+                disabled={isResuming}
+                aria-label={JOB_LABELS.RESUME_JOB}
+              >
+                <Play className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{JOB_LABELS.RESUME_JOB}</TooltipContent>
+          </Tooltip>
         ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handlePause}
-            disabled={isPausing}
-            aria-label={JOB_LABELS.PAUSE_JOB}
-          >
-            <Pause className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePause}
+                disabled={isPausing}
+                aria-label={JOB_LABELS.PAUSE_JOB}
+              >
+                <Pause className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{JOB_LABELS.PAUSE_JOB}</TooltipContent>
+          </Tooltip>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleDeleteClick}
-          aria-label={JOB_LABELS.DELETE_JOB}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDeleteClick}
+              aria-label={JOB_LABELS.DELETE_JOB}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{JOB_LABELS.DELETE_JOB}</TooltipContent>
+        </Tooltip>
       </div>
 
       <AlertDialog

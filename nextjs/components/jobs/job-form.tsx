@@ -1,8 +1,20 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,20 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { JOB_LABELS, JOB_PLACEHOLDERS, JOB_ERRORS } from "@/lib/constants";
+import { JOB_ERRORS, JOB_LABELS, JOB_PLACEHOLDERS } from "@/lib/constants";
 import type { JobCreate, JobTriggerType } from "@/lib/types/job";
-import { useEffect } from "react";
 
 const jobSchema = z
   .object({
@@ -130,7 +130,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
       form.reset(getDefaultValues());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialValues]);
+  }, [initialValues, form.reset, getDefaultValues]);
 
   const triggerType = form.watch("trigger_type");
 
@@ -178,7 +178,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
   const formatDateTimeForInput = (dateString: string | null | undefined): string => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
+    if (Number.isNaN(date.getTime())) return "";
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -278,7 +278,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.WEEKS}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -298,7 +298,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.DAYS}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -318,7 +318,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.HOURS}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -338,7 +338,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.MINUTES}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -358,7 +358,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.SECONDS}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />

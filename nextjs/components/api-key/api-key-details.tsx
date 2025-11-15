@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { API_KEY_LABELS, API_KEY_ERRORS } from "@/lib/constants";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { API_KEY_ERRORS, API_KEY_LABELS } from "@/lib/constants";
 
 interface ApiKeyDetailsProps {
   apiKeyId: string;
@@ -91,6 +91,7 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
             {API_KEY_LABELS.VIEW_DETAILS}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
@@ -111,23 +112,23 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
         ) : apiKey ? (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.NAME}
-              </label>
+              </div>
               <p className="text-gray-900 dark:text-white">{apiKey.name || "N/A"}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.PREFIX}
-              </label>
+              </div>
               <p className="text-gray-900 dark:text-white">{apiKey.prefix || "N/A"}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.STATUS}
-              </label>
+              </div>
               <span
                 className={`px-2 py-1 text-xs font-medium rounded-full ${
                   apiKey.enabled
@@ -140,42 +141,42 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.CREATED_AT}
-              </label>
+              </div>
               <p className="text-gray-900 dark:text-white">{formatDate(apiKey.createdAt)}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.EXPIRES_AT}
-              </label>
+              </div>
               <p className="text-gray-900 dark:text-white">{formatDate(apiKey.expiresAt)}</p>
             </div>
 
             {apiKey.remaining !== undefined && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {API_KEY_LABELS.REMAINING}
-                </label>
+                </div>
                 <p className="text-gray-900 dark:text-white">{apiKey.remaining}</p>
               </div>
             )}
 
             {apiKey.refillAmount !== undefined && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {API_KEY_LABELS.REFILL_AMOUNT}
-                </label>
+                </div>
                 <p className="text-gray-900 dark:text-white">{apiKey.refillAmount}</p>
               </div>
             )}
 
             {apiKey.refillInterval !== undefined && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {API_KEY_LABELS.REFILL_INTERVAL}
-                </label>
+                </div>
                 <p className="text-gray-900 dark:text-white">{apiKey.refillInterval} ms</p>
               </div>
             )}
@@ -183,34 +184,34 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
             {apiKey.rateLimitEnabled && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}
-                  </label>
+                  </div>
                   <p className="text-gray-900 dark:text-white">{apiKey.rateLimitTimeWindow} ms</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {API_KEY_LABELS.RATE_LIMIT_MAX}
-                  </label>
+                  </div>
                   <p className="text-gray-900 dark:text-white">{apiKey.rateLimitMax}</p>
                 </div>
               </>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.METADATA}
-              </label>
+              </div>
               <pre className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-900 dark:text-white overflow-x-auto">
                 {formatJson(apiKey.metadata)}
               </pre>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {API_KEY_LABELS.PERMISSIONS}
-              </label>
+              </div>
               <pre className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-900 dark:text-white overflow-x-auto">
                 {formatJson(apiKey.permissions)}
               </pre>
@@ -220,6 +221,7 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
 
         <div className="mt-6 flex justify-end">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900"
           >

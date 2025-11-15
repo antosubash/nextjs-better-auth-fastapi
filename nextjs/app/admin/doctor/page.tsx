@@ -1,8 +1,8 @@
 "use client";
 
-import { DOCTOR } from "@/lib/constants";
-import { ApiKeyTest } from "@/components/api-key-test";
 import { Stethoscope } from "lucide-react";
+import { ApiKeyTest } from "@/components/api-key-test";
+import { DOCTOR } from "@/lib/constants";
 
 export default function AdminDoctorPage() {
   return (

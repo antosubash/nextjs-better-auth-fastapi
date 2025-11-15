@@ -1,26 +1,49 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { authClient } from "@/lib/auth-client";
-import { getAssignableUserRoles } from "@/lib/permissions-api";
-import { RoleInfo } from "@/lib/permissions-utils";
 import {
-  ADMIN_LABELS,
-  ADMIN_ERRORS,
-  ADMIN_SUCCESS,
-  ADMIN_PAGINATION,
-  USER_ROLES,
-  ROLE_DISPLAY_NAMES,
-} from "@/lib/constants";
-import { UserForm } from "./user-form";
-import { UserActions } from "./user-actions";
-import { UserDetails } from "./user-details";
-import { UserFilters } from "./user-filters";
-import { UserBulkActions } from "./user-bulk-actions";
-import { Search, Plus, Users, ChevronsLeft, ChevronsRight, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+  CheckCircle2,
+  ChevronsLeft,
+  ChevronsRight,
+  Download,
+  Plus,
+  Search,
+  Users,
+  XCircle,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -29,36 +52,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
+import {
+  ADMIN_ERRORS,
+  ADMIN_LABELS,
+  ADMIN_PAGINATION,
+  ADMIN_SUCCESS,
+  ROLE_DISPLAY_NAMES,
+  USER_ROLES,
+} from "@/lib/constants";
+import { getAssignableUserRoles } from "@/lib/permissions-api";
+import type { RoleInfo } from "@/lib/permissions-utils";
 import { exportUsers } from "@/lib/utils/user-export";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { UserActions } from "./user-actions";
+import { UserBulkActions } from "./user-bulk-actions";
+import { UserDetails } from "./user-details";
+import { UserFilters } from "./user-filters";
+import { UserForm } from "./user-form";
 
 interface User {
   id: string;
@@ -120,7 +130,38 @@ export function UserList() {
     loadRoles();
   }, [loadRoles]);
 
-  const loadUsers = async () => {
+  const applyFilters = useCallback(
+    (usersToFilter: User[]) => {
+      let filtered = [...usersToFilter];
+
+      if (filterRole !== "all") {
+        filtered = filtered.filter((u) => u.role === filterRole);
+      }
+
+      if (filterStatus === "active") {
+        filtered = filtered.filter((u) => !u.banned);
+      } else if (filterStatus === "banned") {
+        filtered = filtered.filter((u) => u.banned);
+      }
+
+      if (dateFrom) {
+        const fromTimestamp = dateFrom.getTime();
+        filtered = filtered.filter((u) => u.createdAt >= fromTimestamp);
+      }
+
+      if (dateTo) {
+        const toTimestamp = dateTo.getTime() + 24 * 60 * 60 * 1000 - 1;
+        filtered = filtered.filter((u) => u.createdAt <= toTimestamp);
+      }
+
+      setUsers(filtered);
+      setTotalUsers(filtered.length);
+      setCurrentPage(1);
+    },
+    [filterRole, filterStatus, dateFrom, dateTo]
+  );
+
+  const loadUsers = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
@@ -152,45 +193,17 @@ export function UserList() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const applyFilters = (usersToFilter: User[]) => {
-    let filtered = [...usersToFilter];
-
-    if (filterRole !== "all") {
-      filtered = filtered.filter((u) => u.role === filterRole);
-    }
-
-    if (filterStatus === "active") {
-      filtered = filtered.filter((u) => !u.banned);
-    } else if (filterStatus === "banned") {
-      filtered = filtered.filter((u) => u.banned);
-    }
-
-    if (dateFrom) {
-      const fromTimestamp = dateFrom.getTime();
-      filtered = filtered.filter((u) => u.createdAt >= fromTimestamp);
-    }
-
-    if (dateTo) {
-      const toTimestamp = dateTo.getTime() + 24 * 60 * 60 * 1000 - 1;
-      filtered = filtered.filter((u) => u.createdAt <= toTimestamp);
-    }
-
-    setUsers(filtered);
-    setTotalUsers(filtered.length);
-    setCurrentPage(1);
-  };
+  }, [searchValue, applyFilters]);
 
   useEffect(() => {
-    loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchValue]);
+    void loadUsers();
+  }, [loadUsers]);
 
   useEffect(() => {
-    applyFilters(allUsers);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterRole, filterStatus, dateFrom, dateTo]);
+    if (allUsers.length > 0) {
+      applyFilters(allUsers);
+    }
+  }, [applyFilters, allUsers]);
 
   const handleSearch = (value: string) => {
     setSearchValue(value);
@@ -206,19 +219,6 @@ export function UserList() {
   const handleUserCreated = () => {
     setShowCreateForm(false);
     setSuccess(ADMIN_SUCCESS.USER_CREATED);
-    setTimeout(() => setSuccess(""), 3000);
-    loadUsers();
-  };
-
-  const handleUserDeleted = () => {
-    setSuccess(ADMIN_SUCCESS.USER_DELETED);
-    setTimeout(() => setSuccess(""), 3000);
-    setSelectedUserIds(new Set());
-    loadUsers();
-  };
-
-  const handleActionSuccess = (message: string) => {
-    setSuccess(message);
     setTimeout(() => setSuccess(""), 3000);
     loadUsers();
   };
@@ -400,7 +400,7 @@ export function UserList() {
             <div className="p-8 text-center text-muted-foreground">{ADMIN_LABELS.NO_USERS}</div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <ScrollArea className="w-full">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -431,7 +431,43 @@ export function UserList() {
                             }
                           />
                         </TableCell>
-                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <span className="font-medium cursor-pointer hover:underline">
+                                {user.name}
+                              </span>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80">
+                              <div className="space-y-2">
+                                <div>
+                                  <h4 className="text-sm font-semibold">{user.name}</h4>
+                                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  <p>
+                                    <span className="font-medium">Role:</span>{" "}
+                                    {ROLE_DISPLAY_NAMES[
+                                      user.role as keyof typeof ROLE_DISPLAY_NAMES
+                                    ] ||
+                                      user.role ||
+                                      USER_ROLES.USER}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium">Status:</span>{" "}
+                                    {user.banned ? ADMIN_LABELS.BANNED : ADMIN_LABELS.ACTIVE}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium">Email Verified:</span>{" "}
+                                    {user.emailVerified
+                                      ? ADMIN_LABELS.EMAIL_VERIFIED
+                                      : ADMIN_LABELS.EMAIL_NOT_VERIFIED}
+                                  </p>
+                                </div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           <Badge variant="secondary">
@@ -468,7 +504,7 @@ export function UserList() {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
+              </ScrollArea>
 
               <div className="px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
@@ -521,24 +557,32 @@ export function UserList() {
                           className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                         />
                       </PaginationItem>
-                      {getPageNumbers().map((page, idx) => (
-                        <PaginationItem key={idx}>
-                          {page === "ellipsis" ? (
-                            <PaginationEllipsis />
-                          ) : (
-                            <PaginationLink
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setCurrentPage(page);
-                              }}
-                              isActive={currentPage === page}
-                            >
-                              {page}
-                            </PaginationLink>
-                          )}
-                        </PaginationItem>
-                      ))}
+                      {getPageNumbers().map((page, idx, arr) => {
+                        // For numbers, use the number itself as key
+                        // For ellipsis, use position relative to surrounding pages for uniqueness
+                        const key =
+                          typeof page === "number"
+                            ? `page-${page}`
+                            : `ellipsis-${arr[idx - 1]}-${arr[idx + 1]}`;
+                        return (
+                          <PaginationItem key={key}>
+                            {page === "ellipsis" ? (
+                              <PaginationEllipsis />
+                            ) : (
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCurrentPage(page);
+                                }}
+                                isActive={currentPage === page}
+                              >
+                                {page}
+                              </PaginationLink>
+                            )}
+                          </PaginationItem>
+                        );
+                      })}
                       <PaginationItem>
                         <PaginationNext
                           href="#"

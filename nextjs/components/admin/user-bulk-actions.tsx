@@ -1,27 +1,7 @@
 "use client";
 
+import { Ban, Loader2, Shield, Trash2, UserCheck } from "lucide-react";
 import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
-import { RoleInfo } from "@/lib/permissions-utils";
-import { getValidAssignableRole, canBanRole } from "@/lib/utils/role-validation";
-import {
-  ADMIN_BULK_ACTIONS,
-  ADMIN_LABELS,
-  ADMIN_PLACEHOLDERS,
-  ADMIN_SUCCESS,
-  ADMIN_ERRORS,
-  USER_ROLES,
-  ROLE_DISPLAY_NAMES,
-} from "@/lib/constants";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +12,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -41,7 +30,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Shield, Ban, UserCheck, Loader2 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import {
+  ADMIN_BULK_ACTIONS,
+  ADMIN_ERRORS,
+  ADMIN_LABELS,
+  ADMIN_PLACEHOLDERS,
+  ADMIN_SUCCESS,
+  ROLE_DISPLAY_NAMES,
+  USER_ROLES,
+} from "@/lib/constants";
+import type { RoleInfo } from "@/lib/permissions-utils";
+import { canBanRole, getValidAssignableRole } from "@/lib/utils/role-validation";
 
 interface User {
   id: string;

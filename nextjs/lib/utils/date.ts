@@ -18,7 +18,7 @@ export function normalizeDate(date: Date | number | string | undefined | null): 
 
   // Handle string dates
   const parsed = new Date(date);
-  if (isNaN(parsed.getTime())) {
+  if (Number.isNaN(parsed.getTime())) {
     return Date.now();
   }
 

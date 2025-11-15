@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { authClient } from "@/lib/auth-client";
+import { Check, User as UserIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -10,8 +10,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { USER_SEARCH_LABELS, USER_SEARCH_PLACEHOLDERS, MEMBER_ERRORS } from "@/lib/constants";
-import { Check, User as UserIcon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { MEMBER_ERRORS, USER_SEARCH_LABELS, USER_SEARCH_PLACEHOLDERS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface User {

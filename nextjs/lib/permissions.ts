@@ -1,5 +1,5 @@
 import { createAccessControl } from "better-auth/plugins/access";
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "./constants";
+import { PERMISSION_ACTIONS, PERMISSION_RESOURCES } from "./constants";
 
 export const statement = {
   [PERMISSION_RESOURCES.PROJECT]: [

@@ -1,22 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
-import { useToast } from "@/lib/hooks/use-toast";
-import { PROFILE, SESSION_ERRORS, SESSION_SUCCESS } from "@/lib/constants";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Trash2, Trash, Monitor } from "lucide-react";
+import { Loader2, Monitor, Trash, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +12,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { authClient } from "@/lib/auth-client";
+import { PROFILE, SESSION_ERRORS, SESSION_SUCCESS } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
 
 interface Session {
   id: string;
@@ -60,7 +62,7 @@ export function UserSessions() {
   useEffect(() => {
     loadSessions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadSessions]);
 
   const loadSessions = async () => {
     setIsLoading(true);
@@ -199,73 +201,80 @@ export function UserSessions() {
                 {activeSessions.length} {PROFILE.ACTIVE_SESSIONS}
               </p>
 
-              <div className="overflow-x-auto">
-                <Table className="w-full min-w-[800px]">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{PROFILE.SESSION_IP}</TableHead>
-                      <TableHead>{PROFILE.SESSION_USER_AGENT}</TableHead>
-                      <TableHead>{PROFILE.SESSION_CREATED_AT}</TableHead>
-                      <TableHead>{PROFILE.SESSION_EXPIRES_AT}</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sessions.map((session) => {
-                      const expired = isExpired(session.expiresAt);
-                      const isCurrent = isCurrentSession(session.token);
-                      const canRevoke = !isCurrent;
+              <ScrollArea className="w-full">
+                <div className="min-w-[800px]">
+                  <Table className="w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{PROFILE.SESSION_IP}</TableHead>
+                        <TableHead>{PROFILE.SESSION_USER_AGENT}</TableHead>
+                        <TableHead>{PROFILE.SESSION_CREATED_AT}</TableHead>
+                        <TableHead>{PROFILE.SESSION_EXPIRES_AT}</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sessions.map((session) => {
+                        const expired = isExpired(session.expiresAt);
+                        const isCurrent = isCurrentSession(session.token);
+                        const canRevoke = !isCurrent;
 
-                      return (
-                        <TableRow key={session.id || session.token}>
-                          <TableCell>{session.ipAddress || "N/A"}</TableCell>
-                          <TableCell
-                            className="max-w-lg truncate"
-                            title={session.userAgent || "N/A"}
-                          >
-                            {session.userAgent || "N/A"}
-                          </TableCell>
-                          <TableCell>{formatDate(session.createdAt)}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {formatDate(session.expiresAt)}
-                              {expired && <Badge variant="secondary">{PROFILE.EXPIRED}</Badge>}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {isCurrent ? (
-                              <Badge variant="default">{PROFILE.CURRENT_SESSION}</Badge>
-                            ) : expired ? (
-                              <Badge variant="secondary">{PROFILE.EXPIRED}</Badge>
-                            ) : (
-                              <Badge variant="outline">Active</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {canRevoke ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRevokeSession(session.token)}
-                                disabled={isRevoking === session.token}
-                              >
-                                {isRevoking === session.token ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
-                              </Button>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">-</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                        return (
+                          <TableRow key={session.id || session.token}>
+                            <TableCell>{session.ipAddress || "N/A"}</TableCell>
+                            <TableCell
+                              className="max-w-lg truncate"
+                              title={session.userAgent || "N/A"}
+                            >
+                              {session.userAgent || "N/A"}
+                            </TableCell>
+                            <TableCell>{formatDate(session.createdAt)}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {formatDate(session.expiresAt)}
+                                {expired && <Badge variant="secondary">{PROFILE.EXPIRED}</Badge>}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {isCurrent ? (
+                                <Badge variant="default">{PROFILE.CURRENT_SESSION}</Badge>
+                              ) : expired ? (
+                                <Badge variant="secondary">{PROFILE.EXPIRED}</Badge>
+                              ) : (
+                                <Badge variant="outline">Active</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {canRevoke ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleRevokeSession(session.token)}
+                                      disabled={isRevoking === session.token}
+                                    >
+                                      {isRevoking === session.token ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{PROFILE.REVOKE_SESSION}</TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </ScrollArea>
             </div>
           )}
         </CardContent>

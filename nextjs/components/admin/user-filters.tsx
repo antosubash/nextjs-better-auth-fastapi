@@ -1,10 +1,13 @@
 "use client";
 
-import { ADMIN_FILTERS, ADMIN_LABELS, ROLE_DISPLAY_NAMES } from "@/lib/constants";
-import { RoleInfo } from "@/lib/permissions-utils";
+import { format } from "date-fns";
+import { Filter, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -12,11 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
-import { X, Filter } from "lucide-react";
-import { format } from "date-fns";
+import { ADMIN_FILTERS, ADMIN_LABELS, ROLE_DISPLAY_NAMES } from "@/lib/constants";
+import type { RoleInfo } from "@/lib/permissions-utils";
 
 type FilterStatus = "all" | "active" | "banned";
 

@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { ADMIN_LABELS } from "@/lib/constants";
-import { User, Ban, UserCheck, Key, Monitor } from "lucide-react";
+import { Ban, Key, Monitor, UserCheck, User as UserIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { UserForm } from "@/components/admin/user-form";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ADMIN_LABELS } from "@/lib/constants";
+import { canBanRole } from "@/lib/utils/role-validation";
+import { useUserSessions } from "../hooks/use-user-sessions";
 import { UserBanTab } from "./user-ban-tab";
 import { UserPasswordTab } from "./user-password-tab";
 import { UserSessionsTab } from "./user-sessions-tab";
-import { canBanRole } from "@/lib/utils/role-validation";
-import { useUserSessions } from "../hooks/use-user-sessions";
 
-interface User {
+type User = {
   id: string;
   name: string;
   email: string;
@@ -21,7 +21,7 @@ interface User {
   createdAt?: number;
   emailVerified?: boolean;
   image?: string | null;
-}
+};
 
 interface UserEditTabsProps {
   user: User;
@@ -81,7 +81,7 @@ export function UserEditTabs({
           <div className="border-b px-6 pb-3">
             <TabsList className="inline-flex h-11 items-center justify-start rounded-lg bg-muted p-1.5 text-muted-foreground">
               <TabsTrigger value="edit" className="gap-2 px-4 py-2 text-sm">
-                <User className="h-4 w-4" />
+                <UserIcon className="h-4 w-4" />
                 <span className="hidden sm:inline">{ADMIN_LABELS.EDIT_USER}</span>
                 <span className="sm:hidden">Edit</span>
               </TabsTrigger>
@@ -136,10 +136,7 @@ export function UserEditTabs({
           ) : null}
 
           <TabsContent value="password">
-            <UserPasswordTab
-              isActionLoading={isActionLoading}
-              onPasswordReset={onPasswordReset}
-            />
+            <UserPasswordTab isActionLoading={isActionLoading} onPasswordReset={onPasswordReset} />
           </TabsContent>
 
           <TabsContent value="sessions">
@@ -159,4 +156,3 @@ export function UserEditTabs({
     </Card>
   );
 }
-

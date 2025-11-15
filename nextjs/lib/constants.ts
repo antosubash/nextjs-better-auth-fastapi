@@ -1047,7 +1047,6 @@ export const JOB_LABELS = {
   EXPAND_LOGS: "Expand Logs",
   COLLAPSE_LOGS: "Collapse Logs",
   FUNCTION_NAME: "Function",
-  TRIGGER_TYPE: "Trigger Type",
   USER_ID: "User ID",
   BACK_TO_JOBS: "Back to Jobs",
   RECORD: "record",

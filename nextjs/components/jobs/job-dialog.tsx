@@ -15,10 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { JobForm } from "./job-form";
+import { Separator } from "@/components/ui/separator";
 import { JOB_LABELS, PREDEFINED_JOBS } from "@/lib/constants";
 import type { JobCreate } from "@/lib/types/job";
-import { Separator } from "@/components/ui/separator";
+import { JobForm } from "./job-form";
 
 interface JobDialogProps {
   open: boolean;

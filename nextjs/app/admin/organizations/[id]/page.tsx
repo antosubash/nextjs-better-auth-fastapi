@@ -1,18 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { ArrowLeft, Building2, Edit, RefreshCw, Trash2, UserPlus, Users } from "lucide-react";
 import Image from "next/image";
-import { ORGANIZATION_LABELS, ORGANIZATION_ERRORS, ORGANIZATION_SUCCESS } from "@/lib/constants";
-import { MemberList } from "@/components/organization/member-list";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { InvitationList } from "@/components/organization/invitation-list";
+import { MemberList } from "@/components/organization/member-list";
 import { OrganizationForm } from "@/components/organization/organization-form";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,10 +18,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ErrorToast } from "@/components/ui/error-toast";
-import { Building2, Users, UserPlus, Edit, Trash2, RefreshCw, ArrowLeft } from "lucide-react";
-import { formatDate } from "@/lib/utils/date";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
+import {
+  ADMIN_NAVIGATION,
+  ORGANIZATION_ERRORS,
+  ORGANIZATION_LABELS,
+  ORGANIZATION_SUCCESS,
+} from "@/lib/constants";
+import { formatDate } from "@/lib/utils/date";
 
 interface Organization {
   id: string;
@@ -159,6 +172,23 @@ export default function OrganizationDetailPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/dashboard">{ADMIN_NAVIGATION.DASHBOARD}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/organizations">
+              {ADMIN_NAVIGATION.ORGANIZATIONS}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{organization.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       {error && <ErrorToast message={error} onDismiss={() => setError("")} duration={5000} />}
 
       {success && (

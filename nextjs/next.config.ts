@@ -1,6 +1,6 @@
-import type { NextConfig } from "next";
-import { config } from "dotenv";
 import { resolve } from "node:path";
+import { config } from "dotenv";
+import type { NextConfig } from "next";
 
 // Load .env from project root directory
 config({ path: resolve(__dirname, "../.env") });

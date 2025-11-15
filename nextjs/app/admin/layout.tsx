@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { ADMIN_ERRORS, ADMIN_LAYOUT, USER_ROLES, PAGE_CONTAINER } from "@/lib/constants";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { useEffect, useState } from "react";
 import { AdminHeader } from "@/components/admin/admin-header";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { ImpersonationIndicator } from "@/components/admin/impersonation-indicator";
+import { authClient } from "@/lib/auth-client";
+import { ADMIN_ERRORS, ADMIN_LAYOUT, PAGE_CONTAINER, USER_ROLES } from "@/lib/constants";
 
 /**
  * Admin Layout Component

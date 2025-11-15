@@ -1,8 +1,8 @@
+import { desc, eq, gt, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/database";
 import { session, user } from "@/auth-schema";
-import { eq, gt, desc, sql } from "drizzle-orm";
 import { STATS_ERRORS } from "@/lib/constants";
+import { db } from "@/lib/database";
 import { requireAdmin } from "@/lib/permission-check-server";
 
 export async function GET() {

@@ -15,4 +15,3 @@ export function PageLoading({ message = PAGE_LOADING.DEFAULT }: PageLoadingProps
     </div>
   );
 }
-

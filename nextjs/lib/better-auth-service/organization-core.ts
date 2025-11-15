@@ -1,7 +1,7 @@
-import { withErrorHandling } from "./utils";
-import { getHeaders, requirePermission } from "./server-utils";
 import { auth } from "../auth";
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from "../constants";
+import { PERMISSION_ACTIONS, PERMISSION_RESOURCES } from "../constants";
+import { getHeaders, requirePermission } from "./server-utils";
+import { withErrorHandling } from "./utils";
 
 /**
  * Core organization CRUD operations

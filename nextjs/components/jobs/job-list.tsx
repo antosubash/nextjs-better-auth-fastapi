@@ -1,13 +1,14 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { JOB_LABELS } from "@/lib/constants";
-import { formatDate } from "@/lib/utils/date";
 import type { Job } from "@/lib/types/job";
+import { formatDate } from "@/lib/utils/date";
 import { JobActions } from "./job-actions";
-import { Info } from "lucide-react";
 
 interface JobListProps {
   jobs: Job[];
@@ -99,14 +100,19 @@ export function JobList({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onViewDetails(job)}
-                  aria-label={JOB_LABELS.VIEW_DETAILS}
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onViewDetails(job)}
+                      aria-label={JOB_LABELS.VIEW_DETAILS}
+                    >
+                      <Info className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{JOB_LABELS.VIEW_DETAILS}</TooltipContent>
+                </Tooltip>
                 <JobActions job={job} onPause={onPause} onResume={onResume} onDelete={onDelete} />
               </div>
             </div>

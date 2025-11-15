@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
-import { AUTH_LABELS, DASHBOARD } from "@/lib/constants";
 import { LogIn, LogOut, Menu } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { authClient } from "@/lib/auth-client";
+import { AUTH_LABELS, DASHBOARD } from "@/lib/constants";
 
 export function MainNavbar() {
   const router = useRouter();
@@ -40,7 +42,7 @@ export function MainNavbar() {
     };
 
     checkAuth();
-  }, [pathname]);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -106,17 +108,38 @@ export function MainNavbar() {
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
                 <OrganizationSwitcher />
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
-                  <Avatar className="w-8 h-8">
-                    {user.image ? <AvatarImage src={user.image} alt={user.name || "User"} /> : null}
-                    <AvatarFallback className="text-sm">
-                      {getInitials(user.name, user.email)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium hidden lg:block">
-                    {user.name || user.email}
-                  </span>
-                </div>
+                <Separator orientation="vertical" className="h-6" />
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted cursor-pointer">
+                      <Avatar className="w-8 h-8">
+                        {user.image ? (
+                          <AvatarImage src={user.image} alt={user.name || "User"} />
+                        ) : null}
+                        <AvatarFallback className="text-sm">
+                          {getInitials(user.name, user.email)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium hidden lg:block">
+                        {user.name || user.email}
+                      </span>
+                    </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-80">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-12 h-12">
+                        {user.image ? (
+                          <AvatarImage src={user.image} alt={user.name || "User"} />
+                        ) : null}
+                        <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
+                      </Avatar>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-semibold">{user.name || "User"}</h4>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
                 <Button onClick={handleLogout} variant="default" size="sm">
                   <LogOut className="w-4 h-4 mr-2" />
                   <span className="hidden lg:inline">{AUTH_LABELS.LOGOUT}</span>
@@ -159,6 +182,7 @@ export function MainNavbar() {
                     <div>
                       <OrganizationSwitcher />
                     </div>
+                    <Separator />
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
                       <Avatar className="w-10 h-10">
                         {user.image ? (

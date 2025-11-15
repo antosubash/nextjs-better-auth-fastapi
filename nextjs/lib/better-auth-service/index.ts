@@ -8,18 +8,18 @@
  * - Permission checking
  */
 
-export { sessionService } from "./session";
-export { apiKeyService } from "./api-key";
-export { organizationService } from "./organization";
-export { emailPasswordService } from "./email-password";
 export { adminService } from "./admin";
+export { apiKeyService } from "./api-key";
+export { emailPasswordService } from "./email-password";
+export { organizationService } from "./organization";
+export { sessionService } from "./session";
 export type { OrganizationRoleAPI } from "./utils";
 
-import { sessionService } from "./session";
-import { apiKeyService } from "./api-key";
-import { organizationService } from "./organization";
-import { emailPasswordService } from "./email-password";
 import { adminService } from "./admin";
+import { apiKeyService } from "./api-key";
+import { emailPasswordService } from "./email-password";
+import { organizationService } from "./organization";
+import { sessionService } from "./session";
 
 /**
  * Main Better Auth Service

@@ -1,16 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ADMIN_USER_DETAILS, ROLE_DISPLAY_NAMES, ADMIN_LABELS } from "@/lib/constants";
+import {
+  Ban,
+  Calendar,
+  CheckCircle2,
+  Key,
+  Mail,
+  Shield,
+  User as UserIcon,
+  XCircle,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { ADMIN_LABELS, ADMIN_USER_DETAILS, ROLE_DISPLAY_NAMES } from "@/lib/constants";
 import { UserPasswordDialog } from "./user-password-dialog";
 import { UserSessionsDialog } from "./user-sessions-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Calendar, Shield, Mail, User, Ban, Key } from "lucide-react";
 
-interface User {
+type User = {
   id: string;
   name: string;
   email: string;
@@ -20,7 +29,7 @@ interface User {
   banExpires?: number;
   createdAt: number;
   emailVerified?: boolean;
-}
+};
 
 interface UserDetailsProps {
   user: User | null;
@@ -50,7 +59,7 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const loadSessionCount = async () => {
+  const loadSessionCount = useCallback(async () => {
     if (!user) return;
     try {
       // TODO: Create API route for fetching user sessions if needed
@@ -59,14 +68,13 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
     } catch (err) {
       console.error("Failed to load session count:", err);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (open && user) {
-      loadSessionCount();
+      void loadSessionCount();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, user]);
+  }, [open, user, loadSessionCount]);
 
   if (!user) return null;
 
@@ -82,7 +90,7 @@ export function UserDetails({ user, open, onOpenChange }: UserDetailsProps) {
         <div className="space-y-6">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-muted-foreground" />
+              <UserIcon className="w-5 h-5 text-muted-foreground" />
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">{ADMIN_USER_DETAILS.FULL_NAME}</p>
                 <p className="text-lg font-semibold">{user.name}</p>

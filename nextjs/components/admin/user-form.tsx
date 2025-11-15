@@ -1,22 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Loader2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { authClient } from "@/lib/auth-client";
-import { getAssignableUserRoles } from "@/lib/permissions-api";
-import { RoleInfo } from "@/lib/permissions-utils";
-import { getValidAssignableRole, isAssignableUserRole } from "@/lib/utils/role-validation";
-import {
-  ADMIN_LABELS,
-  ADMIN_PLACEHOLDERS,
-  ADMIN_ERRORS,
-  USER_ROLES,
-  ROLE_DISPLAY_NAMES,
-  AUTH_ERRORS,
-  MEMBER_ERRORS,
-} from "@/lib/constants";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -25,6 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -32,9 +21,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import {
+  ADMIN_ERRORS,
+  ADMIN_LABELS,
+  ADMIN_PLACEHOLDERS,
+  AUTH_ERRORS,
+  MEMBER_ERRORS,
+  ROLE_DISPLAY_NAMES,
+  USER_ROLES,
+} from "@/lib/constants";
+import { getAssignableUserRoles } from "@/lib/permissions-api";
+import type { RoleInfo } from "@/lib/permissions-utils";
+import { getValidAssignableRole, isAssignableUserRole } from "@/lib/utils/role-validation";
 import { ProfilePictureUpload } from "./profile-picture-upload";
 
 interface User {
@@ -90,8 +90,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     } finally {
       setIsLoadingRoles(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, form]);
 
   useEffect(() => {
     loadRoles();
@@ -101,9 +100,10 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     if (user && availableRoles.length > 0) {
       // If user has a non-assignable role (like "user"), use first assignable role
       // Otherwise use the user's role if it's assignable
-      const validRole = isAssignableUserRole(user.role)
-        ? user.role!
-        : availableRoles[0]?.name || USER_ROLES.USER;
+      const validRole =
+        isAssignableUserRole(user.role) && user.role
+          ? user.role
+          : availableRoles[0]?.name || USER_ROLES.USER;
       form.reset({
         name: user.name,
         email: user.email,
@@ -120,8 +120,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         role: defaultRole,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, availableRoles]);
+  }, [user, availableRoles, form]);
 
   const handleProfilePictureUpload = async (imageUrl: string) => {
     if (!isEditing || !user) return;
@@ -170,7 +169,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     setIsLoading(true);
 
     try {
-      if (isEditing) {
+      if (isEditing && user) {
         // Ensure only assignable roles are used
         const validRole = getValidAssignableRole(
           values.role,
@@ -178,7 +177,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         );
 
         const result = await authClient.admin.updateUser({
-          userId: user!.id,
+          userId: user.id,
           data: {
             name: values.name,
             email: values.email,

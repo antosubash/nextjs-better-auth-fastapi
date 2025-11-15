@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { CheckCircle2, LogOut, Mail, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, PROFILE } from "@/lib/constants";
-import { User, Mail, LogOut, CheckCircle2 } from "lucide-react";
 import { ApiData } from "./api-data";
 import { UserSessions } from "./user-sessions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export function UserProfile() {
   const [user, setUser] = useState<{ name?: string; email?: string; image?: string | null } | null>(
@@ -125,10 +126,14 @@ export function UserProfile() {
         </CardContent>
       </Card>
 
+      <Separator className="my-6" />
+
       {/* API Data Component */}
       <div className="mb-6">
         <ApiData />
       </div>
+
+      <Separator className="my-6" />
 
       {/* Session Management */}
       <div className="mb-6">

@@ -1,9 +1,7 @@
 "use client";
 
+import { Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,10 +12,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TASK_LABELS } from "@/lib/constants";
-import { formatDate } from "@/lib/utils/date";
 import type { Task, TaskStatus } from "@/lib/types/task";
-import { Edit, Trash2 } from "lucide-react";
+import { formatDate } from "@/lib/utils/date";
 
 interface TaskListProps {
   tasks: Task[];
@@ -113,22 +114,32 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(task)}
-                    aria-label={TASK_LABELS.EDIT_TASK}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteClick(task.id)}
-                    aria-label={TASK_LABELS.DELETE_TASK}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(task)}
+                        aria-label={TASK_LABELS.EDIT_TASK}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{TASK_LABELS.EDIT_TASK}</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(task.id)}
+                        aria-label={TASK_LABELS.DELETE_TASK}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{TASK_LABELS.DELETE_TASK}</TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             </CardHeader>

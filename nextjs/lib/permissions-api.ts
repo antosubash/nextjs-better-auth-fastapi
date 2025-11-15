@@ -1,5 +1,5 @@
-import { Permission, RoleInfo } from "./permissions-utils";
 import { PERMISSION_ERRORS, ROLE_MANAGEMENT_ERRORS } from "./constants";
+import type { Permission, RoleInfo } from "./permissions-utils";
 import { getAssignableUserRoles as getAssignableRoles } from "./utils/role-validation";
 
 export interface UserPermissionsResponse {

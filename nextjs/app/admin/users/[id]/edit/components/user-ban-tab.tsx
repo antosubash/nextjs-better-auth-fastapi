@@ -1,11 +1,11 @@
 "use client";
 
+import { Ban, Loader2, UserCheck } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ADMIN_LABELS } from "@/lib/constants";
-import { Ban, UserCheck, Loader2 } from "lucide-react";
 
 interface UserBanTabProps {
   isBanned: boolean;
@@ -88,4 +88,3 @@ export function UserBanTab({ isBanned, isActionLoading, onBan, onUnban }: UserBa
     </div>
   );
 }
-

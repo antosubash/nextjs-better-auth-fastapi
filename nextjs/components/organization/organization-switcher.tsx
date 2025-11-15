@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useOrganizationSafe } from "@/lib/contexts/organization-context";
-import { authClient } from "@/lib/auth-client";
-import { ORGANIZATION_SWITCHER, ORGANIZATION_ERRORS } from "@/lib/constants";
-import { ChevronDown, Building2 } from "lucide-react";
-import { ErrorToast } from "@/components/ui/error-toast";
+import { Building2, ChevronDown, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ErrorToast } from "@/components/ui/error-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { authClient } from "@/lib/auth-client";
+import { ORGANIZATION_ERRORS, ORGANIZATION_SWITCHER } from "@/lib/constants";
+import { useOrganizationSafe } from "@/lib/contexts/organization-context";
 
 interface Organization {
   id: string;
@@ -16,7 +24,6 @@ interface Organization {
 
 export function OrganizationSwitcher() {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
   const orgContext = useOrganizationSafe();
 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -75,13 +82,11 @@ export function OrganizationSwitcher() {
 
   const handleSwitch = async (organizationId: string) => {
     if (organizationId === activeOrganization?.id) {
-      setIsOpen(false);
       return;
     }
 
     if (orgContext) {
       await orgContext.switchOrganization(organizationId);
-      setIsOpen(false);
     } else {
       setIsSwitching(true);
       setError(null);
@@ -97,7 +102,6 @@ export function OrganizationSwitcher() {
           if (org) {
             setActiveOrganization(org);
           }
-          setIsOpen(false);
           router.refresh();
           window.location.reload();
         }
@@ -119,11 +123,7 @@ export function OrganizationSwitcher() {
   };
 
   if (isLoading) {
-    return (
-      <div className="px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
-        <div className="h-5 w-32" />
-      </div>
-    );
+    return <Skeleton className="h-9 w-48" />;
   }
 
   if (organizations.length === 0) {
@@ -138,61 +138,45 @@ export function OrganizationSwitcher() {
       {displayError && (
         <ErrorToast message={displayError} onDismiss={clearErrorHandler} duration={5000} />
       )}
-      <div className="relative">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          disabled={displayIsSwitching}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-        >
-          <Building2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          <span className="text-sm font-medium text-gray-900 dark:text-white max-w-[150px] truncate">
-            {displayIsSwitching
-              ? ORGANIZATION_SWITCHER.SWITCHING
-              : activeOrganization?.name || ORGANIZATION_SWITCHER.SELECT_ORGANIZATION}
-          </span>
-          <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-        </button>
-
-        {isOpen && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-            <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20 max-h-96 overflow-y-auto">
-              {organizations.length === 0 ? (
-                <div className="p-4 text-sm text-gray-600 dark:text-gray-400 text-center">
-                  {ORGANIZATION_SWITCHER.NO_ORGANIZATIONS}
-                </div>
-              ) : (
-                <div className="py-2">
-                  {organizations.map((org) => {
-                    const isActive = org.id === activeOrganization?.id;
-                    return (
-                      <button
-                        key={org.id}
-                        onClick={() => handleSwitch(org.id)}
-                        disabled={displayIsSwitching}
-                        className={`w-full px-4 py-2 text-left text-sm transition-colors ${
-                          isActive
-                            ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900"
-                        } disabled:opacity-50`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="truncate">{org.name}</span>
-                          {isActive && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                              {ORGANIZATION_SWITCHER.CURRENT}
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            disabled={displayIsSwitching}
+            className="flex items-center gap-2"
+          >
+            <Building2 className="w-4 h-4" />
+            <span className="max-w-[150px] truncate">
+              {displayIsSwitching
+                ? ORGANIZATION_SWITCHER.SWITCHING
+                : activeOrganization?.name || ORGANIZATION_SWITCHER.SELECT_ORGANIZATION}
+            </span>
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-64">
+          {organizations.length === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground text-center">
+              {ORGANIZATION_SWITCHER.NO_ORGANIZATIONS}
             </div>
-          </>
-        )}
-      </div>
+          ) : (
+            organizations.map((org) => {
+              const isActive = org.id === activeOrganization?.id;
+              return (
+                <DropdownMenuItem
+                  key={org.id}
+                  onClick={() => handleSwitch(org.id)}
+                  disabled={displayIsSwitching}
+                  className="flex items-center justify-between"
+                >
+                  <span className="truncate flex-1">{org.name}</span>
+                  {isActive && <Check className="w-4 h-4 ml-2 shrink-0" />}
+                </DropdownMenuItem>
+              );
+            })
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </>
   );
 }

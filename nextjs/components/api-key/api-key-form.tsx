@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
+  API_KEY_CONFIG,
+  API_KEY_ERRORS,
   API_KEY_LABELS,
   API_KEY_PLACEHOLDERS,
-  API_KEY_ERRORS,
-  API_KEY_CONFIG,
 } from "@/lib/constants";
-import { X } from "lucide-react";
 import { PermissionsEditor } from "./permissions-editor";
 
 interface ApiKey {
@@ -76,7 +76,7 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
     e.preventDefault();
     setError("");
 
-    let parsedMetadata: Record<string, unknown> | undefined = undefined;
+    let parsedMetadata: Record<string, unknown> | undefined;
 
     if (metadata.trim()) {
       try {
@@ -108,8 +108,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         };
 
         if (expiresIn) {
-          const days = parseInt(expiresIn);
-          if (isNaN(days) || days < 0) {
+          const days = parseInt(expiresIn, 10);
+          if (Number.isNaN(days) || days < 0) {
             setError(API_KEY_ERRORS.INVALID_EXPIRATION);
             setIsLoading(false);
             return;
@@ -150,8 +150,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         };
 
         if (expiresIn) {
-          const days = parseInt(expiresIn);
-          if (isNaN(days) || days < 0) {
+          const days = parseInt(expiresIn, 10);
+          if (Number.isNaN(days) || days < 0) {
             setError(API_KEY_ERRORS.INVALID_EXPIRATION);
             setIsLoading(false);
             return;
@@ -200,6 +200,7 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           {isEditing ? API_KEY_LABELS.EDIT_API_KEY : API_KEY_LABELS.CREATE_API_KEY}
         </h2>
         <button
+          type="button"
           onClick={onCancel}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
@@ -215,10 +216,14 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="api-key-name"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             {API_KEY_LABELS.NAME}
           </label>
           <input
+            id="api-key-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -228,10 +233,14 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="api-key-prefix"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             {API_KEY_LABELS.PREFIX}
           </label>
           <input
+            id="api-key-prefix"
             type="text"
             value={prefix}
             onChange={(e) => setPrefix(e.target.value)}
@@ -241,10 +250,14 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="api-key-expires-in"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             {API_KEY_LABELS.EXPIRES_IN}
           </label>
           <input
+            id="api-key-expires-in"
             type="number"
             value={expiresIn}
             onChange={(e) => setExpiresIn(e.target.value)}
@@ -255,10 +268,14 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="api-key-metadata"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             {API_KEY_LABELS.METADATA}
           </label>
           <textarea
+            id="api-key-metadata"
             value={metadata}
             onChange={(e) => setMetadata(e.target.value)}
             placeholder={API_KEY_PLACEHOLDERS.METADATA}
@@ -280,11 +297,15 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="api-key-remaining"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 {API_KEY_LABELS.REMAINING}{" "}
                 <span className="text-xs text-gray-500">(read-only)</span>
               </label>
               <input
+                id="api-key-remaining"
                 type="number"
                 value={remaining}
                 readOnly
@@ -294,11 +315,15 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="api-key-refill-amount"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 {API_KEY_LABELS.REFILL_AMOUNT}{" "}
                 <span className="text-xs text-gray-500">(read-only)</span>
               </label>
               <input
+                id="api-key-refill-amount"
                 type="number"
                 value={refillAmount}
                 readOnly
@@ -308,11 +333,15 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="api-key-refill-interval"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 {API_KEY_LABELS.REFILL_INTERVAL}{" "}
                 <span className="text-xs text-gray-500">(read-only)</span>
               </label>
               <input
+                id="api-key-refill-interval"
                 type="number"
                 value={refillInterval}
                 readOnly
@@ -341,11 +370,15 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
             {rateLimitEnabled && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label
+                    htmlFor="api-key-rate-limit-time-window"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
                     {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}{" "}
                     <span className="text-xs text-gray-500">(read-only)</span>
                   </label>
                   <input
+                    id="api-key-rate-limit-time-window"
                     type="number"
                     value={rateLimitTimeWindow}
                     readOnly
@@ -355,11 +388,15 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label
+                    htmlFor="api-key-rate-limit-max"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
                     {API_KEY_LABELS.RATE_LIMIT_MAX}{" "}
                     <span className="text-xs text-gray-500">(read-only)</span>
                   </label>
                   <input
+                    id="api-key-rate-limit-max"
                     type="number"
                     value={rateLimitMax}
                     readOnly

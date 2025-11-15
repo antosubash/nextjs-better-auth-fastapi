@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { INVITATION_LABELS, INVITATION_ERRORS, INVITATION_SUCCESS } from "@/lib/constants";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { INVITATION_ERRORS, INVITATION_LABELS, INVITATION_SUCCESS } from "@/lib/constants";
 
 export default function AcceptInvitationPage() {
   const params = useParams();
@@ -77,6 +77,7 @@ export default function AcceptInvitationPage() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error</h1>
             <p className="text-gray-600 dark:text-gray-400 mb-4">{message}</p>
             <button
+              type="button"
               onClick={() => router.push("/admin/organizations")}
               className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
             >

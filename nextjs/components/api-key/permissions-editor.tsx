@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, Code, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 import { statement } from "@/lib/permissions";
-import { Plus, Trash2, ChevronDown, ChevronUp, Code } from "lucide-react";
 
 interface PermissionsEditorProps {
   value: Record<string, string[]>;
@@ -37,7 +37,7 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
 
   const addResource = () => {
     const newResource = prompt(API_KEY_PLACEHOLDERS.PERMISSIONS);
-    if (newResource && newResource.trim()) {
+    if (newResource?.trim()) {
       const resource = newResource.trim().toLowerCase();
       if (!value[resource]) {
         onChange({ ...value, [resource]: [] });
@@ -65,7 +65,7 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
 
   const addCustomAction = (resource: string) => {
     const newAction = prompt(API_KEY_PLACEHOLDERS.ACTION_NAME);
-    if (newAction && newAction.trim()) {
+    if (newAction?.trim()) {
       const action = newAction.trim().toLowerCase();
       const currentActions = value[resource] || [];
       if (!currentActions.includes(action)) {

@@ -3,15 +3,15 @@
  */
 
 import type {
-  Organization,
-  Member,
   Invitation,
-  NormalizedOrganization,
-  NormalizedMember,
-  NormalizedInvitation,
-  OrganizationListResponse,
-  MemberListResponse,
   InvitationListResponse,
+  Member,
+  MemberListResponse,
+  NormalizedInvitation,
+  NormalizedMember,
+  NormalizedOrganization,
+  Organization,
+  OrganizationListResponse,
 } from "./organization-types";
 
 /**
@@ -28,7 +28,7 @@ export function normalizeDate(date: number | Date | string | undefined | null): 
     return date.getTime();
   }
   const parsed = new Date(date);
-  if (isNaN(parsed.getTime())) {
+  if (Number.isNaN(parsed.getTime())) {
     return Date.now();
   }
   return parsed.getTime();

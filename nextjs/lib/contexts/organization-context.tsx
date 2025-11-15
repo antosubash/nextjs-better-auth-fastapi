@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { ORGANIZATION_ERRORS, ORGANIZATION_CONTEXT } from "@/lib/constants";
+import { ORGANIZATION_CONTEXT, ORGANIZATION_ERRORS } from "@/lib/constants";
 
 interface Organization {
   id: string;

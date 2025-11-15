@@ -1,17 +1,11 @@
 "use client";
 
+import { Check, ChevronDown, ChevronUp, Copy, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Pagination,
   PaginationContent,
@@ -20,12 +14,18 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { JOB_LABELS, JOB_ERRORS } from "@/lib/constants";
-import { formatDate } from "@/lib/utils/date";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getJobHistory, getJobs } from "@/lib/api/jobs";
-import type { JobHistory, Job } from "@/lib/types/job";
-import { Loader2, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
-import { toast } from "sonner";
+import { JOB_ERRORS, JOB_LABELS } from "@/lib/constants";
+import type { Job, JobHistory } from "@/lib/types/job";
+import { formatDate } from "@/lib/utils/date";
 
 interface JobHistoryListProps {
   jobId?: string;
@@ -109,12 +109,12 @@ export function JobHistoryList({
     if (showJobFilter) {
       loadJobs();
     }
-  }, [showJobFilter]);
+  }, [showJobFilter, loadJobs]);
 
   useEffect(() => {
     loadHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedJobId, page, pageSize]);
+  }, [loadHistory]);
 
   const toggleExpand = (id: string) => {
     const newExpanded = new Set(expandedItems);

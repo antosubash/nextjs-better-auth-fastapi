@@ -1,15 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { authClient } from "@/lib/auth-client";
-import { MEMBER_LABELS, MEMBER_ERRORS, MEMBER_SUCCESS } from "@/lib/constants";
-import { MemberActions } from "./member-actions";
-import { AddMemberDialog } from "./add-member-dialog";
 import { Plus, Users } from "lucide-react";
-import { formatDate } from "@/lib/utils/date";
+import { useCallback, useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -18,16 +13,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useErrorMessage } from "@/hooks/organization/use-error-message";
 import { useSearch } from "@/hooks/organization/use-search";
 import { useSuccessMessage } from "@/hooks/organization/use-success-message";
-import { useErrorMessage } from "@/hooks/organization/use-error-message";
-import { SearchInput } from "./shared/search-input";
-import { SuccessMessage } from "./shared/success-message";
+import { authClient } from "@/lib/auth-client";
+import { MEMBER_ERRORS, MEMBER_LABELS, MEMBER_SUCCESS } from "@/lib/constants";
+import { formatDate } from "@/lib/utils/date";
+import { extractMembers, normalizeMembers } from "@/lib/utils/organization-data";
+import type { MemberListProps, NormalizedMember } from "@/lib/utils/organization-types";
+import { AddMemberDialog } from "./add-member-dialog";
+import { MemberActions } from "./member-actions";
+import { EmptyState } from "./shared/empty-state";
 import { ErrorMessage } from "./shared/error-message";
 import { LoadingState } from "./shared/loading-state";
-import { EmptyState } from "./shared/empty-state";
-import { normalizeMembers, extractMembers } from "@/lib/utils/organization-data";
-import type { NormalizedMember, MemberListProps } from "@/lib/utils/organization-types";
+import { SearchInput } from "./shared/search-input";
+import { SuccessMessage } from "./shared/success-message";
 
 export function MemberList({ organizationId }: MemberListProps) {
   const [members, setMembers] = useState<NormalizedMember[]>([]);

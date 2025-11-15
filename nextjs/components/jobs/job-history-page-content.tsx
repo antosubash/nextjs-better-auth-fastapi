@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { JobHistoryList } from "@/components/jobs/job-history-list";
-import { JOB_LABELS, JOB_ERRORS, PAGE_CONTAINER } from "@/lib/constants";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { JobHistoryList } from "@/components/jobs/job-history-list";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { authClient } from "@/lib/auth-client";
+import { JOB_ERRORS, JOB_LABELS, PAGE_CONTAINER } from "@/lib/constants";
 
 export function JobHistoryPageContent() {
   const router = useRouter();

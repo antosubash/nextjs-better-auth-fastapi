@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { betterAuthService } from "@/lib/better-auth-service/index";
-import { db } from "@/lib/database";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { session, user } from "@/auth-schema";
-import { eq, and, gt, desc, sql } from "drizzle-orm";
+import { betterAuthService } from "@/lib/better-auth-service/index";
 import {
+  PERMISSION_ACTIONS,
+  PERMISSION_RESOURCES,
   STATS_ERRORS,
   STATS_LABELS,
-  PERMISSION_RESOURCES,
-  PERMISSION_ACTIONS,
 } from "@/lib/constants";
+import { db } from "@/lib/database";
 import { requirePermission } from "@/lib/permission-check-server";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -91,11 +92,11 @@ export async function GET(_request: NextRequest) {
 
     // Format recent activity
     const recentActivity = recentSessions
-      .filter((s) => s.createdAt !== null)
+      .filter((s): s is typeof s & { createdAt: number } => s.createdAt !== null)
       .map((s) => ({
         type: "session",
         message: STATS_LABELS.SESSION_CREATED,
-        timestamp: s.createdAt!,
+        timestamp: s.createdAt,
         details: {
           ipAddress: s.ipAddress || undefined,
           userAgent: s.userAgent || undefined,

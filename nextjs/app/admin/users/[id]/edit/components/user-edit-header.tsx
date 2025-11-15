@@ -1,9 +1,9 @@
 "use client";
 
+import { ArrowLeft, Mail, Trash2, User, UserCog } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ADMIN_LABELS } from "@/lib/constants";
-import { ArrowLeft, User, UserCog, Mail, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 interface UserEditHeaderProps {
   isActionLoading: boolean;
@@ -37,12 +37,7 @@ export function UserEditHeader({
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          onClick={onImpersonate}
-          disabled={isActionLoading}
-          size="sm"
-        >
+        <Button variant="outline" onClick={onImpersonate} disabled={isActionLoading} size="sm">
           <UserCog className="mr-2 h-4 w-4" />
           {ADMIN_LABELS.IMPERSONATE_USER}
         </Button>
@@ -63,4 +58,3 @@ export function UserEditHeader({
     </div>
   );
 }
-

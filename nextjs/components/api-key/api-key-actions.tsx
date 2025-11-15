@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { Edit, Eye, MoreVertical, Power, PowerOff, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { API_KEY_LABELS, API_KEY_ERRORS, API_KEY_SUCCESS } from "@/lib/constants";
-import { MoreVertical, Trash2, Edit, Power, PowerOff, Eye } from "lucide-react";
+import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
 
 interface ApiKey {
   id: string;
@@ -117,7 +117,17 @@ export function ApiKeyActions({
 
   const dropdownContent = isOpen && dropdownPosition && (
     <>
-      <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+      <button
+        type="button"
+        className="fixed inset-0 z-10 bg-transparent border-none p-0 cursor-default"
+        onClick={() => setIsOpen(false)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            setIsOpen(false);
+          }
+        }}
+        aria-label="Close menu"
+      />
       <div
         className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
         style={{
@@ -126,6 +136,7 @@ export function ApiKeyActions({
         }}
       >
         <button
+          type="button"
           onClick={() => {
             setIsOpen(false);
             onViewDetails();
@@ -137,6 +148,7 @@ export function ApiKeyActions({
         </button>
 
         <button
+          type="button"
           onClick={() => {
             setIsOpen(false);
             onEdit();
@@ -148,6 +160,7 @@ export function ApiKeyActions({
         </button>
 
         <button
+          type="button"
           onClick={() => {
             setIsOpen(false);
             handleToggleEnabled();
@@ -169,6 +182,7 @@ export function ApiKeyActions({
         </button>
 
         <button
+          type="button"
           onClick={() => {
             setIsOpen(false);
             handleDelete();
@@ -186,6 +200,7 @@ export function ApiKeyActions({
   return (
     <div className="relative">
       <button
+        type="button"
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}

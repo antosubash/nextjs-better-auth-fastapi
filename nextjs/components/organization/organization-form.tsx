@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import {
+  ORGANIZATION_ERRORS,
   ORGANIZATION_LABELS,
   ORGANIZATION_PLACEHOLDERS,
-  ORGANIZATION_ERRORS,
 } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 interface Organization {
   id: string;

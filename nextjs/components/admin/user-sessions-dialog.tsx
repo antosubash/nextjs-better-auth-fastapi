@@ -1,28 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
-import { useToast } from "@/lib/hooks/use-toast";
-import { ADMIN_LABELS, ADMIN_ERRORS, ADMIN_SUCCESS } from "@/lib/constants";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Trash2, Trash } from "lucide-react";
+import { Loader2, Trash, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +12,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { authClient } from "@/lib/auth-client";
+import { ADMIN_ERRORS, ADMIN_LABELS, ADMIN_SUCCESS } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
 
 interface Session {
   id: string;
@@ -73,14 +73,7 @@ export function UserSessionsDialog({
   const [showRevokeAllDialog, setShowRevokeAllDialog] = useState(false);
   const [isRevokingAll, setIsRevokingAll] = useState(false);
 
-  useEffect(() => {
-    if (open && userId) {
-      loadSessions();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, userId]);
-
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     setIsLoading(true);
     try {
       const result = await authClient.admin.listUserSessions({ userId });
@@ -112,7 +105,13 @@ export function UserSessionsDialog({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, toast]);
+
+  useEffect(() => {
+    if (open && userId) {
+      void loadSessions();
+    }
+  }, [open, userId, loadSessions]);
 
   const handleRevokeSession = async (sessionToken: string) => {
     setIsRevoking(sessionToken);

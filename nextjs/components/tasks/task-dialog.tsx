@@ -7,9 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { TaskForm } from "./task-form";
 import { TASK_LABELS } from "@/lib/constants";
 import type { Task, TaskCreate } from "@/lib/types/task";
+import { TaskForm } from "./task-form";
 
 interface TaskDialogProps {
   open: boolean;

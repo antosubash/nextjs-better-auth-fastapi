@@ -1,25 +1,25 @@
 "use client";
 
+import { LogOut, MoreVertical, Shield, UserMinus } from "lucide-react";
 import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
-import { MEMBER_LABELS, MEMBER_ERRORS, MEMBER_SUCCESS } from "@/lib/constants";
-import { MoreVertical, UserMinus, Shield, LogOut } from "lucide-react";
-import { MemberRoleSelector } from "./member-role-selector";
-import { ErrorToast } from "@/components/ui/error-toast";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { ErrorToast } from "@/components/ui/error-toast";
+import { authClient } from "@/lib/auth-client";
+import { MEMBER_ERRORS, MEMBER_LABELS, MEMBER_SUCCESS } from "@/lib/constants";
+import { MemberRoleSelector } from "./member-role-selector";
 
 interface Member {
   id: string;

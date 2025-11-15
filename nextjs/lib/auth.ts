@@ -1,20 +1,20 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { bearer, jwt, admin, organization, apiKey } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
-import { db } from "./database";
+import { admin, apiKey, bearer, jwt, organization } from "better-auth/plugins";
 import * as schema from "../auth-schema";
 import { BETTER_AUTH_CONFIG, USER_ROLES } from "./constants";
+import { db } from "./database";
 import {
   accessControl,
-  memberRole,
   adminRole,
-  ownerRole,
-  myCustomRole,
-  moderatorRole,
   editorRole,
-  viewerRole,
+  memberRole,
+  moderatorRole,
+  myCustomRole,
+  ownerRole,
   supportRole,
+  viewerRole,
 } from "./permissions";
 
 const secret = process.env.BETTER_AUTH_SECRET || "change-me-in-production";
