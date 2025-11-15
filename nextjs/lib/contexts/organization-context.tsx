@@ -5,6 +5,9 @@ import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_CONTEXT, ORGANIZATION_ERRORS } from "@/lib/constants";
+import { createLogger } from "@/lib/utils/logger";
+
+const logger = createLogger("contexts/organization");
 
 interface Organization {
   id: string;
@@ -63,11 +66,11 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
           });
 
           if (result.error) {
-            console.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, result.error);
+            logger.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, result.error);
             setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
           }
         } catch (err) {
-          console.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, err);
+          logger.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, err);
           setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
         }
       }
@@ -98,7 +101,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
 
       await ensureActiveOrganization(orgs, sessionActiveOrgId);
     } catch (err) {
-      console.error(ORGANIZATION_CONTEXT.LOAD_FAILED, err);
+      logger.error(ORGANIZATION_CONTEXT.LOAD_FAILED, err);
       setError(ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
       setOrganizations([]);
       setActiveOrganization(null);
@@ -141,7 +144,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
         router.refresh();
         window.location.reload();
       } catch (err) {
-        console.error(ORGANIZATION_CONTEXT.SWITCH_FAILED, err);
+        logger.error(ORGANIZATION_CONTEXT.SWITCH_FAILED, err);
         setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
       } finally {
         setIsSwitching(false);
@@ -167,7 +170,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
           setActiveOrganization(null);
         }
       } catch (err) {
-        console.error(ORGANIZATION_CONTEXT.LOAD_FAILED, err);
+        logger.error(ORGANIZATION_CONTEXT.LOAD_FAILED, err);
         setIsLoading(false);
         setIsInitialized(true);
       }

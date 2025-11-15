@@ -132,3 +132,46 @@ class ApiMessages:
     """API response message constants."""
 
     HELLO_WORLD = "Hello World! FastAPI is working."
+
+
+# Validation error messages
+class ValidationErrorMessages:
+    """Validation error message constants."""
+
+    # Field required errors
+    FIELD_REQUIRED = "This field is required"
+    CONTENT_REQUIRED = "Content is required"
+    TITLE_REQUIRED = "Title is required"
+    JOB_ID_REQUIRED = "Job ID is required"
+    FUNCTION_REQUIRED = "Function is required"
+    CRON_EXPRESSION_REQUIRED = "Cron expression is required"
+
+    # Field empty errors
+    CONTENT_CANNOT_BE_EMPTY = "Content cannot be empty"
+    TITLE_CANNOT_BE_EMPTY = "Title cannot be empty"
+    JOB_ID_CANNOT_BE_EMPTY = "Job ID cannot be empty"
+
+    # Field format errors
+    TRIGGER_TYPE_INVALID = "Trigger type must be one of: {valid_types}"
+    CRON_EXPRESSION_REQUIRED_FOR_CRON = "Cron expression is required when trigger_type is 'cron'"
+
+    # Field length errors
+    FIELD_TOO_SHORT = "Field is too short (minimum {min_length} characters)"
+    FIELD_TOO_LONG = "Field is too long (maximum {max_length} characters)"
+
+    # Field value errors
+    INVALID_VALUE = "Invalid value provided"
+    INVALID_FORMAT = "Invalid format"
+
+    # Sanitization errors
+    VALUE_MUST_BE_STRING = "Value must be a string"
+    STRING_TOO_SHORT = "String must be at least {min_length} characters long"
+    STRING_TOO_LONG = "String must be at most {max_length} characters long"
+    FILENAME_MUST_BE_STRING = "Filename must be a string"
+    FILENAME_CANNOT_BE_EMPTY = "Filename cannot be empty after sanitization"
+    URL_MUST_BE_STRING = "URL must be a string"
+    URL_CANNOT_BE_EMPTY = "URL cannot be empty"
+    URL_INVALID_FORMAT = "Invalid URL format: {error}"
+    URL_MISSING_SCHEME = "URL must include a scheme (e.g., http:// or https://)"
+    URL_INVALID_SCHEME = "URL scheme must be one of: {schemes}"
+    HTML_MUST_BE_STRING = "HTML must be a string"

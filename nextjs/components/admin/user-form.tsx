@@ -37,7 +37,10 @@ import {
 import { getAssignableUserRoles } from "@/lib/permissions-api";
 import type { RoleInfo } from "@/lib/permissions-utils";
 import { getValidAssignableRole, isAssignableUserRole } from "@/lib/utils/role-validation";
+import { createLogger } from "@/lib/utils/logger";
 import { ProfilePictureUpload } from "./profile-picture-upload";
+
+const logger = createLogger("components/admin/user-form");
 
 interface User {
   id: string;
@@ -99,7 +102,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         form.setValue("role", defaultRole);
       }
     } catch (err) {
-      console.error("Failed to load roles:", err);
+      logger.error("Failed to load roles", err);
     } finally {
       setIsLoadingRoles(false);
     }

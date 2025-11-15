@@ -111,6 +111,27 @@ JWKS_CACHE_TTL_SECONDS=3600
 | `RATE_LIMIT_ENABLED` | Enable rate limiting | `true` | No |
 | `RATE_LIMIT_REQUESTS_PER_MINUTE` | Maximum requests per IP per minute | `60` | No |
 
+### Security Headers Configuration
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `SECURITY_HEADERS_ENABLED` | Enable/disable security headers middleware (backend) | `true` | No |
+| `HSTS_MAX_AGE` | HSTS max age in seconds (1 year = 31536000) | `31536000` | No |
+| `CSP_POLICY` | Content Security Policy string | See default in env.example | No |
+| `PERMISSIONS_POLICY` | Permissions Policy string | See default in env.example | No |
+| `NEXT_PUBLIC_SECURITY_HEADERS_ENABLED` | Enable/disable security headers (frontend) | `true` | No |
+| `NEXT_PUBLIC_HSTS_MAX_AGE` | HSTS max age in seconds for frontend | `31536000` | No |
+| `NEXT_PUBLIC_CSP_POLICY` | Content Security Policy for frontend | See default in env.example | No |
+| `NEXT_PUBLIC_PERMISSIONS_POLICY` | Permissions Policy for frontend | See default in env.example | No |
+
+### Logging Configuration
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `LOG_LEVEL` | Logging level (DEBUG, INFO, WARNING, ERROR) | `INFO` | No |
+| `LOG_FORMAT_JSON` | Use JSON logging format | `false` | No |
+| `NEXT_PUBLIC_LOG_LEVEL` | Log level for frontend (client-side) | `info` | No |
+
 **Example:**
 
 ```bash
@@ -262,6 +283,10 @@ BETTER_AUTH_SECRET=your-secure-production-secret
 - [ ] Configure proper CORS origins
 - [ ] Set appropriate rate limits
 - [ ] Enable JSON logging for log aggregation
+- [ ] Configure security headers (CSP, HSTS, etc.)
+- [ ] Review and customize Content Security Policy
+- [ ] Set appropriate HSTS max age
+- [ ] Configure Permissions Policy based on your needs
 - [ ] Use production database credentials
 - [ ] Configure proper database connection pooling
 - [ ] Set up monitoring and alerting

@@ -2,6 +2,9 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { betterAuthService } from "@/lib/better-auth-service/index";
 import { PROXY_ERRORS } from "@/lib/constants";
+import { createLogger } from "@/lib/utils/logger";
+
+const logger = createLogger("api/proxy");
 
 export async function GET(
   request: NextRequest,
@@ -151,7 +154,7 @@ async function handleProxyRequest(request: NextRequest, pathSegments: string[], 
       statusText: response.statusText,
     });
   } catch (error) {
-    console.error("Proxy request failed:", error);
+    logger.error("Proxy request failed", error);
 
     if (error instanceof Error) {
       const errorMessage = error.message || "";

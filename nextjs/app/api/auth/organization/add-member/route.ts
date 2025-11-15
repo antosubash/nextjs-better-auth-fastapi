@@ -5,8 +5,9 @@ import { MEMBER_ERRORS, PERMISSION_ACTIONS, PERMISSION_RESOURCES } from "@/lib/c
 import { requirePermission } from "@/lib/permission-check-server";
 
 export async function POST(request: NextRequest) {
+  const logger = (await import("@/lib/utils/logger")).createLogger("api/auth/organization");
   try {
-    console.log("[add-member] Starting request");
+    logger.debug("Starting request");
 
     const permissionError = await requirePermission(
       PERMISSION_RESOURCES.ORGANIZATION,
@@ -14,23 +15,23 @@ export async function POST(request: NextRequest) {
     );
 
     if (permissionError) {
-      console.log("[add-member] Permission check failed");
+      logger.debug("Permission check failed");
       return permissionError;
     }
 
-    console.log("[add-member] Permission check passed");
+    logger.debug("Permission check passed");
 
     const body = await request.json();
     const { organizationId, userId, role } = body;
 
-    console.log("[add-member] Request body:", {
+    logger.debug("Request body", {
       organizationId,
       userId,
       role,
     });
 
     if (!organizationId || !userId || !role) {
-      console.log("[add-member] Validation failed: Missing required fields", {
+      logger.debug("Validation failed: Missing required fields", {
         hasOrganizationId: !!organizationId,
         hasUserId: !!userId,
         hasRole: !!role,
@@ -38,9 +39,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: MEMBER_ERRORS.ADD_FAILED }, { status: 400 });
     }
 
-    console.log(
-      `[add-member] Adding user ${userId} to organization ${organizationId} with role ${role}`
-    );
+    logger.debug(`Adding user ${userId} to organization ${organizationId} with role ${role}`);
 
     // Use better-auth's addMember API
     const data = await betterAuthService.organization.addMember({
@@ -49,10 +48,10 @@ export async function POST(request: NextRequest) {
       organizationId,
     });
 
-    console.log(`[add-member] Successfully added user ${userId} to organization ${organizationId}`);
+    logger.info(`Successfully added user ${userId} to organization ${organizationId}`);
     return NextResponse.json(data, { status: 201 });
   } catch (error: unknown) {
-    console.error("[add-member] Error adding member:", error);
+    logger.error("Error adding member", error);
 
     // Check if it's an APIError from Better Auth
     const errorObj = error as {
@@ -65,7 +64,7 @@ export async function POST(request: NextRequest) {
     const errorMessage = errorObj?.message || errorObj?.body?.message || String(error);
     const statusCode = errorObj?.statusCode || errorObj?.status || 500;
 
-    console.log("[add-member] Error details:", {
+    logger.debug("Error details", {
       message: errorMessage,
       statusCode,
       errorName: errorObj?.name,

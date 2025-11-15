@@ -124,6 +124,8 @@ This is a full-stack authentication system combining:
 ### Frontend
 - `nextjs/lib/auth.ts` - Better Auth configuration
 - `nextjs/lib/constants.ts` - All UI strings and constants
+- `nextjs/lib/utils/logger.ts` - Logging utility for client and server
+- `nextjs/lib/utils/sanitization.ts` - Input sanitization utilities
 - `nextjs/auth-schema.ts` - Database schema definitions
 - `nextjs/lib/database.ts` - Database connection
 - `nextjs/app/api/auth/` - Better Auth API routes
@@ -134,8 +136,10 @@ This is a full-stack authentication system combining:
 - `backend/core/app.py` - FastAPI application factory (`create_app()`)
 - `backend/core/auth.py` - JWT and API key verification logic
 - `backend/core/middleware.py` - JWT/API key validation middleware, rate limiting, request ID
+- `backend/core/security_middleware.py` - Security headers middleware
 - `backend/core/config.py` - Configuration constants from environment variables
-- `backend/core/constants.py` - Error messages and other string constants
+- `backend/core/constants.py` - Error messages, validation errors, and other string constants
+- `backend/utils/sanitization.py` - Input sanitization utilities
 - `backend/core/database.py` - Database connection and initialization
 - `backend/core/exceptions.py` - Custom exception classes
 - `backend/core/logging.py` - Logging configuration
@@ -367,6 +371,9 @@ const user = await db.select().from(users).where(eq(users.id, userId));
 - Rate limiting middleware (configurable per IP)
 - Request ID tracking for all requests
 - Both JWT and API key authentication can be used simultaneously
+- **Security Headers**: Both backend and frontend include security headers middleware (CSP, HSTS, X-Frame-Options, etc.)
+- **Input Sanitization**: Input validation and sanitization utilities for both backend and frontend
+- **Error Handling**: Consistent error handling with proper logging (no console statements in production code)
 
 ## Dependencies
 

@@ -5,6 +5,9 @@ from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, field_validator
 
+from core.constants import ValidationErrorMessages
+from utils.sanitization import sanitize_string
+
 
 class JobTriggerType(str):
     """Job trigger type enumeration."""
@@ -51,7 +54,9 @@ class JobCreate(BaseModel):
         """Validate trigger type."""
         valid_types = ["cron", "interval", "once"]
         if v.lower() not in valid_types:
-            error_msg = f"Trigger type must be one of: {', '.join(valid_types)}"
+            error_msg = ValidationErrorMessages.TRIGGER_TYPE_INVALID.format(
+                valid_types=", ".join(valid_types)
+            )
             raise ValueError(error_msg)
         return v.lower()
 
@@ -60,18 +65,19 @@ class JobCreate(BaseModel):
     def validate_cron(cls, v: str | None, info: Any) -> str | None:
         """Validate cron expression is provided when trigger_type is cron."""
         if info.data.get("trigger_type") == "cron" and not v:
-            error_msg = "Cron expression is required when trigger_type is 'cron'"
-            raise ValueError(error_msg)
+            raise ValueError(ValidationErrorMessages.CRON_EXPRESSION_REQUIRED_FOR_CRON)
         return v
 
     @field_validator("job_id")
     @classmethod
     def validate_job_id(cls, v: str) -> str:
-        """Validate job ID is not empty after stripping."""
-        if not v.strip():
-            error_msg = "Job ID cannot be empty"
-            raise ValueError(error_msg)
-        return v.strip()
+        """Validate and sanitize job ID."""
+        try:
+            return sanitize_string(v, max_length=255, min_length=1)
+        except ValueError as e:
+            if "at least" in str(e) or "at most" in str(e):
+                raise ValueError(str(e)) from e
+            raise ValueError(ValidationErrorMessages.JOB_ID_CANNOT_BE_EMPTY) from e
 
     class Config:
         json_schema_extra: ClassVar = {

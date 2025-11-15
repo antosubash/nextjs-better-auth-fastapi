@@ -781,6 +781,8 @@ export const API_KEY_ERRORS = {
   LOAD_API_KEYS_FAILED: "Failed to load API keys",
   LOAD_API_KEY_FAILED: "Failed to load API key",
   VERIFY_FAILED: "Failed to verify API key",
+  INVALID: "Invalid API key",
+  INSUFFICIENT_PERMISSIONS: "Insufficient permissions",
   INVALID_METADATA: "Invalid metadata format. Must be valid JSON.",
   INVALID_PERMISSIONS: "Invalid permissions format. Must be valid JSON.",
   INVALID_EXPIRATION: "Invalid expiration value",
