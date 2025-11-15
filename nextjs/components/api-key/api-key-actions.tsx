@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { API_KEY_LABELS } from "@/lib/constants";
+import { API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
 import { useDeleteApiKey, useUpdateApiKey } from "@/lib/hooks/api/use-api-keys";
 
 interface ApiKey {
@@ -58,7 +58,11 @@ export function ApiKeyActions({
         data: { enabled: !apiKey.enabled },
       });
       setIsOpen(false);
-      onActionSuccess();
+      onActionSuccess(
+        !apiKey.enabled
+          ? API_KEY_SUCCESS.API_KEY_ENABLED
+          : API_KEY_SUCCESS.API_KEY_DISABLED
+      );
     } catch (err) {
       // Error is handled by the mutation hook
       console.error("Failed to toggle enabled:", err);
