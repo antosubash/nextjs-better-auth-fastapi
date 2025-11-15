@@ -59,9 +59,7 @@ export function ApiKeyActions({
       });
       setIsOpen(false);
       onActionSuccess(
-        !apiKey.enabled
-          ? API_KEY_SUCCESS.API_KEY_ENABLED
-          : API_KEY_SUCCESS.API_KEY_DISABLED
+        !apiKey.enabled ? API_KEY_SUCCESS.API_KEY_ENABLED : API_KEY_SUCCESS.API_KEY_DISABLED
       );
     } catch (err) {
       // Error is handled by the mutation hook
