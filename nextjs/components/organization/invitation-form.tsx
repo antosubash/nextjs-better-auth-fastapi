@@ -1,13 +1,28 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import {
+  AUTH_ERRORS,
   COMMON_LABELS,
   INVITATION_ERRORS,
   INVITATION_LABELS,
   INVITATION_PLACEHOLDERS,
+  MEMBER_ERRORS,
   ORGANIZATION_ROLES,
 } from "@/lib/constants";
 import { MemberRoleSelector } from "./member-role-selector";
@@ -18,14 +33,31 @@ interface InvitationFormProps {
   onCancel: () => void;
 }
 
+const invitationSchema = z.object({
+  email: z.string().min(1, AUTH_ERRORS.EMAIL_REQUIRED).email(MEMBER_ERRORS.INVALID_EMAIL),
+  role: z.enum([
+    ORGANIZATION_ROLES.MEMBER,
+    ORGANIZATION_ROLES.ADMIN,
+    ORGANIZATION_ROLES.OWNER,
+    ORGANIZATION_ROLES.MY_CUSTOM_ROLE,
+  ]),
+});
+
+type InvitationFormValues = z.infer<typeof invitationSchema>;
+
 export function InvitationForm({ organizationId, onSuccess, onCancel }: InvitationFormProps) {
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<string>(ORGANIZATION_ROLES.MEMBER);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<InvitationFormValues>({
+    resolver: zodResolver(invitationSchema),
+    defaultValues: {
+      email: "",
+      role: ORGANIZATION_ROLES.MEMBER,
+    },
+  });
+
+  const handleSubmit = async (values: InvitationFormValues) => {
     setError("");
     setIsLoading(true);
 
@@ -33,13 +65,14 @@ export function InvitationForm({ organizationId, onSuccess, onCancel }: Invitati
       // @ts-expect-error - better-auth organization client API method
       const result = await authClient.organization.createInvitation({
         organizationId,
-        email,
-        role,
+        email: values.email,
+        role: values.role,
       });
 
       if (result.error) {
         setError(result.error.message || INVITATION_ERRORS.SEND_FAILED);
       } else {
+        form.reset();
         onSuccess();
       }
     } catch (err) {
@@ -56,51 +89,57 @@ export function InvitationForm({ organizationId, onSuccess, onCancel }: Invitati
         {INVITATION_LABELS.SEND_INVITATION}
       </h3>
       {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-          {error}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="invitation-email"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            {INVITATION_LABELS.EMAIL}
-          </label>
-          <input
-            id="invitation-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={INVITATION_PLACEHOLDERS.EMAIL}
-            required
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{INVITATION_LABELS.EMAIL}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder={INVITATION_PLACEHOLDERS.EMAIL}
+                    {...field}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <div>
-          <label
-            htmlFor="invitation-role"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            {INVITATION_LABELS.ROLE}
-          </label>
-          <MemberRoleSelector
-            id="invitation-role"
-            value={role}
-            onChange={(value) => setRole(value)}
-            disabled={isLoading}
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{INVITATION_LABELS.ROLE}</FormLabel>
+                <FormControl>
+                  <MemberRoleSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <div className="flex gap-3">
-          <Button type="submit" disabled={isLoading} className="flex-1">
-            {isLoading ? INVITATION_LABELS.SENDING : INVITATION_LABELS.SEND_INVITATION}
-          </Button>
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-            {COMMON_LABELS.CANCEL}
-          </Button>
-        </div>
-      </form>
+          <div className="flex gap-3">
+            <Button type="submit" disabled={isLoading} className="flex-1">
+              {isLoading ? INVITATION_LABELS.SENDING : INVITATION_LABELS.SEND_INVITATION}
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+              {COMMON_LABELS.CANCEL}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }

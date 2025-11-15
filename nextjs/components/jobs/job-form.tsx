@@ -69,6 +69,40 @@ const jobSchema = z
       message: JOB_ERRORS.INTERVAL_REQUIRED,
       path: ["seconds"],
     }
+  )
+  .refine(
+    (data) => {
+      if (data.args && data.args.trim() !== "") {
+        try {
+          const parsed = JSON.parse(data.args);
+          return Array.isArray(parsed);
+        } catch {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: JOB_ERRORS.INVALID_ARGS,
+      path: ["args"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.kwargs && data.kwargs.trim() !== "") {
+        try {
+          const parsed = JSON.parse(data.kwargs);
+          return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed);
+        } catch {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: JOB_ERRORS.INVALID_KWARGS,
+      path: ["kwargs"],
+    }
   );
 
 type JobFormValues = z.infer<typeof jobSchema>;

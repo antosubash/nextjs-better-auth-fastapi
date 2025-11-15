@@ -44,7 +44,9 @@ const passwordSchema = z
     newPassword: z
       .string()
       .min(1, AUTH_ERRORS.PASSWORD_REQUIRED)
-      .min(AUTH_ERRORS.PASSWORD_MIN_LENGTH, AUTH_ERRORS.PASSWORD_MIN_LENGTH_ERROR),
+      .refine((val) => val.length >= AUTH_ERRORS.PASSWORD_MIN_LENGTH, {
+        message: AUTH_ERRORS.PASSWORD_MIN_LENGTH_ERROR,
+      }),
     confirmPassword: z.string().min(1, AUTH_ERRORS.CONFIRM_PASSWORD_REQUIRED),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
