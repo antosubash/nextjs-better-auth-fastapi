@@ -1,19 +1,20 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Users,
   Building2,
-  Key,
-  Stethoscope,
   CheckSquare2,
   Clock,
+  Key,
+  LayoutDashboard,
+  Stethoscope,
+  Users,
 } from "lucide-react";
-import { ADMIN_NAVIGATION } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ADMIN_NAVIGATION } from "@/lib/constants";
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -94,28 +95,27 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block lg:fixed lg:top-0 lg:left-0 lg:h-full lg:w-64 lg:border-r lg:bg-background lg:z-40">
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center justify-between p-4">
             <h2 className="text-lg font-semibold">Admin Panel</h2>
           </div>
+          <Separator />
           <nav className="flex-1 p-4 space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
 
               return (
-                <Link
+                <Button
                   key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground"
-                  )}
+                  asChild
+                  variant={active ? "default" : "ghost"}
+                  className="w-full justify-start"
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
+                  <Link href={item.href}>
+                    <Icon className="w-5 h-5 mr-3" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                </Button>
               );
             })}
           </nav>
@@ -125,29 +125,28 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       {/* Mobile Sidebar */}
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent side="left" className="w-64 p-0">
-          <SheetHeader className="p-4 border-b">
+          <SheetHeader className="p-4">
             <SheetTitle>Admin Panel</SheetTitle>
           </SheetHeader>
+          <Separator />
           <nav className="flex-1 p-4 space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
 
               return (
-                <Link
+                <Button
                   key={item.href}
-                  href={item.href}
+                  asChild
+                  variant={active ? "default" : "ghost"}
+                  className="w-full justify-start"
                   onClick={handleLinkClick}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground"
-                  )}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
+                  <Link href={item.href}>
+                    <Icon className="w-5 h-5 mr-3" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                </Button>
               );
             })}
           </nav>

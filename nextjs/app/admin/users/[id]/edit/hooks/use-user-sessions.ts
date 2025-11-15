@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { useToast } from "@/lib/hooks/use-toast";
 import { ADMIN_ERRORS, ADMIN_SUCCESS } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
 
 export interface Session {
   id: string;
@@ -78,7 +78,8 @@ export function useUserSessions(userId: string) {
           await loadSessions();
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.REVOKE_SESSION_FAILED;
+        const errorMessage =
+          err instanceof Error ? err.message : ADMIN_ERRORS.REVOKE_SESSION_FAILED;
         toast.error(errorMessage);
       } finally {
         setIsRevoking(null);
@@ -118,4 +119,3 @@ export function useUserSessions(userId: string) {
     handleRevokeAllSessions,
   };
 }
-

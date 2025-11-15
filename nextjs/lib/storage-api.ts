@@ -50,4 +50,3 @@ export async function deleteProfilePicture(
 
   return response.json();
 }
-

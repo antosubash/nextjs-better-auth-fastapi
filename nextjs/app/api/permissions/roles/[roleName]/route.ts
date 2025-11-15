@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { PERMISSION_ACTIONS, PERMISSION_RESOURCES, ROLE_MANAGEMENT_ERRORS } from "@/lib/constants";
 import { requirePermission } from "@/lib/permission-check-server";
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, ROLE_MANAGEMENT_ERRORS } from "@/lib/constants";
 import { getRole } from "@/lib/permissions-utils";
 
 export async function GET(

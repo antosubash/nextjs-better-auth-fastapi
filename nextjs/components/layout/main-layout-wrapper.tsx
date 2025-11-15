@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { MainLayout } from "./main-layout";
 import { OrganizationProvider } from "@/lib/contexts/organization-context";
+import { MainLayout } from "./main-layout";
 
 interface MainLayoutWrapperProps {
   children: React.ReactNode;

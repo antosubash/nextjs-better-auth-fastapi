@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { getAssignableUserRoles } from "@/lib/permissions-api";
-import { RoleInfo } from "@/lib/permissions-utils";
-import { getValidAssignableRole, canBanRole } from "@/lib/utils/role-validation";
-import { useToast } from "@/lib/hooks/use-toast";
 import { ADMIN_ERRORS, ADMIN_SUCCESS, USER_ROLES } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
+import { getAssignableUserRoles } from "@/lib/permissions-api";
+import type { RoleInfo } from "@/lib/permissions-utils";
+import { canBanRole, getValidAssignableRole } from "@/lib/utils/role-validation";
 
 interface User {
   id: string;
@@ -278,7 +278,8 @@ export function useUserEdit(userId: string) {
           return true;
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.PASSWORD_RESET_FAILED;
+        const errorMessage =
+          err instanceof Error ? err.message : ADMIN_ERRORS.PASSWORD_RESET_FAILED;
         toast.error(errorMessage);
         return false;
       } finally {
@@ -305,4 +306,3 @@ export function useUserEdit(userId: string) {
     handlePasswordReset,
   };
 }
-

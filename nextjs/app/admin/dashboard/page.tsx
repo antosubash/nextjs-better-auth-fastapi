@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ADMIN_DASHBOARD } from "@/lib/constants";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Activity, Ban, UserPlus, Link as LinkIcon, Clock } from "lucide-react";
+import { Activity, Ban, Clock, Link as LinkIcon, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ADMIN_DASHBOARD } from "@/lib/constants";
 
 interface AdminStats {
   totalUsers: number;
@@ -362,9 +362,9 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {activities.map((activity, index) => (
+                {activities.map((activity) => (
                   <div
-                    key={index}
+                    key={`${activity.type}-${activity.timestamp}`}
                     className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border"
                   >
                     <div className="p-2 rounded-lg bg-muted">

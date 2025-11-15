@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, AlertCircle } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface ErrorToastProps {
   message: string;
@@ -48,6 +48,7 @@ export function ErrorToast({ message, onDismiss, duration = 5000 }: ErrorToastPr
           <p className="text-sm font-medium text-red-800 dark:text-red-200">{message}</p>
         </div>
         <button
+          type="button"
           onClick={handleDismiss}
           className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors flex-shrink-0"
           aria-label="Dismiss error"

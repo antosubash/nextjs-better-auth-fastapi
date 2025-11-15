@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { Card, CardContent } from "@/components/ui/card";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { TaskDialog } from "@/components/tasks/task-dialog";
+import { TaskFilters } from "@/components/tasks/task-filters";
+import { TaskList } from "@/components/tasks/task-list";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Pagination,
   PaginationContent,
@@ -20,14 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TaskList } from "@/components/tasks/task-list";
-import { TaskDialog } from "@/components/tasks/task-dialog";
-import { TaskFilters } from "@/components/tasks/task-filters";
-import { TASK_LABELS, TASK_ERRORS, TASK_SUCCESS, PAGE_CONTAINER } from "@/lib/constants";
-import { getTasks, createTask, updateTask, deleteTask } from "@/lib/api/tasks";
+import { createTask, deleteTask, getTasks, updateTask } from "@/lib/api/tasks";
+import { authClient } from "@/lib/auth-client";
+import { PAGE_CONTAINER, TASK_ERRORS, TASK_LABELS, TASK_SUCCESS } from "@/lib/constants";
 import type { Task, TaskCreate, TaskStatus } from "@/lib/types/task";
-import { Plus } from "lucide-react";
-import { toast } from "sonner";
 
 export function TasksPageContent() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export function TasksPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       setIsLoading(true);
       setError("");
@@ -57,7 +57,7 @@ export function TasksPageContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, pageSize, statusFilter]);
 
   useEffect(() => {
     const checkAuthAndLoadTasks = async () => {
@@ -79,15 +79,13 @@ export function TasksPageContent() {
     };
 
     checkAuthAndLoadTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, [router, loadTasks]);
 
   useEffect(() => {
     if (isAuthorized) {
       loadTasks();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, statusFilter, isAuthorized]);
+  }, [isAuthorized, loadTasks]);
 
   const handleCreateClick = () => {
     setEditingTask(undefined);

@@ -1,25 +1,37 @@
 "use client";
 
+import { Loader2, LogOut, MoreVertical, Shield, UserMinus } from "lucide-react";
 import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
-import { MEMBER_LABELS, MEMBER_ERRORS, MEMBER_SUCCESS } from "@/lib/constants";
-import { MoreVertical, UserMinus, Shield, LogOut } from "lucide-react";
-import { MemberRoleSelector } from "./member-role-selector";
-import { ErrorToast } from "@/components/ui/error-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { ErrorToast } from "@/components/ui/error-toast";
+import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
+import { MEMBER_ERRORS, MEMBER_LABELS, MEMBER_SUCCESS } from "@/lib/constants";
+import { MemberRoleSelector } from "./member-role-selector";
 
 interface Member {
   id: string;
@@ -50,6 +62,8 @@ export function MemberActions({
 }: MemberActionsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [newRole, setNewRole] = useState(member.role);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,10 +94,6 @@ export function MemberActions({
   };
 
   const handleRemove = async () => {
-    if (!confirm(MEMBER_LABELS.CONFIRM_REMOVE)) {
-      return;
-    }
-
     setIsLoading(true);
     try {
       const result = await authClient.organization.removeMember({
@@ -101,6 +111,7 @@ export function MemberActions({
         }
       } else {
         onMemberRemoved();
+        setShowRemoveDialog(false);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.REMOVE_FAILED;
@@ -111,10 +122,6 @@ export function MemberActions({
   };
 
   const handleLeave = async () => {
-    if (!confirm(MEMBER_LABELS.CONFIRM_LEAVE)) {
-      return;
-    }
-
     setIsLoading(true);
     try {
       const result = await authClient.organization.leave({
@@ -125,6 +132,7 @@ export function MemberActions({
         setError(result.error.message || MEMBER_ERRORS.LEAVE_FAILED);
       } else {
         onActionSuccess(MEMBER_SUCCESS.LEFT_ORGANIZATION);
+        setShowLeaveDialog(false);
         window.location.href = "/admin/organizations";
       }
     } catch (err) {
@@ -149,21 +157,21 @@ export function MemberActions({
             <Shield className="w-4 h-4 mr-2" />
             {MEMBER_LABELS.UPDATE_ROLE}
           </DropdownMenuItem>
-
+          {(isCurrentUser || isOwner) && <DropdownMenuSeparator />}
           {isCurrentUser ? (
             <DropdownMenuItem
-              onClick={handleLeave}
+              onClick={() => setShowLeaveDialog(true)}
               disabled={isLoading}
-              className="text-red-600 dark:text-red-400"
+              className="text-destructive focus:text-destructive"
             >
               <LogOut className="w-4 h-4 mr-2" />
               {MEMBER_LABELS.LEAVE_ORGANIZATION}
             </DropdownMenuItem>
           ) : isOwner ? (
             <DropdownMenuItem
-              onClick={handleRemove}
+              onClick={() => setShowRemoveDialog(true)}
               disabled={isLoading}
-              className="text-red-600 dark:text-red-400"
+              className="text-destructive focus:text-destructive"
             >
               <UserMinus className="w-4 h-4 mr-2" />
               {MEMBER_LABELS.REMOVE_MEMBER}
@@ -177,8 +185,8 @@ export function MemberActions({
           <DialogHeader>
             <DialogTitle>{MEMBER_LABELS.UPDATE_ROLE}</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <label className="block text-sm font-medium mb-2">{MEMBER_LABELS.ROLE}</label>
+          <div className="py-4 space-y-2">
+            <Label>{MEMBER_LABELS.ROLE}</Label>
             <MemberRoleSelector value={newRole} onChange={setNewRole} disabled={isLoading} />
           </div>
           <DialogFooter>
@@ -193,11 +201,70 @@ export function MemberActions({
               {MEMBER_LABELS.CANCEL}
             </Button>
             <Button onClick={handleUpdateRole} disabled={isLoading}>
-              {isLoading ? MEMBER_LABELS.SAVING : MEMBER_LABELS.UPDATE_ROLE}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {MEMBER_LABELS.SAVING}
+                </>
+              ) : (
+                MEMBER_LABELS.UPDATE_ROLE
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{MEMBER_LABELS.REMOVE_MEMBER}</AlertDialogTitle>
+            <AlertDialogDescription>{MEMBER_LABELS.CONFIRM_REMOVE}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading}>{MEMBER_LABELS.CANCEL}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRemove}
+              disabled={isLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                MEMBER_LABELS.REMOVE_MEMBER
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{MEMBER_LABELS.LEAVE_ORGANIZATION}</AlertDialogTitle>
+            <AlertDialogDescription>{MEMBER_LABELS.CONFIRM_LEAVE}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading}>{MEMBER_LABELS.CANCEL}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLeave}
+              disabled={isLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Leaving...
+                </>
+              ) : (
+                MEMBER_LABELS.LEAVE_ORGANIZATION
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

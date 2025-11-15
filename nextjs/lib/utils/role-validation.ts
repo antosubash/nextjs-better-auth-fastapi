@@ -1,5 +1,6 @@
-import { getAllRoles, RoleInfo } from "../permissions-utils";
 import { USER_ROLES } from "../constants";
+import type { RoleInfo } from "../permissions-utils";
+import { getAllRoles } from "../permissions-utils";
 
 /**
  * Valid assignable user roles (as defined in Better Auth admin plugin)
@@ -88,8 +89,8 @@ export function getValidRole(
   roleName: string | null | undefined,
   defaultRole: string = USER_ROLES.USER
 ): string {
-  if (isValidRole(roleName)) {
-    return roleName!;
+  if (isValidRole(roleName) && roleName) {
+    return roleName;
   }
   return defaultRole;
 }
@@ -101,8 +102,8 @@ export function getValidAssignableRole(
   roleName: string | null | undefined,
   defaultRole: string = USER_ROLES.USER
 ): string {
-  if (isAssignableUserRole(roleName)) {
-    return roleName!;
+  if (isAssignableUserRole(roleName) && roleName) {
+    return roleName;
   }
   // If the role is not assignable, try to find a valid assignable role
   // Otherwise fall back to default

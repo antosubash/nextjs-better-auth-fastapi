@@ -1,9 +1,26 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { API_KEY_LABELS, API_KEY_ERRORS, API_KEY_SUCCESS } from "@/lib/constants";
-import { MoreVertical, Trash2, Edit, Power, PowerOff, Eye } from "lucide-react";
+import { Edit, Eye, Loader2, MoreVertical, Power, PowerOff, Trash2 } from "lucide-react";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
 
 interface ApiKey {
   id: string;
@@ -28,11 +45,7 @@ export function ApiKeyActions({
 }: ApiKeyActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<{
-    top: number;
-    right: number;
-  } | null>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleToggleEnabled = async () => {
     setIsLoading(true);
@@ -49,7 +62,8 @@ export function ApiKeyActions({
       const result = await response.json();
 
       if (!response.ok || result.error) {
-        alert(result.error || API_KEY_ERRORS.UPDATE_FAILED);
+        // Error handling should be done via toast/error state
+        console.error(result.error || API_KEY_ERRORS.UPDATE_FAILED);
       } else {
         onActionSuccess(
           apiKey.enabled ? API_KEY_SUCCESS.API_KEY_DISABLED : API_KEY_SUCCESS.API_KEY_ENABLED
@@ -58,17 +72,13 @@ export function ApiKeyActions({
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.UPDATE_FAILED;
-      alert(errorMessage);
+      console.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm(API_KEY_LABELS.CONFIRM_DELETE)) {
-      return;
-    }
-
     setIsLoading(true);
     try {
       const response = await fetch(`/api/api-keys/${apiKey.id}`, {
@@ -77,126 +87,105 @@ export function ApiKeyActions({
       const result = await response.json();
 
       if (!response.ok || result.error) {
-        alert(result.error || API_KEY_ERRORS.DELETE_FAILED);
+        // Error handling should be done via toast/error state
+        console.error(result.error || API_KEY_ERRORS.DELETE_FAILED);
       } else {
         onDelete();
+        setShowDeleteDialog(false);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.DELETE_FAILED;
-      alert(errorMessage);
+      console.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (isOpen && buttonRef.current) {
-      const updatePosition = () => {
-        if (buttonRef.current) {
-          const rect = buttonRef.current.getBoundingClientRect();
-          setDropdownPosition({
-            top: rect.bottom + 8,
-            right: window.innerWidth - rect.right,
-          });
-        }
-      };
-
-      updatePosition();
-
-      window.addEventListener("scroll", updatePosition, true);
-      window.addEventListener("resize", updatePosition);
-
-      return () => {
-        window.removeEventListener("scroll", updatePosition, true);
-        window.removeEventListener("resize", updatePosition);
-      };
-    } else {
-      setDropdownPosition(null);
-    }
-  }, [isOpen]);
-
-  const dropdownContent = isOpen && dropdownPosition && (
-    <>
-      <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-      <div
-        className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
-        style={{
-          top: `${dropdownPosition.top}px`,
-          right: `${dropdownPosition.right}px`,
-        }}
-      >
-        <button
-          onClick={() => {
-            setIsOpen(false);
-            onViewDetails();
-          }}
-          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-        >
-          <Eye className="w-4 h-4" />
-          {API_KEY_LABELS.VIEW_DETAILS}
-        </button>
-
-        <button
-          onClick={() => {
-            setIsOpen(false);
-            onEdit();
-          }}
-          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-        >
-          <Edit className="w-4 h-4" />
-          {API_KEY_LABELS.EDIT_API_KEY}
-        </button>
-
-        <button
-          onClick={() => {
-            setIsOpen(false);
-            handleToggleEnabled();
-          }}
-          disabled={isLoading}
-          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-        >
-          {apiKey.enabled ? (
-            <>
-              <PowerOff className="w-4 h-4" />
-              {API_KEY_LABELS.DISABLED}
-            </>
-          ) : (
-            <>
-              <Power className="w-4 h-4" />
-              {API_KEY_LABELS.ENABLED}
-            </>
-          )}
-        </button>
-
-        <button
-          onClick={() => {
-            setIsOpen(false);
-            handleDelete();
-          }}
-          disabled={isLoading}
-          className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-        >
-          <Trash2 className="w-4 h-4" />
-          {API_KEY_LABELS.DELETE_API_KEY}
-        </button>
-      </div>
-    </>
-  );
-
   return (
-    <div className="relative">
-      <button
-        ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={isLoading}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-      >
-        <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-      </button>
+    <>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" disabled={isLoading}>
+            <MoreVertical className="w-5 h-5" />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => {
+              setIsOpen(false);
+              onViewDetails();
+            }}
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            {API_KEY_LABELS.VIEW_DETAILS}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              setIsOpen(false);
+              onEdit();
+            }}
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            {API_KEY_LABELS.EDIT_API_KEY}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              setIsOpen(false);
+              handleToggleEnabled();
+            }}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : apiKey.enabled ? (
+              <PowerOff className="w-4 h-4 mr-2" />
+            ) : (
+              <Power className="w-4 h-4 mr-2" />
+            )}
+            {apiKey.enabled ? API_KEY_LABELS.DISABLED : API_KEY_LABELS.ENABLED}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              setIsOpen(false);
+              setShowDeleteDialog(true);
+            }}
+            disabled={isLoading}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {API_KEY_LABELS.DELETE_API_KEY}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      {typeof window !== "undefined" &&
-        dropdownContent &&
-        createPortal(dropdownContent, document.body)}
-    </div>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{API_KEY_LABELS.DELETE_API_KEY}</AlertDialogTitle>
+            <AlertDialogDescription>{API_KEY_LABELS.CONFIRM_DELETE}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading}>{API_KEY_LABELS.CANCEL}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {API_KEY_LABELS.DELETING}
+                </>
+              ) : (
+                API_KEY_LABELS.DELETE_API_KEY
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

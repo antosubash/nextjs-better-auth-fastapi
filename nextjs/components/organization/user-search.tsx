@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { authClient } from "@/lib/auth-client";
+import { Check, User as UserIcon } from "lucide-react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -10,8 +11,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { USER_SEARCH_LABELS, USER_SEARCH_PLACEHOLDERS, MEMBER_ERRORS } from "@/lib/constants";
-import { Check, User as UserIcon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { MEMBER_ERRORS, USER_SEARCH_LABELS, USER_SEARCH_PLACEHOLDERS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface User {
@@ -130,8 +131,13 @@ export function UserSearch({
                 >
                   <div className="flex items-center gap-2 flex-1">
                     {user.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={user.image} alt={user.name} className="w-6 h-6 rounded-full" />
+                      <Image
+                        src={user.image}
+                        alt={user.name}
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 rounded-full"
+                      />
                     ) : (
                       <UserIcon className="w-6 h-6 text-gray-400" />
                     )}

@@ -1,12 +1,48 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { API_KEY_LABELS, API_KEY_ERRORS, API_KEY_SUCCESS } from "@/lib/constants";
-import { ApiKeyForm } from "./api-key-form";
+import { Check, Copy, Key, Plus, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Empty, EmptyDescription } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
+import { SearchInput } from "../organization/shared/search-input";
 import { ApiKeyActions } from "./api-key-actions";
 import { ApiKeyDetails } from "./api-key-details";
+import { ApiKeyForm } from "./api-key-form";
 import { ApiKeyVerify } from "./api-key-verify";
-import { Search, Plus, Key, Copy, Check, Trash2 } from "lucide-react";
 
 interface ApiKey {
   id: string;
@@ -20,8 +56,6 @@ interface ApiKey {
 export function ApiKeyList() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingApiKey, setEditingApiKey] = useState<ApiKey | null>(null);
@@ -29,16 +63,18 @@ export function ApiKeyList() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
   const [keyCopied, setKeyCopied] = useState(false);
+  const [showDeleteExpiredDialog, setShowDeleteExpiredDialog] = useState(false);
+  const [isDeletingExpired, setIsDeletingExpired] = useState(false);
+  const toast = useToast();
 
-  const loadApiKeys = async () => {
+  const loadApiKeys = useCallback(async () => {
     setIsLoading(true);
-    setError("");
     try {
       const response = await fetch("/api/api-keys");
       const result = await response.json();
 
       if (!response.ok || result.error) {
-        setError(result.error || API_KEY_ERRORS.LOAD_API_KEYS_FAILED);
+        toast.error(result.error || API_KEY_ERRORS.LOAD_API_KEYS_FAILED);
       } else if (result.data) {
         const keys = Array.isArray(result.data) ? result.data : [];
         setApiKeys(
@@ -55,15 +91,15 @@ export function ApiKeyList() {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.LOAD_API_KEYS_FAILED;
-      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
-    loadApiKeys();
-  }, []);
+    void loadApiKeys();
+  }, [loadApiKeys]);
 
   const handleSearch = (value: string) => {
     setSearchValue(value);
@@ -74,35 +110,28 @@ export function ApiKeyList() {
     if (createdKey) {
       setNewlyCreatedKey(createdKey);
     }
-    setSuccess(API_KEY_SUCCESS.API_KEY_CREATED);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(API_KEY_SUCCESS.API_KEY_CREATED);
     loadApiKeys();
   };
 
   const handleApiKeyUpdated = () => {
     setEditingApiKey(null);
-    setSuccess(API_KEY_SUCCESS.API_KEY_UPDATED);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(API_KEY_SUCCESS.API_KEY_UPDATED);
     loadApiKeys();
   };
 
   const handleApiKeyDeleted = () => {
-    setSuccess(API_KEY_SUCCESS.API_KEY_DELETED);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(API_KEY_SUCCESS.API_KEY_DELETED);
     loadApiKeys();
   };
 
   const handleActionSuccess = (message: string) => {
-    setSuccess(message);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(message);
     loadApiKeys();
   };
 
   const handleDeleteExpired = async () => {
-    if (!confirm(API_KEY_LABELS.CONFIRM_DELETE_EXPIRED)) {
-      return;
-    }
-
+    setIsDeletingExpired(true);
     try {
       const response = await fetch("/api/api-keys/expired", {
         method: "DELETE",
@@ -110,16 +139,18 @@ export function ApiKeyList() {
       const result = await response.json();
 
       if (!response.ok || result.error) {
-        setError(result.error || API_KEY_ERRORS.DELETE_EXPIRED_FAILED);
+        toast.error(result.error || API_KEY_ERRORS.DELETE_EXPIRED_FAILED);
       } else {
-        setSuccess(API_KEY_SUCCESS.EXPIRED_DELETED);
-        setTimeout(() => setSuccess(""), 3000);
+        toast.success(API_KEY_SUCCESS.EXPIRED_DELETED);
         loadApiKeys();
+        setShowDeleteExpiredDialog(false);
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : API_KEY_ERRORS.DELETE_EXPIRED_FAILED;
-      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsDeletingExpired(false);
     }
   };
 
@@ -166,33 +197,15 @@ export function ApiKeyList() {
           </h1>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => setShowVerifyModal(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
-          >
+          <Button variant="outline" onClick={() => setShowVerifyModal(true)}>
             {API_KEY_LABELS.VERIFY_API_KEY}
-          </button>
-          <button
-            onClick={() => setShowCreateForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-          >
+          </Button>
+          <Button onClick={() => setShowCreateForm(true)}>
             <Plus className="w-5 h-5" />
             {API_KEY_LABELS.CREATE_API_KEY}
-          </button>
+          </Button>
         </div>
       </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-800 dark:text-green-200">
-          {success}
-        </div>
-      )}
 
       {showCreateForm && (
         <div className="mb-6">
@@ -216,167 +229,177 @@ export function ApiKeyList() {
 
       {showVerifyModal && <ApiKeyVerify onClose={() => setShowVerifyModal(false)} />}
 
-      {newlyCreatedKey && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 max-w-2xl w-full">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              {API_KEY_SUCCESS.API_KEY_CREATED}
-            </h2>
-            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200">
-              {API_KEY_LABELS.KEY_WARNING}
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Your API Key:
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newlyCreatedKey}
-                  readOnly
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm"
-                />
-                <button
-                  onClick={handleCopyKey}
-                  className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 flex items-center gap-2"
-                >
-                  {keyCopied ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      {API_KEY_LABELS.KEY_COPIED}
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      {API_KEY_LABELS.COPY_KEY}
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <button
-                onClick={() => setNewlyCreatedKey(null)}
-                className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
-              >
-                {API_KEY_LABELS.CANCEL}
-              </button>
+      <Dialog open={!!newlyCreatedKey} onOpenChange={(open) => !open && setNewlyCreatedKey(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{API_KEY_SUCCESS.API_KEY_CREATED}</DialogTitle>
+            <DialogDescription>{API_KEY_LABELS.KEY_WARNING}</DialogDescription>
+          </DialogHeader>
+          <div className="mb-4">
+            <Label htmlFor="newly-created-api-key">{API_KEY_LABELS.YOUR_API_KEY}</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                id="newly-created-api-key"
+                type="text"
+                value={newlyCreatedKey || ""}
+                readOnly
+                className="flex-1 font-mono"
+              />
+              <Button type="button" onClick={handleCopyKey}>
+                {keyCopied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    {API_KEY_LABELS.KEY_COPIED}
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    {API_KEY_LABELS.COPY_KEY}
+                  </>
+                )}
+              </Button>
             </div>
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button type="button" onClick={() => setNewlyCreatedKey(null)}>
+              {API_KEY_LABELS.CANCEL}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="mb-4 flex items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
+        <div className="flex-1 max-w-md">
+          <SearchInput
             placeholder={API_KEY_LABELS.SEARCH_API_KEYS}
             value={searchValue}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
+            onChange={handleSearch}
           />
         </div>
-        <button
-          onClick={handleDeleteExpired}
-          className="flex items-center gap-2 px-4 py-2 border border-red-300 dark:border-red-700 rounded-lg bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        <Button
+          variant="outline"
+          onClick={() => setShowDeleteExpiredDialog(true)}
+          className="text-destructive"
         >
           <Trash2 className="w-4 h-4" />
           {API_KEY_LABELS.DELETE_ALL_EXPIRED}
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {API_KEY_LABELS.LOADING}
-          </div>
-        ) : filteredApiKeys.length === 0 ? (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
-            {API_KEY_LABELS.NO_API_KEYS}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {API_KEY_LABELS.NAME}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {API_KEY_LABELS.PREFIX}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {API_KEY_LABELS.STATUS}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {API_KEY_LABELS.EXPIRES_AT}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {API_KEY_LABELS.CREATED_AT}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {API_KEY_LABELS.ACTIONS}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredApiKeys.map((key) => {
-                  const expired = isExpired(key.expiresAt);
-                  return (
-                    <tr key={key.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        {key.name || "Unnamed"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 font-mono">
-                        {key.prefix || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {expired ? (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200">
-                            {API_KEY_LABELS.EXPIRED}
-                          </span>
-                        ) : key.enabled ? (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-                            {API_KEY_LABELS.ENABLED}
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200">
-                            {API_KEY_LABELS.DISABLED}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                        {key.expiresAt
-                          ? formatDate(
-                              key.expiresAt instanceof Date
-                                ? key.expiresAt.getTime()
-                                : typeof key.expiresAt === "number"
-                                  ? key.expiresAt
-                                  : new Date(key.expiresAt).getTime()
-                            )
-                          : "Never"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                        {formatDate(key.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm relative">
-                        <ApiKeyActions
-                          apiKey={key}
-                          onEdit={() => setEditingApiKey(key)}
-                          onDelete={handleApiKeyDeleted}
-                          onViewDetails={() => setViewingApiKeyId(key.id)}
-                          onActionSuccess={handleActionSuccess}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <AlertDialog open={showDeleteExpiredDialog} onOpenChange={setShowDeleteExpiredDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{API_KEY_LABELS.DELETE_ALL_EXPIRED}</AlertDialogTitle>
+            <AlertDialogDescription>{API_KEY_LABELS.CONFIRM_DELETE_EXPIRED}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingExpired}>
+              {API_KEY_LABELS.CANCEL}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteExpired}
+              disabled={isDeletingExpired}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingExpired ? (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2 animate-spin" />
+                  {API_KEY_LABELS.DELETING}
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {API_KEY_LABELS.DELETE_ALL_EXPIRED}
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 space-y-4">
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton loaders are static and won't reorder
+                  <div key={`skeleton-${i}`} className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-20" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : filteredApiKeys.length === 0 ? (
+            <Empty>
+              <EmptyDescription>{API_KEY_LABELS.NO_API_KEYS}</EmptyDescription>
+            </Empty>
+          ) : (
+            <ScrollArea className="w-full">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{API_KEY_LABELS.NAME}</TableHead>
+                    <TableHead>{API_KEY_LABELS.PREFIX}</TableHead>
+                    <TableHead>{API_KEY_LABELS.STATUS}</TableHead>
+                    <TableHead>{API_KEY_LABELS.EXPIRES_AT}</TableHead>
+                    <TableHead>{API_KEY_LABELS.CREATED_AT}</TableHead>
+                    <TableHead>{API_KEY_LABELS.ACTIONS}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredApiKeys.map((key) => {
+                    const expired = isExpired(key.expiresAt);
+                    return (
+                      <TableRow key={key.id}>
+                        <TableCell className="font-medium">{key.name || "Unnamed"}</TableCell>
+                        <TableCell className="font-mono">{key.prefix || "N/A"}</TableCell>
+                        <TableCell>
+                          {expired ? (
+                            <Badge variant="destructive">{API_KEY_LABELS.EXPIRED}</Badge>
+                          ) : key.enabled ? (
+                            <Badge variant="default">{API_KEY_LABELS.ENABLED}</Badge>
+                          ) : (
+                            <Badge variant="secondary">{API_KEY_LABELS.DISABLED}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {key.expiresAt
+                            ? formatDate(
+                                key.expiresAt instanceof Date
+                                  ? key.expiresAt.getTime()
+                                  : typeof key.expiresAt === "number"
+                                    ? key.expiresAt
+                                    : new Date(key.expiresAt).getTime()
+                              )
+                            : "Never"}
+                        </TableCell>
+                        <TableCell>{formatDate(key.createdAt)}</TableCell>
+                        <TableCell>
+                          <ApiKeyActions
+                            apiKey={key}
+                            onEdit={() => setEditingApiKey(key)}
+                            onDelete={handleApiKeyDeleted}
+                            onViewDetails={() => setViewingApiKeyId(key.id)}
+                            onActionSuccess={handleActionSuccess}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

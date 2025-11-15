@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { auth } from "../auth";
-import { checkUserPermission } from "../permission-check";
 import { PERMISSION_ERRORS } from "../constants";
+import { checkUserPermission } from "../permission-check";
 
 /**
  * Server-only utilities for Better Auth Service

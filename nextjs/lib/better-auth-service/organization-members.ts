@@ -1,7 +1,7 @@
-import { withErrorHandling } from "./utils";
-import { getHeaders, requirePermission } from "./server-utils";
 import { auth } from "../auth";
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, MEMBER_ERRORS } from "../constants";
+import { MEMBER_ERRORS, PERMISSION_ACTIONS, PERMISSION_RESOURCES } from "../constants";
+import { getHeaders, requirePermission } from "./server-utils";
+import { withErrorHandling } from "./utils";
 
 /**
  * Organization member-related methods

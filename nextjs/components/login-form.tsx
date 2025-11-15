@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { authClient } from "@/lib/auth-client";
-import { AUTH_LABELS, AUTH_PLACEHOLDERS, AUTH_ERRORS } from "@/lib/constants";
-import { getDashboardPath } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -16,8 +14,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
+import { AUTH_ERRORS, AUTH_LABELS, AUTH_PLACEHOLDERS } from "@/lib/constants";
+import { getDashboardPath } from "@/lib/utils";
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;

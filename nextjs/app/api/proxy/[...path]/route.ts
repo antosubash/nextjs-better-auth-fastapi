@@ -1,5 +1,6 @@
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { betterAuthService } from "@/lib/better-auth-service/index";
-import { NextRequest, NextResponse } from "next/server";
 import { PROXY_ERRORS } from "@/lib/constants";
 
 export async function GET(
@@ -68,11 +69,11 @@ async function handleProxyRequest(request: NextRequest, pathSegments: string[], 
     const fullUrl = searchParams ? `${url}?${searchParams}` : url;
 
     const requestHeaders = new Headers();
-    
+
     // Check if this is a multipart/form-data request (file upload)
     const contentType = request.headers.get("content-type") || "";
     const isMultipart = contentType.includes("multipart/form-data");
-    
+
     // Only set Content-Type to JSON if it's not multipart
     if (!isMultipart) {
       requestHeaders.set("Content-Type", "application/json");
@@ -138,7 +139,7 @@ async function handleProxyRequest(request: NextRequest, pathSegments: string[], 
     }
 
     const responseData = await response.text();
-    let jsonData;
+    let jsonData: unknown;
     try {
       jsonData = JSON.parse(responseData);
     } catch {

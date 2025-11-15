@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JOB_LABELS } from "@/lib/constants";
-import { formatDate } from "@/lib/utils/date";
 import type { Job } from "@/lib/types/job";
-import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/utils/date";
 import { JobHistoryComponent } from "./job-history";
 
 interface JobDetailsDialogProps {

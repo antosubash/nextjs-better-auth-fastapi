@@ -1,5 +1,5 @@
-import { getUserEffectivePermissions, formatPermissionKey } from "./permissions-utils";
 import { PERMISSION_ERRORS, USER_ROLES } from "./constants";
+import { formatPermissionKey, getUserEffectivePermissions } from "./permissions-utils";
 
 /**
  * Client-safe permission checking utilities

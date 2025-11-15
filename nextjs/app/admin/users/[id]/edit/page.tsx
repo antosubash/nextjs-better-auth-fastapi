@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { ArrowLeft, Loader2, User } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, User } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,12 +14,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ADMIN_LABELS, ADMIN_ERRORS } from "@/lib/constants";
-import { useUserEdit } from "./hooks/use-user-edit";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ADMIN_ERRORS, ADMIN_LABELS, ADMIN_NAVIGATION } from "@/lib/constants";
 import { UserEditHeader } from "./components/user-edit-header";
 import { UserEditTabs } from "./components/user-edit-tabs";
 import { UserInfoCard } from "./components/user-info-card";
-import { Loader2 } from "lucide-react";
+import { useUserEdit } from "./hooks/use-user-edit";
 
 export default function EditUserPage() {
   const params = useParams();
@@ -107,6 +114,21 @@ export default function EditUserPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/dashboard">{ADMIN_NAVIGATION.DASHBOARD}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/users">{ADMIN_NAVIGATION.USER_MANAGEMENT}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{ADMIN_LABELS.EDIT_USER}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <UserEditHeader
         isActionLoading={isActionLoading}
         onImpersonate={handleImpersonate}

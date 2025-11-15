@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Code, Shield, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
 import { LoginForm } from "@/components/login-form";
 import { SignupForm } from "@/components/signup-form";
+import { authClient } from "@/lib/auth-client";
 import { LANDING_PAGE, PAGE_CONTAINER } from "@/lib/constants";
 import { getDashboardPath } from "@/lib/utils";
-import { Shield, Zap, Code } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -81,11 +81,11 @@ export default function Home() {
               {LANDING_PAGE.FEATURES_TITLE}
             </h2>
             <div className="space-y-4">
-              {features.map((feature, index) => {
+              {features.map((feature) => {
                 const Icon = feature.icon;
                 return (
                   <div
-                    key={index}
+                    key={feature.TITLE}
                     className="flex gap-4 p-6 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
                   >
                     <div className="shrink-0">

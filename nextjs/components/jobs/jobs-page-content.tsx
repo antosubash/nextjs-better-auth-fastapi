@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { History, Plus } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { Card, CardContent } from "@/components/ui/card";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { JobDetailsDialog } from "@/components/jobs/job-details-dialog";
+import { JobDialog } from "@/components/jobs/job-dialog";
+import { JobList } from "@/components/jobs/job-list";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Pagination,
   PaginationContent,
@@ -20,15 +25,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { JobList } from "@/components/jobs/job-list";
-import { JobDialog } from "@/components/jobs/job-dialog";
-import { JobDetailsDialog } from "@/components/jobs/job-details-dialog";
-import { JOB_LABELS, JOB_ERRORS, JOB_SUCCESS, PAGE_CONTAINER } from "@/lib/constants";
-import { getJobs, createJob, deleteJob, pauseJob, resumeJob, getJob } from "@/lib/api/jobs";
+import { createJob, deleteJob, getJob, getJobs, pauseJob, resumeJob } from "@/lib/api/jobs";
+import { authClient } from "@/lib/auth-client";
+import { JOB_ERRORS, JOB_LABELS, JOB_SUCCESS, PAGE_CONTAINER } from "@/lib/constants";
 import type { Job, JobCreate } from "@/lib/types/job";
-import { Plus, History } from "lucide-react";
-import { toast } from "sonner";
-import Link from "next/link";
 
 export function JobsPageContent() {
   const router = useRouter();
@@ -44,7 +44,7 @@ export function JobsPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     try {
       setIsLoading(true);
       setError("");
@@ -58,7 +58,7 @@ export function JobsPageContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, pageSize]);
 
   useEffect(() => {
     const checkAuthAndLoadJobs = async () => {
@@ -80,15 +80,13 @@ export function JobsPageContent() {
     };
 
     checkAuthAndLoadJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, [router, loadJobs]);
 
   useEffect(() => {
     if (isAuthorized) {
       loadJobs();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, isAuthorized]);
+  }, [isAuthorized, loadJobs]);
 
   const handleCreateClick = () => {
     setIsDialogOpen(true);

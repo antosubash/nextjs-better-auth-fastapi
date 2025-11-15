@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 /**
  * Generic data loading hook with loading and error states
@@ -27,6 +27,8 @@ export function useDataLoader<T>(loadFn: () => Promise<T>, dependencies: unknown
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Note: Biome cannot statically verify dynamic dependency arrays, this is expected for generic hooks
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Generic hook requires dynamic dependency array
   }, dependencies);
 
   const reload = useCallback(() => {

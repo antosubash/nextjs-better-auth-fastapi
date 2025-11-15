@@ -1,8 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { API_KEY_LABELS, API_KEY_ERRORS } from "@/lib/constants";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { API_KEY_ERRORS, API_KEY_LABELS } from "@/lib/constants";
 
 interface ApiKeyDetailsProps {
   apiKeyId: string;
@@ -84,149 +89,136 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {API_KEY_LABELS.VIEW_DETAILS}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>{API_KEY_LABELS.VIEW_DETAILS}</DialogTitle>
+        </DialogHeader>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {isLoading ? (
-          <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-            {API_KEY_LABELS.LOADING}
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
           </div>
         ) : apiKey ? (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {API_KEY_LABELS.NAME}
-              </label>
-              <p className="text-gray-900 dark:text-white">{apiKey.name || "N/A"}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {API_KEY_LABELS.PREFIX}
-              </label>
-              <p className="text-gray-900 dark:text-white">{apiKey.prefix || "N/A"}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {API_KEY_LABELS.STATUS}
-              </label>
-              <span
-                className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  apiKey.enabled
-                    ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
-                    : "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200"
-                }`}
-              >
-                {apiKey.enabled ? API_KEY_LABELS.ENABLED : API_KEY_LABELS.DISABLED}
-              </span>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {API_KEY_LABELS.CREATED_AT}
-              </label>
-              <p className="text-gray-900 dark:text-white">{formatDate(apiKey.createdAt)}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {API_KEY_LABELS.EXPIRES_AT}
-              </label>
-              <p className="text-gray-900 dark:text-white">{formatDate(apiKey.expiresAt)}</p>
-            </div>
-
-            {apiKey.remaining !== undefined && (
+          <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {API_KEY_LABELS.REMAINING}
-                </label>
-                <p className="text-gray-900 dark:text-white">{apiKey.remaining}</p>
-              </div>
-            )}
-
-            {apiKey.refillAmount !== undefined && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {API_KEY_LABELS.REFILL_AMOUNT}
-                </label>
-                <p className="text-gray-900 dark:text-white">{apiKey.refillAmount}</p>
-              </div>
-            )}
-
-            {apiKey.refillInterval !== undefined && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {API_KEY_LABELS.REFILL_INTERVAL}
-                </label>
-                <p className="text-gray-900 dark:text-white">{apiKey.refillInterval} ms</p>
-              </div>
-            )}
-
-            {apiKey.rateLimitEnabled && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}
-                  </label>
-                  <p className="text-gray-900 dark:text-white">{apiKey.rateLimitTimeWindow} ms</p>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  {API_KEY_LABELS.NAME}
                 </div>
+                <p className="text-sm">{apiKey.name || "N/A"}</p>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {API_KEY_LABELS.RATE_LIMIT_MAX}
-                  </label>
-                  <p className="text-gray-900 dark:text-white">{apiKey.rateLimitMax}</p>
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  {API_KEY_LABELS.PREFIX}
                 </div>
-              </>
-            )}
+                <p className="text-sm font-mono">{apiKey.prefix || "N/A"}</p>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {API_KEY_LABELS.METADATA}
-              </label>
-              <pre className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-900 dark:text-white overflow-x-auto">
-                {formatJson(apiKey.metadata)}
-              </pre>
-            </div>
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  {API_KEY_LABELS.STATUS}
+                </div>
+                <Badge variant={apiKey.enabled ? "default" : "secondary"}>
+                  {apiKey.enabled ? API_KEY_LABELS.ENABLED : API_KEY_LABELS.DISABLED}
+                </Badge>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {API_KEY_LABELS.PERMISSIONS}
-              </label>
-              <pre className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-900 dark:text-white overflow-x-auto">
-                {formatJson(apiKey.permissions)}
-              </pre>
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  {API_KEY_LABELS.CREATED_AT}
+                </div>
+                <p className="text-sm">{formatDate(apiKey.createdAt)}</p>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  {API_KEY_LABELS.EXPIRES_AT}
+                </div>
+                <p className="text-sm">{formatDate(apiKey.expiresAt)}</p>
+              </div>
+
+              {apiKey.remaining !== undefined && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground mb-1">
+                    {API_KEY_LABELS.REMAINING}
+                  </div>
+                  <p className="text-sm">{apiKey.remaining}</p>
+                </div>
+              )}
+
+              {apiKey.refillAmount !== undefined && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground mb-1">
+                    {API_KEY_LABELS.REFILL_AMOUNT}
+                  </div>
+                  <p className="text-sm">{apiKey.refillAmount}</p>
+                </div>
+              )}
+
+              {apiKey.refillInterval !== undefined && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground mb-1">
+                    {API_KEY_LABELS.REFILL_INTERVAL}
+                  </div>
+                  <p className="text-sm">{apiKey.refillInterval} ms</p>
+                </div>
+              )}
+
+              {apiKey.rateLimitEnabled && (
+                <>
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">
+                      {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}
+                    </div>
+                    <p className="text-sm">{apiKey.rateLimitTimeWindow} ms</p>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">
+                      {API_KEY_LABELS.RATE_LIMIT_MAX}
+                    </div>
+                    <p className="text-sm">{apiKey.rateLimitMax}</p>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  {API_KEY_LABELS.METADATA}
+                </div>
+                <pre className="p-3 bg-muted rounded-lg text-sm overflow-x-auto border">
+                  {formatJson(apiKey.metadata)}
+                </pre>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  {API_KEY_LABELS.PERMISSIONS}
+                </div>
+                <pre className="p-3 bg-muted rounded-lg text-sm overflow-x-auto border">
+                  {formatJson(apiKey.permissions)}
+                </pre>
+              </div>
             </div>
-          </div>
+          </ScrollArea>
         ) : null}
 
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900"
-          >
+        <div className="flex justify-end mt-6">
+          <Button type="button" variant="outline" onClick={onClose}>
             {API_KEY_LABELS.CANCEL}
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

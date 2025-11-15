@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
+import { Activity, Calendar, CheckCircle2, Clock, Users, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { DASHBOARD, USER_ROLES, PAGE_CONTAINER } from "@/lib/constants";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, CheckCircle2, XCircle, Activity, Clock } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { DASHBOARD, PAGE_CONTAINER, USER_ROLES } from "@/lib/constants";
 
 interface UserStats {
   sessionsCount: number;
@@ -241,9 +241,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.recentActivity.map((activity, index) => (
+              {stats.recentActivity.map((activity) => (
                 <div
-                  key={index}
+                  key={`${activity.type}-${activity.timestamp}`}
                   className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border"
                 >
                   <div className="p-2 rounded-lg bg-muted">

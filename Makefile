@@ -1,4 +1,4 @@
-.PHONY: help install backend frontend dev clean lint lint-backend lint-frontend format format-backend format-frontend check check-backend check-frontend type-check build build-backend build-frontend migrate migrate-backend migrate-frontend seed
+.PHONY: help install backend frontend dev clean lint lint-backend lint-frontend format format-backend format-frontend check check-backend check-frontend type-check build build-backend build-frontend docker-build docker-build-backend docker-build-frontend migrate migrate-backend migrate-frontend seed
 
 # Default target
 help:
@@ -26,8 +26,13 @@ help:
 	@echo ""
 	@echo "Build:"
 	@echo "  make build           - Build both backend and frontend"
-	@echo "  make build-backend   - Build backend (if applicable)"
+	@echo "  make build-backend   - Build backend (sync deps and verify app)"
 	@echo "  make build-frontend  - Build frontend Next.js app"
+	@echo ""
+	@echo "Docker:"
+	@echo "  make docker-build         - Build Docker images for both backend and frontend"
+	@echo "  make docker-build-backend - Build Docker image for backend"
+	@echo "  make docker-build-frontend - Build Docker image for frontend"
 	@echo ""
 	@echo "Database:"
 	@echo "  make migrate         - Run database migrations for both frontend and backend"
@@ -132,10 +137,14 @@ type-check:
 	@echo "Type checking frontend code..."
 	cd nextjs && pnpm type-check
 
-# Build backend (placeholder - add build steps if needed)
+# Build backend
 build-backend:
 	@echo "Building backend..."
-	@echo "No build step configured for backend"
+	@echo "Syncing dependencies..."
+	cd backend && uv sync
+	@echo "Verifying application can be imported..."
+	cd backend && uv run python -c "from main import app; print('✓ Application imported successfully')"
+	@echo "Backend build complete!"
 
 # Build frontend
 build-frontend:
@@ -145,4 +154,38 @@ build-frontend:
 # Build both backend and frontend
 build: build-backend build-frontend
 	@echo "Build complete!"
+
+# Build Docker image for backend
+docker-build-backend:
+	@echo "Building Docker image for backend..."
+	docker build -t nextjs-better-auth-backend:latest -f backend/Dockerfile backend/
+	@echo "Backend Docker image built successfully!"
+
+# Build Docker image for frontend
+docker-build-frontend:
+	@echo "Building Docker image for frontend..."
+	@if [ -f .env ]; then \
+		set -a && . ./.env && set +a && \
+		docker build \
+			--build-arg DATABASE_URL="$${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/better_auth_db}" \
+			--build-arg BETTER_AUTH_SECRET="$${BETTER_AUTH_SECRET:-change-me-in-production}" \
+			--build-arg BETTER_AUTH_URL="$${BETTER_AUTH_URL:-http://localhost:3000}" \
+			--build-arg NEXT_PUBLIC_API_URL="$${NEXT_PUBLIC_API_URL:-http://localhost:8000}" \
+			-t nextjs-better-auth-frontend:latest \
+			-f nextjs/Dockerfile nextjs/; \
+	else \
+		echo "Warning: .env file not found. Using default values. Build may fail if DATABASE_URL is required."; \
+		docker build \
+			--build-arg DATABASE_URL="postgresql://postgres:postgres@localhost:5432/better_auth_db" \
+			--build-arg BETTER_AUTH_SECRET="change-me-in-production" \
+			--build-arg BETTER_AUTH_URL="http://localhost:3000" \
+			--build-arg NEXT_PUBLIC_API_URL="http://localhost:8000" \
+			-t nextjs-better-auth-frontend:latest \
+			-f nextjs/Dockerfile nextjs/; \
+	fi
+	@echo "Frontend Docker image built successfully!"
+
+# Build Docker images for both backend and frontend
+docker-build: docker-build-backend docker-build-frontend
+	@echo "Docker build complete!"
 

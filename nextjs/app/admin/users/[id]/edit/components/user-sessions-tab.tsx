@@ -1,16 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Loader2, Trash, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,9 +11,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ADMIN_LABELS } from "@/lib/constants";
-import { Loader2, Trash, Trash2 } from "lucide-react";
-import { Session } from "../hooks/use-user-sessions";
+import type { Session } from "../hooks/use-user-sessions";
 import { formatDate, isExpired } from "../utils/session-utils";
 
 interface UserSessionsTabProps {
@@ -102,19 +102,14 @@ export function UserSessionsTab({
               {sessions.map((session) => (
                 <TableRow key={session.id || session.token}>
                   <TableCell>{session.ipAddress || "N/A"}</TableCell>
-                  <TableCell
-                    className="max-w-lg truncate"
-                    title={session.userAgent || "N/A"}
-                  >
+                  <TableCell className="max-w-lg truncate" title={session.userAgent || "N/A"}>
                     {session.userAgent || "N/A"}
                   </TableCell>
                   <TableCell>{formatDate(session.createdAt)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {formatDate(session.expiresAt)}
-                      {isExpired(session.expiresAt) && (
-                        <Badge variant="secondary">Expired</Badge>
-                      )}
+                      {isExpired(session.expiresAt) && <Badge variant="secondary">Expired</Badge>}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -168,4 +163,3 @@ export function UserSessionsTab({
     </div>
   );
 }
-

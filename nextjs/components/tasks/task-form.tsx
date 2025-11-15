@@ -1,17 +1,9 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -20,8 +12,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { TASK_LABELS, TASK_PLACEHOLDERS, TASK_ERRORS } from "@/lib/constants";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { TASK_ERRORS, TASK_LABELS, TASK_PLACEHOLDERS } from "@/lib/constants";
 import type { Task, TaskCreate, TaskStatus } from "@/lib/types/task";
 
 const taskSchema = z.object({

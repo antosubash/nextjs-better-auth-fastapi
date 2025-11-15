@@ -382,6 +382,7 @@ export const ORGANIZATION_LABELS = {
   CANCEL: "Cancel",
   VIEW_DETAILS: "View Details",
   SAVING: "Saving...",
+  DELETING: "Deleting...",
   BACK_TO_ORGANIZATIONS: "Back to Organizations",
   CREATED_ON: "Created on",
   REFRESH: "Refresh",
@@ -512,6 +513,7 @@ export const INVITATION_LABELS = {
   CONFIRM_CANCEL: "Are you sure you want to cancel this invitation?",
   CONFIRM_REJECT: "Are you sure you want to reject this invitation?",
   SENDING: "Sending...",
+  CANCEL: "Cancel",
 } as const;
 
 export const INVITATION_PLACEHOLDERS = {
@@ -724,7 +726,27 @@ export const API_KEY_LABELS = {
   ACTION: "action",
   VISUAL_EDITOR: "Visual Editor",
   JSON_EDITOR: "JSON Editor",
+  SELECT_ALL: "Select All",
+  DESELECT_ALL: "Deselect All",
+  SEARCH_RESOURCES: "Search resources...",
+  RESOURCE_NAME: "Resource Name",
+  ACTION_NAME: "Action Name",
+  ADD: "Add",
+  CUSTOM_ACTIONS: "Custom Actions",
+  PREDEFINED_ACTIONS: "Predefined Actions",
   SERVER_ONLY_NOTE: "This field can only be set from the server",
+  SAVING: "Saving...",
+  DELETING: "Deleting...",
+  VERIFYING: "Verifying...",
+  YOUR_API_KEY: "Your API Key:",
+  KEY_DETAILS: "Key Details:",
+  NOTE: "Note:",
+  READ_ONLY: "(read-only)",
+  YES: "Yes",
+  NO: "No",
+  ERROR: "Error:",
+  SERVER_ONLY_FIELDS_NOTE:
+    "The following fields are read-only and can only be modified from the server: Remaining, Refill Amount, Refill Interval, and Rate Limiting settings.",
 } as const;
 
 export const API_KEY_PLACEHOLDERS = {
@@ -1047,7 +1069,6 @@ export const JOB_LABELS = {
   EXPAND_LOGS: "Expand Logs",
   COLLAPSE_LOGS: "Collapse Logs",
   FUNCTION_NAME: "Function",
-  TRIGGER_TYPE: "Trigger Type",
   USER_ID: "User ID",
   BACK_TO_JOBS: "Back to Jobs",
   RECORD: "record",

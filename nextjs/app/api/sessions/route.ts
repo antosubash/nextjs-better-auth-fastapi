@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/permission-check-server";
-import { SESSION_ERRORS } from "@/lib/constants";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { betterAuthService } from "@/lib/better-auth-service";
+import { SESSION_ERRORS } from "@/lib/constants";
+import { requireAuth } from "@/lib/permission-check-server";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {

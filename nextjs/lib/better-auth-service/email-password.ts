@@ -1,6 +1,6 @@
-import { withErrorHandling } from "./utils";
-import { getHeaders } from "./server-utils";
 import { auth } from "../auth";
+import { getHeaders } from "./server-utils";
+import { withErrorHandling } from "./utils";
 
 /**
  * Email & Password authentication methods

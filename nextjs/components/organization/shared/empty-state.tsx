@@ -1,5 +1,7 @@
 "use client";
 
+import { Empty, EmptyDescription } from "@/components/ui/empty";
+
 interface EmptyStateProps {
   message: string;
   className?: string;
@@ -7,12 +9,8 @@ interface EmptyStateProps {
 
 export function EmptyState({ message, className = "" }: EmptyStateProps) {
   return (
-    <div
-      className={`p-8 text-center text-gray-600 dark:text-gray-400 ${className}`}
-      role="status"
-      aria-live="polite"
-    >
-      {message}
-    </div>
+    <Empty className={className} role="status" aria-live="polite">
+      <EmptyDescription>{message}</EmptyDescription>
+    </Empty>
   );
 }

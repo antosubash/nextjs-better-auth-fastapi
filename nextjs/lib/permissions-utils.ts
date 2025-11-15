@@ -1,10 +1,10 @@
-import { statement } from "./permissions";
 import {
-  PERMISSION_RESOURCES,
   PERMISSION_ACTIONS,
-  ROLE_DISPLAY_NAMES,
+  PERMISSION_RESOURCES,
   ROLE_DESCRIPTIONS,
+  ROLE_DISPLAY_NAMES,
 } from "./constants";
+import { statement } from "./permissions";
 
 export interface Permission {
   resource: string;

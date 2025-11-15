@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
-import { useToast } from "@/lib/hooks/use-toast";
-import { ADMIN_LABELS, ADMIN_ERRORS, ADMIN_SUCCESS } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
+import { ADMIN_ERRORS, ADMIN_LABELS, ADMIN_SUCCESS } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
 
 export function ImpersonationIndicator() {
   const toast = useToast();
@@ -16,34 +17,30 @@ export function ImpersonationIndicator() {
     email: string;
   } | null>(null);
 
-  const checkImpersonationStatus = async () => {
-    try {
-      const session = await authClient.getSession();
-      // Check if session indicates impersonation
-      // This is a placeholder - actual implementation depends on Better Auth API
-      if (session?.data?.user) {
-        // Check for impersonation flag in session
-        const user = session.data.user as { [key: string]: unknown };
-        if (user.impersonatedBy) {
-          setIsImpersonating(true);
-          setImpersonatedUser({
-            id: user.id as string,
-            name: (user.name as string) || "",
-            email: (user.email as string) || "",
-          });
-        }
-      }
-    } catch (err) {
-      console.error("Failed to check impersonation status:", err);
-    }
-  };
-
   useEffect(() => {
     // Check if we're impersonating by checking session or API
-    const checkStatus = async () => {
-      await checkImpersonationStatus();
+    const checkImpersonationStatus = async () => {
+      try {
+        const session = await authClient.getSession();
+        // Check if session indicates impersonation
+        // This is a placeholder - actual implementation depends on Better Auth API
+        if (session?.data?.user) {
+          // Check for impersonation flag in session
+          const user = session.data.user as { [key: string]: unknown };
+          if (user.impersonatedBy) {
+            setIsImpersonating(true);
+            setImpersonatedUser({
+              id: user.id as string,
+              name: (user.name as string) || "",
+              email: (user.email as string) || "",
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check impersonation status:", err);
+      }
     };
-    void checkStatus();
+    void checkImpersonationStatus();
   }, []);
 
   const handleStopImpersonating = async () => {
@@ -71,24 +68,26 @@ export function ImpersonationIndicator() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 dark:bg-yellow-600 text-yellow-900 dark:text-yellow-100 px-4 py-2 shadow-lg">
-      <div className="container mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <User className="w-4 h-4" />
-          <span className="font-medium">
-            {ADMIN_LABELS.IMPERSONATING}: {impersonatedUser.name} ({impersonatedUser.email})
-          </span>
+    <div className="fixed top-0 left-0 right-0 z-50 px-4 py-2 shadow-lg">
+      <Alert className="container mx-auto bg-yellow-500 dark:bg-yellow-600 text-yellow-900 dark:text-yellow-100 border-yellow-600 dark:border-yellow-700">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4" />
+            <span className="font-medium">
+              {ADMIN_LABELS.IMPERSONATING}: {impersonatedUser.name} ({impersonatedUser.email})
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleStopImpersonating}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-700"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            {ADMIN_LABELS.STOP_IMPERSONATING}
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleStopImpersonating}
-          className="bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-700"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          {ADMIN_LABELS.STOP_IMPERSONATING}
-        </Button>
-      </div>
+      </Alert>
     </div>
   );
 }

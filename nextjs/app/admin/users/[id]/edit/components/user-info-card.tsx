@@ -1,10 +1,10 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Ban, Calendar, CheckCircle2, Mail, Shield, XCircle } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import { ADMIN_LABELS, ROLE_DISPLAY_NAMES } from "@/lib/constants";
-import { Mail, Shield, Calendar, CheckCircle2, XCircle, Ban } from "lucide-react";
 import { formatDate } from "@/lib/utils/date";
 
 interface User {
@@ -52,21 +52,21 @@ export function UserInfoCard({ user }: UserInfoCardProps) {
               </Avatar>
               <div>
                 <h2 className="text-2xl font-semibold mb-1">{user.name}</h2>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="w-4 h-4" />
-                <span>{user.email}</span>
-                {user.emailVerified ? (
-                  <Badge variant="default" className="ml-2 gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    {ADMIN_LABELS.EMAIL_VERIFIED}
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="ml-2 gap-1">
-                    <XCircle className="w-3 h-3" />
-                    {ADMIN_LABELS.EMAIL_NOT_VERIFIED}
-                  </Badge>
-                )}
-              </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="w-4 h-4" />
+                  <span>{user.email}</span>
+                  {user.emailVerified ? (
+                    <Badge variant="default" className="ml-2 gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      {ADMIN_LABELS.EMAIL_VERIFIED}
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="ml-2 gap-1">
+                      <XCircle className="w-3 h-3" />
+                      {ADMIN_LABELS.EMAIL_NOT_VERIFIED}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -76,8 +76,7 @@ export function UserInfoCard({ user }: UserInfoCardProps) {
                   <Shield className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">{ADMIN_LABELS.ROLE}:</span>
                   <Badge variant="outline">
-                    {ROLE_DISPLAY_NAMES[user.role as keyof typeof ROLE_DISPLAY_NAMES] ||
-                      user.role}
+                    {ROLE_DISPLAY_NAMES[user.role as keyof typeof ROLE_DISPLAY_NAMES] || user.role}
                   </Badge>
                 </div>
               )}
@@ -104,4 +103,3 @@ export function UserInfoCard({ user }: UserInfoCardProps) {
     </Card>
   );
 }
-

@@ -1,14 +1,11 @@
 "use client";
 
+import { CheckCircle2, Key, Loader2, Send, XCircle } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { callFastApiWithApiKey } from "@/lib/api-key-client";
-import { API_KEY_TEST } from "@/lib/constants";
-import { Send, Loader2, CheckCircle2, XCircle, Key } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -17,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -24,8 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { callFastApiWithApiKey } from "@/lib/api-key-client";
+import { API_KEY_TEST } from "@/lib/constants";
 
 interface ApiKeyTestFormValues {
   apiKey: string;

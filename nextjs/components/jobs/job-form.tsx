@@ -1,8 +1,19 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,20 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { JOB_LABELS, JOB_PLACEHOLDERS, JOB_ERRORS } from "@/lib/constants";
+import { Switch } from "@/components/ui/switch";
+import { JOB_ERRORS, JOB_LABELS, JOB_PLACEHOLDERS } from "@/lib/constants";
 import type { JobCreate, JobTriggerType } from "@/lib/types/job";
-import { useEffect } from "react";
 
 const jobSchema = z
   .object({
@@ -32,17 +32,17 @@ const jobSchema = z
     function: z.string().min(1, JOB_ERRORS.FUNCTION_REQUIRED),
     trigger_type: z.enum(["cron", "interval", "once"]),
     cron_expression: z.string().optional().nullable(),
-    weeks: z.number().min(0).default(0),
-    days: z.number().min(0).default(0),
-    hours: z.number().min(0).default(0),
-    minutes: z.number().min(0).default(0),
-    seconds: z.number().min(0).default(0),
+    weeks: z.number().min(0),
+    days: z.number().min(0),
+    hours: z.number().min(0),
+    minutes: z.number().min(0),
+    seconds: z.number().min(0),
     run_date: z.string().optional().nullable(),
     start_date: z.string().optional().nullable(),
     end_date: z.string().optional().nullable(),
     args: z.string().optional(),
     kwargs: z.string().optional(),
-    replace_existing: z.boolean().default(true),
+    replace_existing: z.boolean(),
   })
   .refine(
     (data) => {
@@ -81,7 +81,7 @@ interface JobFormProps {
 }
 
 export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValues }: JobFormProps) {
-  const getDefaultValues = (): JobFormValues => {
+  const getDefaultValues = useCallback((): JobFormValues => {
     if (initialValues) {
       return {
         job_id: initialValues.job_id || "",
@@ -118,7 +118,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
       kwargs: "",
       replace_existing: true,
     };
-  };
+  }, [initialValues]);
 
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobSchema),
@@ -129,8 +129,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
     if (initialValues) {
       form.reset(getDefaultValues());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialValues]);
+  }, [initialValues, form.reset, getDefaultValues]);
 
   const triggerType = form.watch("trigger_type");
 
@@ -178,7 +177,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
   const formatDateTimeForInput = (dateString: string | null | undefined): string => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
+    if (Number.isNaN(date.getTime())) return "";
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -278,7 +277,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.WEEKS}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -298,7 +297,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.DAYS}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -318,7 +317,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.HOURS}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -338,7 +337,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.MINUTES}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -358,7 +357,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                       placeholder={JOB_PLACEHOLDERS.SECONDS}
                       {...field}
                       value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -473,14 +472,14 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
           control={form.control}
           name="replace_existing"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>{JOB_LABELS.REPLACE_EXISTING}</FormLabel>
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">{JOB_LABELS.REPLACE_EXISTING}</FormLabel>
                 <FormDescription>Replace existing job with the same ID</FormDescription>
               </div>
+              <FormControl>
+                <Switch checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
             </FormItem>
           )}
         />

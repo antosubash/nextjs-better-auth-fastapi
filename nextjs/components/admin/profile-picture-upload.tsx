@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Image as ImageIcon, Loader2, Upload, X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { PROFILE_PICTURE } from "@/lib/constants";
-import { uploadProfilePicture, deleteProfilePicture } from "@/lib/storage-api";
-import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { deleteProfilePicture, uploadProfilePicture } from "@/lib/storage-api";
 import { cn } from "@/lib/utils";
 
 interface ProfilePictureUploadProps {
@@ -51,18 +51,17 @@ export function ProfilePictureUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const validateFile = (file: File): string | null => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return PROFILE_PICTURE.INVALID_FILE_TYPE;
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      return PROFILE_PICTURE.FILE_TOO_LARGE;
-    }
-    return null;
-  };
-
   const handleFileSelect = useCallback(
     async (file: File) => {
+      const validateFile = (file: File): string | null => {
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          return PROFILE_PICTURE.INVALID_FILE_TYPE;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          return PROFILE_PICTURE.FILE_TOO_LARGE;
+        }
+        return null;
+      };
       const validationError = validateFile(file);
       if (validationError) {
         setError(validationError);
@@ -150,26 +149,34 @@ export function ProfilePictureUpload({
     <div className="space-y-4">
       <div className="flex items-center gap-6">
         <Avatar className="w-24 h-24">
-          {displayImage ? (
-            <AvatarImage src={displayImage} alt={PROFILE_PICTURE.TITLE} />
-          ) : null}
+          {displayImage ? <AvatarImage src={displayImage} alt={PROFILE_PICTURE.TITLE} /> : null}
           <AvatarFallback className="text-2xl font-bold">
             {getInitials(userName, userEmail)}
           </AvatarFallback>
         </Avatar>
 
         <div className="flex-1 space-y-2">
-          <div
+          <Button
+            type="button"
+            variant="outline"
+            disabled={disabled}
             className={cn(
-              "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
+              "w-full border-2 border-dashed p-6 h-auto flex-col cursor-pointer",
               isDragging && !disabled
                 ? "border-primary bg-primary/5"
                 : "border-muted-foreground/25 hover:border-muted-foreground/50",
-              disabled && "opacity-50 cursor-not-allowed"
+              disabled && "opacity-50 cursor-not-allowed pointer-events-none"
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
+            onClick={() => !disabled && fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && !disabled) {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
           >
             <input
               ref={fileInputRef}
@@ -180,7 +187,7 @@ export function ProfilePictureUpload({
               className="hidden"
             />
 
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <ImageIcon className="w-8 h-8 mx-auto text-muted-foreground" />
               <p className="text-sm text-muted-foreground">{PROFILE_PICTURE.DRAG_DROP}</p>
               <p className="text-xs text-muted-foreground">{PROFILE_PICTURE.MAX_SIZE}</p>
@@ -189,7 +196,10 @@ export function ProfilePictureUpload({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
                 disabled={disabled || isUploading}
                 className="mt-2"
               >
@@ -197,7 +207,7 @@ export function ProfilePictureUpload({
                 {PROFILE_PICTURE.SELECT_FILE}
               </Button>
             </div>
-          </div>
+          </Button>
 
           {currentImageUrl && !preview && (
             <div className="flex gap-2">
@@ -250,4 +260,3 @@ export function ProfilePictureUpload({
     </div>
   );
 }
-

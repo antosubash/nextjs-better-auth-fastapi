@@ -11,4 +11,3 @@ export function formatDate(timestamp: number): string {
 export function isExpired(expiresAt: number): boolean {
   return expiresAt < Date.now();
 }
-

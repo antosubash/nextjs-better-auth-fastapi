@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { CheckCircle2, LogOut, Mail, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, PROFILE } from "@/lib/constants";
-import { User, Mail, LogOut, CheckCircle2 } from "lucide-react";
 import { ApiData } from "./api-data";
 import { UserSessions } from "./user-sessions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export function UserProfile() {
   const [user, setUser] = useState<{ name?: string; email?: string; image?: string | null } | null>(
@@ -84,62 +85,68 @@ export function UserProfile() {
         {user.name && <p className="text-xl text-muted-foreground font-medium">{user.name}</p>}
       </div>
 
-      {/* Account Information Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>{PROFILE.ACCOUNT_INFO}</CardTitle>
-            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Email Field */}
-            <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border">
-              <div className="p-2 rounded-lg bg-muted">
-                <Mail className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div className="flex-1">
-                <label className="text-sm font-medium text-muted-foreground mb-1 block">
-                  {PROFILE.EMAIL_LABEL}
-                </label>
-                <p className="text-base font-medium">{user.email}</p>
-              </div>
-            </div>
+      <Tabs defaultValue="account" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="account">{PROFILE.ACCOUNT_INFO}</TabsTrigger>
+          <TabsTrigger value="api">API Data</TabsTrigger>
+          <TabsTrigger value="sessions">{PROFILE.SESSIONS}</TabsTrigger>
+        </TabsList>
 
-            {/* Name Field */}
-            {user.name && (
-              <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border">
-                <div className="p-2 rounded-lg bg-muted">
-                  <User className="w-5 h-5 text-muted-foreground" />
+        <TabsContent value="account" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CardTitle>{PROFILE.ACCOUNT_INFO}</CardTitle>
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Email Field */}
+                <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border">
+                  <div className="p-2 rounded-lg bg-muted">
+                    <Mail className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-muted-foreground mb-1 block">
+                      {PROFILE.EMAIL_LABEL}
+                    </span>
+                    <p className="text-base font-medium">{user.email}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <label className="text-sm font-medium text-muted-foreground mb-1 block">
-                    {PROFILE.NAME_LABEL}
-                  </label>
-                  <p className="text-base font-medium">{user.name}</p>
-                </div>
+
+                {/* Name Field */}
+                {user.name && (
+                  <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <User className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-muted-foreground mb-1 block">
+                        {PROFILE.NAME_LABEL}
+                      </span>
+                      <p className="text-base font-medium">{user.name}</p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {/* API Data Component */}
-      <div className="mb-6">
-        <ApiData />
-      </div>
+          <Button onClick={handleLogout} variant="default" className="w-full">
+            <LogOut className="w-5 h-5 mr-2" />
+            {AUTH_LABELS.LOGOUT}
+          </Button>
+        </TabsContent>
 
-      {/* Session Management */}
-      <div className="mb-6">
-        <UserSessions />
-      </div>
+        <TabsContent value="api" className="space-y-6">
+          <ApiData />
+        </TabsContent>
 
-      {/* Logout Button */}
-      <Button onClick={handleLogout} variant="default" className="w-full">
-        <LogOut className="w-5 h-5 mr-2" />
-        {AUTH_LABELS.LOGOUT}
-      </Button>
+        <TabsContent value="sessions" className="space-y-6">
+          <UserSessions />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

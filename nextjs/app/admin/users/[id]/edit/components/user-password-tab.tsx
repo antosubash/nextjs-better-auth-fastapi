@@ -1,8 +1,8 @@
 "use client";
 
+import { Key, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -11,9 +11,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { ADMIN_LABELS, ADMIN_PLACEHOLDERS } from "@/lib/constants";
 import { useToast } from "@/lib/hooks/use-toast";
-import { Key, Loader2 } from "lucide-react";
 
 interface PasswordFormValues {
   newPassword: string;
@@ -69,11 +69,7 @@ export function UserPasswordTab({ isActionLoading, onPasswordReset }: UserPasswo
               <FormItem>
                 <FormLabel>{ADMIN_LABELS.NEW_PASSWORD}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    placeholder={ADMIN_PLACEHOLDERS.NEW_PASSWORD}
-                    {...field}
-                  />
+                  <Input type="password" placeholder={ADMIN_PLACEHOLDERS.NEW_PASSWORD} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -117,4 +113,3 @@ export function UserPasswordTab({ isActionLoading, onPasswordReset }: UserPasswo
     </div>
   );
 }
-

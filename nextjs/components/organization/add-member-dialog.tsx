@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,22 +10,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { UserSearch } from "./user-search";
-import { MemberRoleSelector } from "./member-role-selector";
+import { authClient } from "@/lib/auth-client";
 import {
   ADD_MEMBER_DIALOG_LABELS,
-  MEMBER_LABELS,
-  MEMBER_ERRORS,
   INVITATION_ERRORS,
+  MEMBER_ERRORS,
+  MEMBER_LABELS,
   ORGANIZATION_ROLES,
-  USER_SEARCH_PLACEHOLDERS,
   USER_SEARCH_LABELS,
+  USER_SEARCH_PLACEHOLDERS,
 } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import type { NormalizedMember } from "@/lib/utils/organization-types";
+import { MemberRoleSelector } from "./member-role-selector";
+import { UserSearch } from "./user-search";
 
 interface User {
   id: string;
@@ -153,7 +153,7 @@ export function AddMemberDialog({
   };
 
   const canSubmit = useEmailInput
-    ? emailInput && emailInput.includes("@")
+    ? emailInput?.includes("@")
     : selectedUser !== null && !existingMemberIds.has(selectedUser.id);
 
   return (

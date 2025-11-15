@@ -1,9 +1,7 @@
 "use client";
 
+import { Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,10 +12,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Empty, EmptyDescription } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TASK_LABELS } from "@/lib/constants";
-import { formatDate } from "@/lib/utils/date";
 import type { Task, TaskStatus } from "@/lib/types/task";
-import { Edit, Trash2 } from "lucide-react";
+import { formatDate } from "@/lib/utils/date";
 
 interface TaskListProps {
   tasks: Task[];
@@ -76,11 +79,32 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">{TASK_LABELS.LOADING}</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: skeleton loaders are static and won't reorder
+          <Card key={`skeleton-${i}`}>
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0 space-y-2">
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-8 w-8" />
+                  <Skeleton className="h-8 w-8" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   }
 
@@ -88,7 +112,9 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">{TASK_LABELS.NO_TASKS}</p>
+          <Empty>
+            <EmptyDescription>{TASK_LABELS.NO_TASKS}</EmptyDescription>
+          </Empty>
         </CardContent>
       </Card>
     );
@@ -113,22 +139,32 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(task)}
-                    aria-label={TASK_LABELS.EDIT_TASK}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteClick(task.id)}
-                    aria-label={TASK_LABELS.DELETE_TASK}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(task)}
+                        aria-label={TASK_LABELS.EDIT_TASK}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{TASK_LABELS.EDIT_TASK}</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(task.id)}
+                        aria-label={TASK_LABELS.DELETE_TASK}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{TASK_LABELS.DELETE_TASK}</TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             </CardHeader>

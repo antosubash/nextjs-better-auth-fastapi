@@ -15,10 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { JobForm } from "./job-form";
+import { Separator } from "@/components/ui/separator";
 import { JOB_LABELS, PREDEFINED_JOBS } from "@/lib/constants";
 import type { JobCreate } from "@/lib/types/job";
-import { Separator } from "@/components/ui/separator";
+import { JobForm } from "./job-form";
 
 interface JobDialogProps {
   open: boolean;
@@ -55,20 +55,32 @@ export function JobDialog({ open, onOpenChange, onSubmit, isSubmitting = false }
       return undefined;
     }
 
-    return {
+    const baseValues: Partial<JobCreate> = {
       job_id: template.id,
       function: template.function,
       trigger_type: template.trigger_type,
-      cron_expression: template.cron_expression || undefined,
-      weeks: template.weeks || undefined,
-      days: template.days || undefined,
-      hours: template.hours || undefined,
-      minutes: template.minutes || undefined,
-      seconds: template.seconds || undefined,
-      args: template.args,
-      kwargs: template.kwargs,
+      args: Array.from(template.args) as unknown[],
+      kwargs: template.kwargs as Record<string, unknown>,
       replace_existing: true,
     };
+
+    if (template.trigger_type === "cron" && "cron_expression" in template) {
+      baseValues.cron_expression = template.cron_expression;
+    }
+
+    if (template.trigger_type === "interval") {
+      if ("weeks" in template && typeof template.weeks === "number")
+        baseValues.weeks = template.weeks;
+      if ("days" in template && typeof template.days === "number") baseValues.days = template.days;
+      if ("hours" in template && typeof template.hours === "number")
+        baseValues.hours = template.hours;
+      if ("minutes" in template && typeof template.minutes === "number")
+        baseValues.minutes = template.minutes;
+      if ("seconds" in template && typeof template.seconds === "number")
+        baseValues.seconds = template.seconds;
+    }
+
+    return baseValues;
   };
 
   return (
@@ -81,11 +93,11 @@ export function JobDialog({ open, onOpenChange, onSubmit, isSubmitting = false }
 
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">
+            <label htmlFor="template-select" className="text-sm font-medium mb-2 block">
               {PREDEFINED_JOBS.SELECT_TEMPLATE}
             </label>
             <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
-              <SelectTrigger>
+              <SelectTrigger id="template-select">
                 <SelectValue placeholder={PREDEFINED_JOBS.SELECT_TEMPLATE} />
               </SelectTrigger>
               <SelectContent>

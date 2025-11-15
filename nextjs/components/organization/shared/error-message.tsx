@@ -1,5 +1,10 @@
 "use client";
 
+import { X } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
 interface ErrorMessageProps {
   message: string;
   onDismiss?: () => void;
@@ -12,21 +17,21 @@ export function ErrorMessage({ message, onDismiss, className = "" }: ErrorMessag
   }
 
   return (
-    <div
-      className={`p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200 ${className}`}
-      role="alert"
-      aria-live="assertive"
-    >
-      {message}
-      {onDismiss && (
-        <button
-          onClick={onDismiss}
-          className="ml-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
-          aria-label="Dismiss error message"
-        >
-          ×
-        </button>
-      )}
-    </div>
+    <Alert variant="destructive" className={cn(className)} role="alert" aria-live="assertive">
+      <AlertDescription className="flex items-center justify-between">
+        <span>{message}</span>
+        {onDismiss && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onDismiss}
+            className="ml-2 h-auto w-auto p-1 hover:bg-destructive/20"
+            aria-label="Dismiss error message"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </AlertDescription>
+    </Alert>
   );
 }
