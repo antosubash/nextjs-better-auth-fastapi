@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Code, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronDown, Code, Plus, Search, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
+import { cn } from "@/lib/utils";
 import { API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 import { statement } from "@/lib/permissions";
 
@@ -246,23 +247,30 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
                 predefinedActions.every((action) => actions.includes(action));
 
               return (
-                <Card key={resource}>
+                <Card
+                  key={resource}
+                  className={cn(
+                    "transition-all duration-200",
+                    isExpanded ? "shadow-md" : "!pb-0 !pt-3 shadow-sm hover:shadow-md"
+                  )}
+                >
                   <Collapsible open={isExpanded} onOpenChange={() => toggleResource(resource)}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
+                    <CardHeader className="pb-0">
+                      <div className="flex items-center justify-between gap-3">
                         <CollapsibleTrigger asChild>
                           <Button
                             variant="ghost"
-                            className="flex items-center gap-2 flex-1 justify-start p-0 h-auto font-medium"
+                            className="flex items-center gap-3 flex-1 justify-start p-0 h-auto font-semibold text-base hover:bg-accent/50 rounded-lg px-3 py-2 -ml-3 transition-colors"
                           >
-                            {isExpanded ? (
-                              <ChevronDown className="w-4 h-4" />
-                            ) : (
-                              <ChevronUp className="w-4 h-4" />
-                            )}
-                            <span className="capitalize">{resource}</span>
+                            <ChevronDown
+                              className={cn(
+                                "w-5 h-5 transition-transform duration-200 text-muted-foreground",
+                                isExpanded ? "rotate-180" : "rotate-0"
+                              )}
+                            />
+                            <span className="capitalize text-base">{resource}</span>
                             {actions.length > 0 && (
-                              <Badge variant="secondary" className="ml-2">
+                              <Badge variant="secondary" className="ml-auto text-xs font-medium">
                                 {actions.length}{" "}
                                 {actions.length === 1
                                   ? API_KEY_LABELS.ACTION
@@ -276,8 +284,11 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={() => removeResource(resource)}
-                            className="text-destructive hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeResource(resource);
+                            }}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -286,7 +297,7 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
                     </CardHeader>
 
                     <CollapsibleContent>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-4 pt-0">
                         {predefinedActions.length > 0 && (
                           <>
                             <div className="flex items-center justify-between">
