@@ -4,7 +4,7 @@ import { Image as ImageIcon, Loader2, Upload, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { PROFILE_PICTURE } from "@/lib/constants";
 import { deleteProfilePicture, uploadProfilePicture } from "@/lib/storage-api";
 import { cn } from "@/lib/utils";
@@ -156,27 +156,19 @@ export function ProfilePictureUpload({
         </Avatar>
 
         <div className="flex-1 space-y-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={disabled}
+          <section
+            aria-label={PROFILE_PICTURE.TITLE}
             className={cn(
-              "w-full border-2 border-dashed p-6 h-auto flex-col cursor-pointer",
+              buttonVariants({ variant: "outline" }),
+              "w-full border-2 border-dashed p-6 h-auto flex-col",
               isDragging && !disabled
                 ? "border-primary bg-primary/5"
-                : "border-muted-foreground/25 hover:border-muted-foreground/50",
+                : "border-muted-foreground/25",
               disabled && "opacity-50 cursor-not-allowed pointer-events-none"
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onClick={() => !disabled && fileInputRef.current?.click()}
-            onKeyDown={(e) => {
-              if ((e.key === "Enter" || e.key === " ") && !disabled) {
-                e.preventDefault();
-                fileInputRef.current?.click();
-              }
-            }}
           >
             <input
               ref={fileInputRef}
@@ -196,10 +188,7 @@ export function ProfilePictureUpload({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
+                onClick={() => fileInputRef.current?.click()}
                 disabled={disabled || isUploading}
                 className="mt-2"
               >
@@ -207,7 +196,7 @@ export function ProfilePictureUpload({
                 {PROFILE_PICTURE.SELECT_FILE}
               </Button>
             </div>
-          </Button>
+          </section>
 
           {currentImageUrl && !preview && (
             <div className="flex gap-2">

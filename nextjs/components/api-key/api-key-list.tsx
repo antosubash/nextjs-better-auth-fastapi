@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Copy, Key, Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,8 +36,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
-import { useToast } from "@/lib/hooks/use-toast";
+import { API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
+import { useDeleteExpiredApiKeys, useApiKeys } from "@/lib/hooks/api/use-api-keys";
 import { SearchInput } from "../organization/shared/search-input";
 import { ApiKeyActions } from "./api-key-actions";
 import { ApiKeyDetails } from "./api-key-details";
@@ -54,8 +54,8 @@ interface ApiKey {
 }
 
 export function ApiKeyList() {
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: apiKeys = [], isLoading } = useApiKeys();
+  const deleteExpiredMutation = useDeleteExpiredApiKeys();
   const [searchValue, setSearchValue] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingApiKey, setEditingApiKey] = useState<ApiKey | null>(null);
@@ -64,42 +64,6 @@ export function ApiKeyList() {
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
   const [keyCopied, setKeyCopied] = useState(false);
   const [showDeleteExpiredDialog, setShowDeleteExpiredDialog] = useState(false);
-  const [isDeletingExpired, setIsDeletingExpired] = useState(false);
-  const toast = useToast();
-
-  const loadApiKeys = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/api-keys");
-      const result = await response.json();
-
-      if (!response.ok || result.error) {
-        toast.error(result.error || API_KEY_ERRORS.LOAD_API_KEYS_FAILED);
-      } else if (result.data) {
-        const keys = Array.isArray(result.data) ? result.data : [];
-        setApiKeys(
-          keys.map((key: ApiKey) => ({
-            ...key,
-            createdAt:
-              key.createdAt instanceof Date
-                ? key.createdAt.getTime()
-                : typeof key.createdAt === "number"
-                  ? key.createdAt
-                  : Date.now(),
-          }))
-        );
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.LOAD_API_KEYS_FAILED;
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    void loadApiKeys();
-  }, [loadApiKeys]);
 
   const handleSearch = (value: string) => {
     setSearchValue(value);
@@ -110,47 +74,27 @@ export function ApiKeyList() {
     if (createdKey) {
       setNewlyCreatedKey(createdKey);
     }
-    toast.success(API_KEY_SUCCESS.API_KEY_CREATED);
-    loadApiKeys();
   };
 
   const handleApiKeyUpdated = () => {
     setEditingApiKey(null);
-    toast.success(API_KEY_SUCCESS.API_KEY_UPDATED);
-    loadApiKeys();
   };
 
   const handleApiKeyDeleted = () => {
-    toast.success(API_KEY_SUCCESS.API_KEY_DELETED);
-    loadApiKeys();
+    // Handled by mutation hook
   };
 
-  const handleActionSuccess = (message: string) => {
-    toast.success(message);
-    loadApiKeys();
+  const handleActionSuccess = () => {
+    // Handled by mutation hooks
   };
 
   const handleDeleteExpired = async () => {
-    setIsDeletingExpired(true);
     try {
-      const response = await fetch("/api/api-keys/expired", {
-        method: "DELETE",
-      });
-      const result = await response.json();
-
-      if (!response.ok || result.error) {
-        toast.error(result.error || API_KEY_ERRORS.DELETE_EXPIRED_FAILED);
-      } else {
-        toast.success(API_KEY_SUCCESS.EXPIRED_DELETED);
-        loadApiKeys();
-        setShowDeleteExpiredDialog(false);
-      }
+      await deleteExpiredMutation.mutateAsync();
+      setShowDeleteExpiredDialog(false);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : API_KEY_ERRORS.DELETE_EXPIRED_FAILED;
-      toast.error(errorMessage);
-    } finally {
-      setIsDeletingExpired(false);
+      // Error is handled by the mutation hook
+      console.error("Failed to delete expired keys:", err);
     }
   };
 
@@ -293,15 +237,15 @@ export function ApiKeyList() {
             <AlertDialogDescription>{API_KEY_LABELS.CONFIRM_DELETE_EXPIRED}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingExpired}>
+            <AlertDialogCancel disabled={deleteExpiredMutation.isPending}>
               {API_KEY_LABELS.CANCEL}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteExpired}
-              disabled={isDeletingExpired}
+              disabled={deleteExpiredMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeletingExpired ? (
+              {deleteExpiredMutation.isPending ? (
                 <>
                   <Trash2 className="w-4 h-4 mr-2 animate-spin" />
                   {API_KEY_LABELS.DELETING}

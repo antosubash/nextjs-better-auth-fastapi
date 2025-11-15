@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,58 +7,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { API_KEY_ERRORS, API_KEY_LABELS } from "@/lib/constants";
+import { useApiKeyDetails } from "@/lib/hooks/api/use-api-keys";
 
 interface ApiKeyDetailsProps {
   apiKeyId: string;
   onClose: () => void;
 }
 
-interface ApiKeyData {
-  id: string;
-  name?: string | null;
-  prefix?: string | null;
-  enabled?: boolean;
-  createdAt?: Date | number | string;
-  expiresAt?: Date | number | string | null;
-  remaining?: number | null;
-  refillAmount?: number | null;
-  refillInterval?: number | null;
-  rateLimitEnabled?: boolean;
-  rateLimitTimeWindow?: number | null;
-  rateLimitMax?: number | null;
-  metadata?: Record<string, unknown> | null;
-  permissions?: Record<string, string[]> | null;
-}
-
 export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
-  const [apiKey, setApiKey] = useState<ApiKeyData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const loadApiKey = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const response = await fetch(`/api/api-keys/${apiKeyId}`);
-        const result = await response.json();
-
-        if (!response.ok || result.error) {
-          setError(result.error || API_KEY_ERRORS.LOAD_API_KEY_FAILED);
-        } else if (result.data) {
-          setApiKey(result.data);
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : API_KEY_ERRORS.LOAD_API_KEY_FAILED;
-        setError(errorMessage);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadApiKey();
-  }, [apiKeyId]);
+  const { data: apiKey, isLoading, error: queryError } = useApiKeyDetails(apiKeyId);
+  const error =
+    queryError instanceof Error
+      ? queryError.message
+      : queryError
+        ? API_KEY_ERRORS.LOAD_API_KEY_FAILED
+        : "";
 
   const formatDate = (date: Date | number | string | null | undefined) => {
     if (!date) return "Never";

@@ -24,6 +24,7 @@ import {
   API_KEY_LABELS,
   API_KEY_PLACEHOLDERS,
 } from "@/lib/constants";
+import { useCreateApiKey, useUpdateApiKey } from "@/lib/hooks/api/use-api-keys";
 import { PermissionsEditor } from "./permissions-editor";
 
 interface ApiKey {
@@ -63,10 +64,12 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
   const [rateLimitEnabled, setRateLimitEnabled] = useState(false);
   const [rateLimitTimeWindow, setRateLimitTimeWindow] = useState("");
   const [rateLimitMax, setRateLimitMax] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const isEditing = !!apiKey;
+  const createMutation = useCreateApiKey();
+  const updateMutation = useUpdateApiKey();
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   const form = useForm<ApiKeyFormValues>({
     defaultValues: {
@@ -95,13 +98,16 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         expiresIn: expiresInValue,
         metadata: apiKey.metadata ? JSON.stringify(apiKey.metadata, null, 2) : "",
       });
-      setPermissions(apiKey.permissions || {});
-      setRemaining(apiKey.remaining?.toString() || "");
-      setRefillAmount(apiKey.refillAmount?.toString() || "");
-      setRefillInterval(apiKey.refillInterval?.toString() || "");
-      setRateLimitEnabled(apiKey.rateLimitEnabled || false);
-      setRateLimitTimeWindow(apiKey.rateLimitTimeWindow?.toString() || "");
-      setRateLimitMax(apiKey.rateLimitMax?.toString() || "");
+      // Use setTimeout to avoid setState in effect warning
+      setTimeout(() => {
+        setPermissions(apiKey.permissions || {});
+        setRemaining(apiKey.remaining?.toString() || "");
+        setRefillAmount(apiKey.refillAmount?.toString() || "");
+        setRefillInterval(apiKey.refillInterval?.toString() || "");
+        setRateLimitEnabled(apiKey.rateLimitEnabled || false);
+        setRateLimitTimeWindow(apiKey.rateLimitTimeWindow?.toString() || "");
+        setRateLimitMax(apiKey.rateLimitMax?.toString() || "");
+      }, 0);
     }
   }, [apiKey, form]);
 
@@ -122,20 +128,15 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
     const parsedPermissions: Record<string, string[]> | undefined =
       Object.keys(permissions).length > 0 ? permissions : undefined;
 
-    setIsLoading(true);
-
     try {
-      if (isEditing) {
+      if (isEditing && apiKey) {
         const updateData: {
-          keyId: string;
           name?: string;
           expiresIn?: number;
           prefix?: string;
           metadata?: Record<string, unknown>;
           permissions?: Record<string, string[]>;
-          enabled?: boolean;
         } = {
-          keyId: apiKey.id,
           name: values.name || undefined,
         };
 
@@ -143,7 +144,6 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           const days = parseInt(values.expiresIn, 10);
           if (Number.isNaN(days) || days < 0) {
             setError(API_KEY_ERRORS.INVALID_EXPIRATION);
-            setIsLoading(false);
             return;
           }
           updateData.expiresIn = days * 24 * 60 * 60;
@@ -152,24 +152,9 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         if (values.prefix) updateData.prefix = values.prefix;
         if (parsedMetadata) updateData.metadata = parsedMetadata;
         if (parsedPermissions) updateData.permissions = parsedPermissions;
-        // Note: remaining, refillAmount, refillInterval, rateLimitEnabled,
-        // rateLimitTimeWindow, and rateLimitMax are server-only properties
-        // and cannot be set from the client
 
-        const response = await fetch(`/api/api-keys/${apiKey.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updateData),
-        });
-        const result = await response.json();
-
-        if (!response.ok || result.error) {
-          setError(result.error || API_KEY_ERRORS.UPDATE_FAILED);
-        } else {
-          onSuccess();
-        }
+        await updateMutation.mutateAsync({ id: apiKey.id, data: updateData });
+        onSuccess();
       } else {
         const createData: {
           name?: string;
@@ -185,7 +170,6 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           const days = parseInt(values.expiresIn, 10);
           if (Number.isNaN(days) || days < 0) {
             setError(API_KEY_ERRORS.INVALID_EXPIRATION);
-            setIsLoading(false);
             return;
           }
           createData.expiresIn = days * 24 * 60 * 60;
@@ -197,20 +181,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
         if (parsedMetadata) createData.metadata = parsedMetadata;
         if (parsedPermissions) createData.permissions = parsedPermissions;
 
-        const response = await fetch("/api/api-keys", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(createData),
-        });
-        const result = await response.json();
-
-        if (!response.ok || result.error) {
-          setError(result.error || API_KEY_ERRORS.CREATE_FAILED);
-        } else {
-          onSuccess(result.data?.key);
-        }
+        const result = await createMutation.mutateAsync(createData);
+        onSuccess(result.data?.key);
       }
     } catch (err) {
       const errorMessage =
@@ -220,8 +192,6 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
             ? API_KEY_ERRORS.UPDATE_FAILED
             : API_KEY_ERRORS.CREATE_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 

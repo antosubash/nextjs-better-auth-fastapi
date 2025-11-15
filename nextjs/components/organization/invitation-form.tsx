@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import {
   COMMON_LABELS,
@@ -92,21 +93,12 @@ export function InvitationForm({ organizationId, onSuccess, onCancel }: Invitati
           />
         </div>
         <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button type="submit" disabled={isLoading} className="flex-1">
             {isLoading ? INVITATION_LABELS.SENDING : INVITATION_LABELS.SEND_INVITATION}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isLoading}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          </Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
             {COMMON_LABELS.CANCEL}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

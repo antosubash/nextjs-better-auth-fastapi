@@ -3,8 +3,7 @@
 import { History, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import { JobDetailsDialog } from "@/components/jobs/job-details-dialog";
 import { JobDialog } from "@/components/jobs/job-dialog";
 import { JobList } from "@/components/jobs/job-list";
@@ -25,43 +24,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createJob, deleteJob, getJob, getJobs, pauseJob, resumeJob } from "@/lib/api/jobs";
+import {
+  useCreateJob,
+  useDeleteJob,
+  useJobs,
+  usePauseJob,
+  useResumeJob,
+} from "@/lib/hooks/api/use-jobs";
 import { authClient } from "@/lib/auth-client";
-import { JOB_ERRORS, JOB_LABELS, JOB_SUCCESS, PAGE_CONTAINER } from "@/lib/constants";
+import { JOB_ERRORS, JOB_LABELS, PAGE_CONTAINER } from "@/lib/constants";
 import type { Job, JobCreate } from "@/lib/types/job";
 
 export function JobsPageContent() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
-  const loadJobs = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const response = await getJobs(page, pageSize);
-      setJobs(response.items);
-      setTotal(response.total);
-    } catch (err) {
-      console.error("Failed to load jobs:", err);
-      setError(err instanceof Error ? err.message : JOB_ERRORS.LOAD_JOBS_FAILED);
-      toast.error(JOB_ERRORS.LOAD_JOBS_FAILED);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, pageSize]);
+  const { data: jobsData, isLoading: isLoadingJobs, error: jobsError } = useJobs(page, pageSize);
+  const createJobMutation = useCreateJob();
+  const deleteJobMutation = useDeleteJob();
+  const pauseJobMutation = usePauseJob();
+  const resumeJobMutation = useResumeJob();
+
+  const jobs = jobsData?.items ?? [];
+  const total = jobsData?.total ?? 0;
 
   useEffect(() => {
-    const checkAuthAndLoadJobs = async () => {
+    const checkAuth = async () => {
       try {
         const session = await authClient.getSession();
         if (!session?.data?.session) {
@@ -70,23 +64,15 @@ export function JobsPageContent() {
         }
 
         setIsAuthorized(true);
-        await loadJobs();
       } catch (err) {
-        console.error("Failed to load jobs:", err);
-        setError(err instanceof Error ? err.message : JOB_ERRORS.LOAD_JOBS_FAILED);
+        console.error("Failed to check auth:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuthAndLoadJobs();
-  }, [router, loadJobs]);
-
-  useEffect(() => {
-    if (isAuthorized) {
-      loadJobs();
-    }
-  }, [isAuthorized, loadJobs]);
+    checkAuth();
+  }, [router]);
 
   const handleCreateClick = () => {
     setIsDialogOpen(true);
@@ -94,67 +80,47 @@ export function JobsPageContent() {
 
   const handleSubmit = async (data: JobCreate) => {
     try {
-      setIsSubmitting(true);
-      setError("");
-      await createJob(data);
-      toast.success(JOB_SUCCESS.JOB_CREATED);
+      await createJobMutation.mutateAsync(data);
       setIsDialogOpen(false);
-      await loadJobs();
     } catch (err) {
+      // Error is handled by the mutation hook
       console.error("Failed to create job:", err);
-      const errorMessage = err instanceof Error ? err.message : JOB_ERRORS.CREATE_FAILED;
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (jobId: string) => {
     try {
-      await deleteJob(jobId);
-      toast.success(JOB_SUCCESS.JOB_DELETED);
-      await loadJobs();
+      await deleteJobMutation.mutateAsync(jobId);
     } catch (err) {
+      // Error is handled by the mutation hook
       console.error("Failed to delete job:", err);
-      toast.error(JOB_ERRORS.DELETE_FAILED);
       throw err;
     }
   };
 
   const handlePause = async (jobId: string) => {
     try {
-      await pauseJob(jobId);
-      toast.success(JOB_SUCCESS.JOB_PAUSED);
-      await loadJobs();
+      await pauseJobMutation.mutateAsync(jobId);
     } catch (err) {
+      // Error is handled by the mutation hook
       console.error("Failed to pause job:", err);
-      toast.error(JOB_ERRORS.PAUSE_FAILED);
       throw err;
     }
   };
 
   const handleResume = async (jobId: string) => {
     try {
-      await resumeJob(jobId);
-      toast.success(JOB_SUCCESS.JOB_RESUMED);
-      await loadJobs();
+      await resumeJobMutation.mutateAsync(jobId);
     } catch (err) {
+      // Error is handled by the mutation hook
       console.error("Failed to resume job:", err);
-      toast.error(JOB_ERRORS.RESUME_FAILED);
       throw err;
     }
   };
 
-  const handleViewDetails = async (job: Job) => {
-    try {
-      const fullJob = await getJob(job.id);
-      setSelectedJob(fullJob);
-      setIsDetailsDialogOpen(true);
-    } catch (err) {
-      console.error("Failed to load job details:", err);
-      toast.error(JOB_ERRORS.LOAD_JOB_FAILED);
-    }
+  const handleViewDetails = (job: Job) => {
+    setSelectedJob(job);
+    setIsDetailsDialogOpen(true);
   };
 
   const totalPages = Math.ceil(total / pageSize) || 0;
@@ -199,10 +165,12 @@ export function JobsPageContent() {
         </div>
       </div>
 
-      {error && (
+      {jobsError && (
         <Card className="mb-6 border-destructive">
           <CardContent className="pt-6">
-            <p className="text-center text-destructive">{error}</p>
+            <p className="text-center text-destructive">
+              {jobsError instanceof Error ? jobsError.message : JOB_ERRORS.LOAD_JOBS_FAILED}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -213,7 +181,7 @@ export function JobsPageContent() {
         onResume={handleResume}
         onDelete={handleDelete}
         onViewDetails={handleViewDetails}
-        isLoading={isLoading}
+        isLoading={isLoadingJobs}
       />
 
       {totalPages > 1 && (
@@ -300,7 +268,7 @@ export function JobsPageContent() {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
+        isSubmitting={createJobMutation.isPending}
       />
 
       <JobDetailsDialog
