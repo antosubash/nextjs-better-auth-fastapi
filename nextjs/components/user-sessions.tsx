@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Monitor, Trash, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,18 +27,8 @@ import {
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { authClient } from "@/lib/auth-client";
-import { PROFILE, SESSION_ERRORS, SESSION_SUCCESS } from "@/lib/constants";
-import { useToast } from "@/lib/hooks/use-toast";
-
-interface Session {
-  id: string;
-  token: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  createdAt: number;
-  expiresAt: number;
-  isActive: boolean;
-}
+import { PROFILE } from "@/lib/constants";
+import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/lib/hooks/api/use-sessions";
 
 function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleString("en-US", {
@@ -51,96 +41,40 @@ function formatDate(timestamp: number): string {
 }
 
 export function UserSessions() {
-  const toast = useToast();
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRevoking, setIsRevoking] = useState<string | null>(null);
-  const [showRevokeAllDialog, setShowRevokeAllDialog] = useState(false);
-  const [isRevokingAll, setIsRevokingAll] = useState(false);
   const [currentSessionToken, setCurrentSessionToken] = useState<string | null>(null);
+  const [showRevokeAllDialog, setShowRevokeAllDialog] = useState(false);
+  const [revokingSessionToken, setRevokingSessionToken] = useState<string | null>(null);
 
-  const loadSessions = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Get current session token
+  const { data: sessionsData, isLoading } = useSessions();
+  const revokeSessionMutation = useRevokeSession();
+  const revokeAllSessionsMutation = useRevokeAllSessions();
+
+  const sessions = sessionsData?.sessions || [];
+
+  useEffect(() => {
+    const loadCurrentSession = async () => {
       const sessionResult = await authClient.getSession();
       const currentToken = sessionResult?.data?.session?.token || null;
       setCurrentSessionToken(currentToken);
-
-      // Fetch all sessions
-      const response = await fetch("/api/sessions");
-      if (!response.ok) {
-        const error = await response.json();
-        toast.error(error.error || SESSION_ERRORS.LOAD_SESSIONS_FAILED);
-        return;
-      }
-
-      const data = await response.json();
-      setSessions(data.sessions || []);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : SESSION_ERRORS.LOAD_SESSIONS_FAILED;
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    loadSessions();
-  }, [loadSessions]);
+    };
+    loadCurrentSession();
+  }, []);
 
   const handleRevokeSession = async (sessionToken: string) => {
-    setIsRevoking(sessionToken);
+    setRevokingSessionToken(sessionToken);
     try {
-      const response = await fetch("/api/sessions", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ sessionToken }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        toast.error(error.error || SESSION_ERRORS.REVOKE_SESSION_FAILED);
-      } else {
-        toast.success(SESSION_SUCCESS.SESSION_REVOKED);
-        loadSessions();
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : SESSION_ERRORS.REVOKE_SESSION_FAILED;
-      toast.error(errorMessage);
+      await revokeSessionMutation.mutateAsync(sessionToken);
     } finally {
-      setIsRevoking(null);
+      setRevokingSessionToken(null);
     }
   };
 
   const handleRevokeAllSessions = async () => {
-    setIsRevokingAll(true);
     try {
-      const response = await fetch("/api/sessions", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ revokeAll: true }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        toast.error(error.error || SESSION_ERRORS.REVOKE_SESSION_FAILED);
-      } else {
-        toast.success(SESSION_SUCCESS.SESSIONS_REVOKED);
-        loadSessions();
-        setShowRevokeAllDialog(false);
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : SESSION_ERRORS.REVOKE_SESSION_FAILED;
-      toast.error(errorMessage);
-    } finally {
-      setIsRevokingAll(false);
+      await revokeAllSessionsMutation.mutateAsync();
+      setShowRevokeAllDialog(false);
+    } catch {
+      // Error handled by mutation
     }
   };
 
@@ -168,9 +102,9 @@ export function UserSessions() {
                 variant="destructive"
                 size="sm"
                 onClick={() => setShowRevokeAllDialog(true)}
-                disabled={isRevokingAll}
+                disabled={revokeAllSessionsMutation.isPending}
               >
-                {isRevokingAll ? (
+                {revokeAllSessionsMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Revoking...
@@ -252,9 +186,9 @@ export function UserSessions() {
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => handleRevokeSession(session.token)}
-                                      disabled={isRevoking === session.token}
+                                      disabled={revokingSessionToken === session.token || revokeSessionMutation.isPending}
                                     >
-                                      {isRevoking === session.token ? (
+                                      {revokingSessionToken === session.token ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                       ) : (
                                         <Trash2 className="h-4 w-4" />
@@ -286,13 +220,13 @@ export function UserSessions() {
             <AlertDialogDescription>{PROFILE.CONFIRM_REVOKE_ALL_SESSIONS}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isRevokingAll}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={revokeAllSessionsMutation.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRevokeAllSessions}
-              disabled={isRevokingAll}
+              disabled={revokeAllSessionsMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isRevokingAll ? (
+              {revokeAllSessionsMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Revoking...

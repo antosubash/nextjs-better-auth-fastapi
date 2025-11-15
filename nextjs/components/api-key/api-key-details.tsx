@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,66 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
     }
   };
 
+  const renderDetailField = (label: string, value: React.ReactNode) => {
+    return (
+      <div>
+        <div className="text-sm font-medium text-muted-foreground mb-1">{label}</div>
+        <div className="text-sm">{value}</div>
+      </div>
+    );
+  };
+
+  const renderApiKeyDetails = () => {
+    if (!apiKey) return null;
+
+    return (
+      <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
+        <div className="space-y-4">
+          {renderDetailField(API_KEY_LABELS.NAME, apiKey.name || "N/A")}
+          {renderDetailField(
+            API_KEY_LABELS.PREFIX,
+            <span className="font-mono">{apiKey.prefix || "N/A"}</span>
+          )}
+          {renderDetailField(
+            API_KEY_LABELS.STATUS,
+            <Badge variant={apiKey.enabled ? "default" : "secondary"}>
+              {apiKey.enabled ? API_KEY_LABELS.ENABLED : API_KEY_LABELS.DISABLED}
+            </Badge>
+          )}
+          {renderDetailField(API_KEY_LABELS.CREATED_AT, formatDate(apiKey.createdAt))}
+          {renderDetailField(API_KEY_LABELS.EXPIRES_AT, formatDate(apiKey.expiresAt))}
+          {apiKey.remaining !== undefined &&
+            renderDetailField(API_KEY_LABELS.REMAINING, apiKey.remaining)}
+          {apiKey.refillAmount !== undefined &&
+            renderDetailField(API_KEY_LABELS.REFILL_AMOUNT, apiKey.refillAmount)}
+          {apiKey.refillInterval !== undefined &&
+            renderDetailField(API_KEY_LABELS.REFILL_INTERVAL, `${apiKey.refillInterval} ms`)}
+          {apiKey.rateLimitEnabled && (
+            <>
+              {renderDetailField(
+                API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW,
+                `${apiKey.rateLimitTimeWindow} ms`
+              )}
+              {renderDetailField(API_KEY_LABELS.RATE_LIMIT_MAX, apiKey.rateLimitMax)}
+            </>
+          )}
+          {renderDetailField(
+            API_KEY_LABELS.METADATA,
+            <pre className="p-3 bg-muted rounded-lg text-sm overflow-x-auto border">
+              {formatJson(apiKey.metadata)}
+            </pre>
+          )}
+          {renderDetailField(
+            API_KEY_LABELS.PERMISSIONS,
+            <pre className="p-3 bg-muted rounded-lg text-sm overflow-x-auto border">
+              {formatJson(apiKey.permissions)}
+            </pre>
+          )}
+        </div>
+      </ScrollArea>
+    );
+  };
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh]">
@@ -69,111 +130,9 @@ export function ApiKeyDetails({ apiKeyId, onClose }: ApiKeyDetailsProps) {
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
           </div>
-        ) : apiKey ? (
-          <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
-                  {API_KEY_LABELS.NAME}
-                </div>
-                <p className="text-sm">{apiKey.name || "N/A"}</p>
-              </div>
-
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
-                  {API_KEY_LABELS.PREFIX}
-                </div>
-                <p className="text-sm font-mono">{apiKey.prefix || "N/A"}</p>
-              </div>
-
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
-                  {API_KEY_LABELS.STATUS}
-                </div>
-                <Badge variant={apiKey.enabled ? "default" : "secondary"}>
-                  {apiKey.enabled ? API_KEY_LABELS.ENABLED : API_KEY_LABELS.DISABLED}
-                </Badge>
-              </div>
-
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
-                  {API_KEY_LABELS.CREATED_AT}
-                </div>
-                <p className="text-sm">{formatDate(apiKey.createdAt)}</p>
-              </div>
-
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
-                  {API_KEY_LABELS.EXPIRES_AT}
-                </div>
-                <p className="text-sm">{formatDate(apiKey.expiresAt)}</p>
-              </div>
-
-              {apiKey.remaining !== undefined && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-1">
-                    {API_KEY_LABELS.REMAINING}
-                  </div>
-                  <p className="text-sm">{apiKey.remaining}</p>
-                </div>
-              )}
-
-              {apiKey.refillAmount !== undefined && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-1">
-                    {API_KEY_LABELS.REFILL_AMOUNT}
-                  </div>
-                  <p className="text-sm">{apiKey.refillAmount}</p>
-                </div>
-              )}
-
-              {apiKey.refillInterval !== undefined && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-1">
-                    {API_KEY_LABELS.REFILL_INTERVAL}
-                  </div>
-                  <p className="text-sm">{apiKey.refillInterval} ms</p>
-                </div>
-              )}
-
-              {apiKey.rateLimitEnabled && (
-                <>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">
-                      {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}
-                    </div>
-                    <p className="text-sm">{apiKey.rateLimitTimeWindow} ms</p>
-                  </div>
-
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">
-                      {API_KEY_LABELS.RATE_LIMIT_MAX}
-                    </div>
-                    <p className="text-sm">{apiKey.rateLimitMax}</p>
-                  </div>
-                </>
-              )}
-
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
-                  {API_KEY_LABELS.METADATA}
-                </div>
-                <pre className="p-3 bg-muted rounded-lg text-sm overflow-x-auto border">
-                  {formatJson(apiKey.metadata)}
-                </pre>
-              </div>
-
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
-                  {API_KEY_LABELS.PERMISSIONS}
-                </div>
-                <pre className="p-3 bg-muted rounded-lg text-sm overflow-x-auto border">
-                  {formatJson(apiKey.permissions)}
-                </pre>
-              </div>
-            </div>
-          </ScrollArea>
-        ) : null}
+        ) : (
+          renderApiKeyDetails()
+        )}
 
         <div className="flex justify-end mt-6">
           <Button type="button" variant="outline" onClick={onClose}>

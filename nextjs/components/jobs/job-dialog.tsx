@@ -45,6 +45,51 @@ export function JobDialog({ open, onOpenChange, onSubmit, isSubmitting = false }
     setSelectedTemplate(templateId);
   };
 
+  const buildBaseValues = (
+    template: (typeof PREDEFINED_JOBS.TEMPLATES)[number]
+  ): Partial<JobCreate> => {
+    return {
+      job_id: template.id,
+      function: template.function,
+      trigger_type: template.trigger_type,
+      args: Array.from(template.args) as unknown[],
+      kwargs: template.kwargs as Record<string, unknown>,
+      replace_existing: true,
+    };
+  };
+
+  const addCronExpression = (
+    baseValues: Partial<JobCreate>,
+    template: (typeof PREDEFINED_JOBS.TEMPLATES)[number]
+  ): void => {
+    if (template.trigger_type === "cron" && "cron_expression" in template) {
+      baseValues.cron_expression = template.cron_expression;
+    }
+  };
+
+  const addIntervalValue = (
+    baseValues: Partial<JobCreate>,
+    template: (typeof PREDEFINED_JOBS.TEMPLATES)[number],
+    key: "weeks" | "days" | "hours" | "minutes" | "seconds"
+  ): void => {
+    if (key in template && typeof template[key] === "number") {
+      baseValues[key] = template[key] as number;
+    }
+  };
+
+  const addIntervalValues = (
+    baseValues: Partial<JobCreate>,
+    template: (typeof PREDEFINED_JOBS.TEMPLATES)[number]
+  ): void => {
+    if (template.trigger_type !== "interval") return;
+
+    addIntervalValue(baseValues, template, "weeks");
+    addIntervalValue(baseValues, template, "days");
+    addIntervalValue(baseValues, template, "hours");
+    addIntervalValue(baseValues, template, "minutes");
+    addIntervalValue(baseValues, template, "seconds");
+  };
+
   const getInitialValues = (): Partial<JobCreate> | undefined => {
     if (!selectedTemplate || selectedTemplate === "custom") {
       return undefined;
@@ -55,30 +100,9 @@ export function JobDialog({ open, onOpenChange, onSubmit, isSubmitting = false }
       return undefined;
     }
 
-    const baseValues: Partial<JobCreate> = {
-      job_id: template.id,
-      function: template.function,
-      trigger_type: template.trigger_type,
-      args: Array.from(template.args) as unknown[],
-      kwargs: template.kwargs as Record<string, unknown>,
-      replace_existing: true,
-    };
-
-    if (template.trigger_type === "cron" && "cron_expression" in template) {
-      baseValues.cron_expression = template.cron_expression;
-    }
-
-    if (template.trigger_type === "interval") {
-      if ("weeks" in template && typeof template.weeks === "number")
-        baseValues.weeks = template.weeks;
-      if ("days" in template && typeof template.days === "number") baseValues.days = template.days;
-      if ("hours" in template && typeof template.hours === "number")
-        baseValues.hours = template.hours;
-      if ("minutes" in template && typeof template.minutes === "number")
-        baseValues.minutes = template.minutes;
-      if ("seconds" in template && typeof template.seconds === "number")
-        baseValues.seconds = template.seconds;
-    }
+    const baseValues = buildBaseValues(template);
+    addCronExpression(baseValues, template);
+    addIntervalValues(baseValues, template);
 
     return baseValues;
   };

@@ -2,25 +2,11 @@
 
 import { Activity, Calendar, CheckCircle2, Clock, Users, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
 import { DASHBOARD, PAGE_CONTAINER, USER_ROLES } from "@/lib/constants";
-
-interface UserStats {
-  sessionsCount: number;
-  accountCreatedAt: number;
-  emailVerified: boolean;
-  recentActivity: Array<{
-    type: string;
-    message: string;
-    timestamp: number;
-    details?: {
-      ipAddress?: string;
-      userAgent?: string;
-    };
-  }>;
-}
+import { useUserStats } from "@/lib/hooks/api/use-stats";
 
 function formatDate(timestamp: number) {
   return new Date(timestamp).toLocaleDateString("en-US", {
@@ -63,47 +49,24 @@ function formatTimestamp(timestamp: number): string {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [error, setError] = useState("");
+  const { data: stats, isLoading, error } = useUserStats();
 
   useEffect(() => {
-    const checkAuthAndLoadStats = async () => {
-      try {
-        const session = await authClient.getSession();
-        if (!session?.data?.session) {
-          router.push("/");
-          return;
-        }
+    const checkAuth = async () => {
+      const session = await authClient.getSession();
+      if (!session?.data?.session) {
+        router.push("/");
+        return;
+      }
 
-        const userRole = session?.data?.user?.role;
-        if (userRole === USER_ROLES.ADMIN) {
-          router.push("/admin/dashboard");
-          return;
-        }
-
-        setIsAuthorized(true);
-
-        const response = await fetch("/api/stats/user", {
-          credentials: "include",
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || DASHBOARD.ERROR);
-        }
-
-        setStats(data);
-      } catch (err) {
-        console.error("Failed to load dashboard:", err);
-        setError(err instanceof Error ? err.message : DASHBOARD.ERROR);
-      } finally {
-        setIsLoading(false);
+      const userRole = session?.data?.user?.role;
+      if (userRole === USER_ROLES.ADMIN) {
+        router.push("/admin/dashboard");
+        return;
       }
     };
 
-    checkAuthAndLoadStats();
+    checkAuth();
   }, [router]);
 
   if (isLoading) {
@@ -114,25 +77,13 @@ export default function DashboardPage() {
     );
   }
 
-  if (!isAuthorized) {
-    return null;
-  }
-
-  if (error) {
+  if (error || !stats) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-red-600 dark:text-red-400">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-red-600 dark:text-red-400">{DASHBOARD.ERROR}</p>
+          <p className="text-lg text-red-600 dark:text-red-400">
+            {error?.message || DASHBOARD.ERROR}
+          </p>
         </div>
       </div>
     );

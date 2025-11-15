@@ -9,8 +9,8 @@
  * - Type exports
  */
 
-import { readFileSync, readdirSync } from "node:fs";
-import { join, extname, basename, relative } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { basename, extname, join, relative } from "node:path";
 
 const MAX_FILE_LINES = 500;
 const ROOT_DIR = join(process.cwd());

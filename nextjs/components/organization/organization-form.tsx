@@ -85,47 +85,57 @@ export function OrganizationForm({
     }
   }, [organization, form]);
 
+  const handleUpdate = async (values: OrganizationFormValues) => {
+    if (!organization) return;
+
+    const result = await authClient.organization.update({
+      organizationId: organization.id,
+      data: {
+        name: values.name,
+        slug: values.slug,
+        metadata: values.description ? { description: values.description } : undefined,
+      },
+    });
+
+    if (result.error) {
+      setError(result.error.message || ORGANIZATION_ERRORS.UPDATE_FAILED);
+      return false;
+    }
+    return true;
+  };
+
+  const handleCreate = async (values: OrganizationFormValues) => {
+    const result = await authClient.organization.create({
+      name: values.name,
+      slug: values.slug,
+      metadata: values.description ? { description: values.description } : undefined,
+    });
+
+    if (result.error) {
+      setError(result.error.message || ORGANIZATION_ERRORS.CREATE_FAILED);
+      return false;
+    }
+    return true;
+  };
+
+  const getErrorMessage = (err: unknown, isEditing: boolean) => {
+    if (err instanceof Error) {
+      return err.message;
+    }
+    return isEditing ? ORGANIZATION_ERRORS.UPDATE_FAILED : ORGANIZATION_ERRORS.CREATE_FAILED;
+  };
+
   const handleSubmit = async (values: OrganizationFormValues) => {
     setError("");
     setIsLoading(true);
 
     try {
-      if (isEditing) {
-        const result = await authClient.organization.update({
-          organizationId: organization.id,
-          data: {
-            name: values.name,
-            slug: values.slug,
-            metadata: values.description ? { description: values.description } : undefined,
-          },
-        });
-
-        if (result.error) {
-          setError(result.error.message || ORGANIZATION_ERRORS.UPDATE_FAILED);
-        } else {
-          onSuccess();
-        }
-      } else {
-        const result = await authClient.organization.create({
-          name: values.name,
-          slug: values.slug,
-          metadata: values.description ? { description: values.description } : undefined,
-        });
-
-        if (result.error) {
-          setError(result.error.message || ORGANIZATION_ERRORS.CREATE_FAILED);
-        } else {
-          onSuccess();
-        }
+      const success = isEditing ? await handleUpdate(values) : await handleCreate(values);
+      if (success) {
+        onSuccess();
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : isEditing
-            ? ORGANIZATION_ERRORS.UPDATE_FAILED
-            : ORGANIZATION_ERRORS.CREATE_FAILED;
-      setError(errorMessage);
+      setError(getErrorMessage(err, isEditing));
     } finally {
       setIsLoading(false);
     }

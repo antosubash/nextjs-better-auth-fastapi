@@ -24,4 +24,33 @@ export const queryKeys = {
     details: () => [...queryKeys.apiKeys.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.apiKeys.details(), id] as const,
   },
+  organizations: {
+    all: ["organizations"] as const,
+    lists: () => [...queryKeys.organizations.all, "list"] as const,
+    list: () => [...queryKeys.organizations.lists()] as const,
+    details: () => [...queryKeys.organizations.all, "detail"] as const,
+    detail: (id: string) => [...queryKeys.organizations.details(), id] as const,
+  },
+  sessions: {
+    all: ["sessions"] as const,
+    lists: () => [...queryKeys.sessions.all, "list"] as const,
+    list: () => [...queryKeys.sessions.lists()] as const,
+  },
+  stats: {
+    all: ["stats"] as const,
+    user: () => [...queryKeys.stats.all, "user"] as const,
+    admin: () => [...queryKeys.stats.all, "admin"] as const,
+  },
+  permissions: {
+    all: ["permissions"] as const,
+    lists: () => [...queryKeys.permissions.all, "list"] as const,
+    list: () => [...queryKeys.permissions.lists()] as const,
+    roles: () => [...queryKeys.permissions.all, "roles"] as const,
+    role: (roleName: string) => [...queryKeys.permissions.roles(), roleName] as const,
+    assignableRoles: () => [...queryKeys.permissions.all, "assignableRoles"] as const,
+    userPermissions: (userId: string) => [...queryKeys.permissions.all, "userPermissions", userId] as const,
+  },
+  storage: {
+    all: ["storage"] as const,
+  },
 } as const;

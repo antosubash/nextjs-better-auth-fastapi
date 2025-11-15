@@ -1,10 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getJob, getJobHistory, getJobs } from "@/lib/api/jobs";
-import { queryKeys } from "./query-keys";
-import type { JobCreate } from "@/lib/types/job";
-import { createJob, deleteJob, pauseJob, resumeJob } from "@/lib/api/jobs";
 import { toast } from "sonner";
+import {
+  createJob,
+  deleteJob,
+  getJob,
+  getJobHistory,
+  getJobs,
+  pauseJob,
+  resumeJob,
+} from "@/lib/api/jobs";
 import { JOB_ERRORS, JOB_SUCCESS } from "@/lib/constants";
+import type { JobCreate } from "@/lib/types/job";
+import { queryKeys } from "./query-keys";
 
 export function useJobs(page = 1, pageSize = 10, options?: { enabled?: boolean }) {
   return useQuery({

@@ -32,11 +32,19 @@
         "recommended": true
       },
       "complexity": {
-        "noExcessiveCognitiveComplexity": "off",
+        "noExcessiveCognitiveComplexity": {
+          "level": "warn",
+          "options": {
+            "maxAllowedComplexity": 15
+          }
+        },
         "noForEach": "off"
       },
       "correctness": {
-        "useExhaustiveDependencies": "warn"
+        "useExhaustiveDependencies": "warn",
+        "noUnusedImports": "warn",
+        "noUnusedFunctionParameters": "warn",
+        "noNestedComponentDefinitions": "warn"
       },
       "performance": {
         "noAccumulatingSpread": "warn"

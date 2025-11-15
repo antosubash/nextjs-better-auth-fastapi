@@ -147,74 +147,109 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
     }
   }, [apiKey, form]);
 
+  const parseFormMetadata = (metadata: string): Record<string, unknown> | undefined => {
+    if (metadata && metadata.trim() !== "") {
+      return JSON.parse(metadata);
+    }
+    return undefined;
+  };
+
+  const parseFormPermissions = (): Record<string, string[]> | undefined => {
+    return Object.keys(permissions).length > 0 ? permissions : undefined;
+  };
+
+  const parseExpiresIn = (expiresIn: string): number | undefined => {
+    if (expiresIn && expiresIn.trim() !== "") {
+      const days = parseInt(expiresIn, 10);
+      return days * 24 * 60 * 60;
+    }
+    return undefined;
+  };
+
+  const buildUpdateData = (
+    values: ApiKeyFormValues,
+    parsedMetadata: Record<string, unknown> | undefined,
+    parsedPermissions: Record<string, string[]> | undefined
+  ) => {
+    const updateData: {
+      name?: string;
+      expiresIn?: number;
+      prefix?: string;
+      metadata?: Record<string, unknown>;
+      permissions?: Record<string, string[]>;
+    } = {
+      name: values.name || undefined,
+    };
+
+    const expiresInSeconds = parseExpiresIn(values.expiresIn || "");
+    if (expiresInSeconds !== undefined) {
+      updateData.expiresIn = expiresInSeconds;
+    }
+
+    if (values.prefix) updateData.prefix = values.prefix;
+    if (parsedMetadata) updateData.metadata = parsedMetadata;
+    if (parsedPermissions) updateData.permissions = parsedPermissions;
+
+    return updateData;
+  };
+
+  const buildCreateData = (
+    values: ApiKeyFormValues,
+    parsedMetadata: Record<string, unknown> | undefined,
+    parsedPermissions: Record<string, string[]> | undefined
+  ) => {
+    const createData: {
+      name?: string;
+      expiresIn?: number;
+      prefix?: string;
+      metadata?: Record<string, unknown>;
+      permissions?: Record<string, string[]>;
+    } = {
+      name: values.name || undefined,
+    };
+
+    const expiresInSeconds = parseExpiresIn(values.expiresIn || "");
+    if (expiresInSeconds !== undefined) {
+      createData.expiresIn = expiresInSeconds;
+    } else {
+      createData.expiresIn = API_KEY_CONFIG.DEFAULT_EXPIRATION_DAYS * 24 * 60 * 60;
+    }
+
+    if (values.prefix) createData.prefix = values.prefix;
+    if (parsedMetadata) createData.metadata = parsedMetadata;
+    if (parsedPermissions) createData.permissions = parsedPermissions;
+
+    return createData;
+  };
+
+  const handleFormError = (err: unknown): void => {
+    const errorMessage =
+      err instanceof Error
+        ? err.message
+        : isEditing
+          ? API_KEY_ERRORS.UPDATE_FAILED
+          : API_KEY_ERRORS.CREATE_FAILED;
+    setError(errorMessage);
+  };
+
   const handleSubmit = async (values: ApiKeyFormValues) => {
     setError("");
 
-    let parsedMetadata: Record<string, unknown> | undefined;
-
-    if (values.metadata && values.metadata.trim() !== "") {
-      parsedMetadata = JSON.parse(values.metadata);
-    }
-
-    const parsedPermissions: Record<string, string[]> | undefined =
-      Object.keys(permissions).length > 0 ? permissions : undefined;
+    const parsedMetadata = parseFormMetadata(values.metadata || "");
+    const parsedPermissions = parseFormPermissions();
 
     try {
       if (isEditing && apiKey) {
-        const updateData: {
-          name?: string;
-          expiresIn?: number;
-          prefix?: string;
-          metadata?: Record<string, unknown>;
-          permissions?: Record<string, string[]>;
-        } = {
-          name: values.name || undefined,
-        };
-
-        if (values.expiresIn && values.expiresIn.trim() !== "") {
-          const days = parseInt(values.expiresIn, 10);
-          updateData.expiresIn = days * 24 * 60 * 60;
-        }
-
-        if (values.prefix) updateData.prefix = values.prefix;
-        if (parsedMetadata) updateData.metadata = parsedMetadata;
-        if (parsedPermissions) updateData.permissions = parsedPermissions;
-
+        const updateData = buildUpdateData(values, parsedMetadata, parsedPermissions);
         await updateMutation.mutateAsync({ id: apiKey.id, data: updateData });
         onSuccess();
       } else {
-        const createData: {
-          name?: string;
-          expiresIn?: number;
-          prefix?: string;
-          metadata?: Record<string, unknown>;
-          permissions?: Record<string, string[]>;
-        } = {
-          name: values.name || undefined,
-        };
-
-        if (values.expiresIn && values.expiresIn.trim() !== "") {
-          const days = parseInt(values.expiresIn, 10);
-          createData.expiresIn = days * 24 * 60 * 60;
-        } else {
-          createData.expiresIn = API_KEY_CONFIG.DEFAULT_EXPIRATION_DAYS * 24 * 60 * 60;
-        }
-
-        if (values.prefix) createData.prefix = values.prefix;
-        if (parsedMetadata) createData.metadata = parsedMetadata;
-        if (parsedPermissions) createData.permissions = parsedPermissions;
-
+        const createData = buildCreateData(values, parsedMetadata, parsedPermissions);
         const result = await createMutation.mutateAsync(createData);
         onSuccess(result.data?.key);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : isEditing
-            ? API_KEY_ERRORS.UPDATE_FAILED
-            : API_KEY_ERRORS.CREATE_FAILED;
-      setError(errorMessage);
+      handleFormError(err);
     }
   };
 

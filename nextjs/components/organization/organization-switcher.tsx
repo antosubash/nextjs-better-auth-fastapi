@@ -80,6 +80,33 @@ export function OrganizationSwitcher() {
     loadOrganizationsFallback,
   ]);
 
+  const switchOrganizationFallback = async (organizationId: string) => {
+    setIsSwitching(true);
+    setError(null);
+    try {
+      const result = await authClient.organization.setActive({
+        organizationId,
+      });
+
+      if (result.error) {
+        setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+        return;
+      }
+
+      const org = organizations.find((o) => o.id === organizationId);
+      if (org) {
+        setActiveOrganization(org);
+      }
+      router.refresh();
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to switch organization:", err);
+      setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+    } finally {
+      setIsSwitching(false);
+    }
+  };
+
   const handleSwitch = async (organizationId: string) => {
     if (organizationId === activeOrganization?.id) {
       return;
@@ -88,29 +115,7 @@ export function OrganizationSwitcher() {
     if (orgContext) {
       await orgContext.switchOrganization(organizationId);
     } else {
-      setIsSwitching(true);
-      setError(null);
-      try {
-        const result = await authClient.organization.setActive({
-          organizationId,
-        });
-
-        if (result.error) {
-          setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-        } else {
-          const org = organizations.find((o) => o.id === organizationId);
-          if (org) {
-            setActiveOrganization(org);
-          }
-          router.refresh();
-          window.location.reload();
-        }
-      } catch (err) {
-        console.error("Failed to switch organization:", err);
-        setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-      } finally {
-        setIsSwitching(false);
-      }
+      await switchOrganizationFallback(organizationId);
     }
   };
 

@@ -115,26 +115,7 @@ interface JobFormProps {
 }
 
 export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValues }: JobFormProps) {
-  const getDefaultValues = useCallback((): JobFormValues => {
-    if (initialValues) {
-      return {
-        job_id: initialValues.job_id || "",
-        function: initialValues.function || "",
-        trigger_type: initialValues.trigger_type || "cron",
-        cron_expression: initialValues.cron_expression || "",
-        weeks: initialValues.weeks || 0,
-        days: initialValues.days || 0,
-        hours: initialValues.hours || 0,
-        minutes: initialValues.minutes || 0,
-        seconds: initialValues.seconds || 0,
-        run_date: initialValues.run_date || null,
-        start_date: initialValues.start_date || null,
-        end_date: initialValues.end_date || null,
-        args: initialValues.args ? JSON.stringify(initialValues.args) : "",
-        kwargs: initialValues.kwargs ? JSON.stringify(initialValues.kwargs) : "",
-        replace_existing: initialValues.replace_existing ?? true,
-      };
-    }
+  const getEmptyDefaultValues = useCallback((): JobFormValues => {
     return {
       job_id: "",
       function: "",
@@ -152,7 +133,41 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
       kwargs: "",
       replace_existing: true,
     };
-  }, [initialValues]);
+  }, []);
+
+  const serializeArgs = (args: unknown): string => {
+    return args ? JSON.stringify(args) : "";
+  };
+
+  const getDefaultValuesFromInitial = useCallback((): JobFormValues => {
+    if (!initialValues) {
+      return getEmptyDefaultValues();
+    }
+
+    const baseValues: JobFormValues = {
+      job_id: initialValues.job_id || "",
+      function: initialValues.function || "",
+      trigger_type: initialValues.trigger_type || "cron",
+      cron_expression: initialValues.cron_expression || "",
+      weeks: initialValues.weeks || 0,
+      days: initialValues.days || 0,
+      hours: initialValues.hours || 0,
+      minutes: initialValues.minutes || 0,
+      seconds: initialValues.seconds || 0,
+      run_date: initialValues.run_date || null,
+      start_date: initialValues.start_date || null,
+      end_date: initialValues.end_date || null,
+      args: serializeArgs(initialValues.args),
+      kwargs: serializeArgs(initialValues.kwargs),
+      replace_existing: initialValues.replace_existing ?? true,
+    };
+
+    return baseValues;
+  }, [initialValues, getEmptyDefaultValues]);
+
+  const getDefaultValues = useCallback((): JobFormValues => {
+    return getDefaultValuesFromInitial();
+  }, [getDefaultValuesFromInitial]);
 
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobSchema),
@@ -167,44 +182,73 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
 
   const triggerType = form.watch("trigger_type");
 
-  const handleSubmit = async (values: JobFormValues) => {
-    let args: unknown[] = [];
-    let kwargs: Record<string, unknown> = {};
-
+  const parseArgs = (argsString: string | undefined): unknown[] => {
+    if (!argsString) return [];
     try {
-      if (values.args) {
-        args = JSON.parse(values.args);
-      }
+      return JSON.parse(argsString);
     } catch {
       throw new Error(JOB_ERRORS.INVALID_ARGS);
     }
+  };
 
+  const parseKwargs = (kwargsString: string | undefined): Record<string, unknown> => {
+    if (!kwargsString) return {};
     try {
-      if (values.kwargs) {
-        kwargs = JSON.parse(values.kwargs);
-      }
+      return JSON.parse(kwargsString);
     } catch {
       throw new Error(JOB_ERRORS.INVALID_KWARGS);
     }
+  };
 
-    const jobData: JobCreate = {
+  const buildCronTriggerData = (values: JobFormValues): Partial<JobCreate> => {
+    if (values.trigger_type !== "cron") return {};
+    return {
+      cron_expression: values.cron_expression || null,
+    };
+  };
+
+  const buildIntervalTriggerData = (values: JobFormValues): Partial<JobCreate> => {
+    if (values.trigger_type !== "interval") return {};
+    return {
+      weeks: values.weeks,
+      days: values.days,
+      hours: values.hours,
+      minutes: values.minutes,
+      seconds: values.seconds,
+    };
+  };
+
+  const buildOnceTriggerData = (values: JobFormValues): Partial<JobCreate> => {
+    if (values.trigger_type !== "once") return {};
+    return {
+      run_date: values.run_date || null,
+    };
+  };
+
+  const buildJobData = (
+    values: JobFormValues,
+    args: unknown[],
+    kwargs: Record<string, unknown>
+  ): JobCreate => {
+    return {
       job_id: values.job_id,
       function: values.function,
       trigger_type: values.trigger_type as JobTriggerType,
-      cron_expression: values.trigger_type === "cron" ? values.cron_expression || null : null,
-      weeks: values.trigger_type === "interval" ? values.weeks : undefined,
-      days: values.trigger_type === "interval" ? values.days : undefined,
-      hours: values.trigger_type === "interval" ? values.hours : undefined,
-      minutes: values.trigger_type === "interval" ? values.minutes : undefined,
-      seconds: values.trigger_type === "interval" ? values.seconds : undefined,
-      run_date: values.trigger_type === "once" ? values.run_date || null : null,
+      ...buildCronTriggerData(values),
+      ...buildIntervalTriggerData(values),
+      ...buildOnceTriggerData(values),
       start_date: values.start_date || null,
       end_date: values.end_date || null,
       args: args.length > 0 ? args : undefined,
       kwargs: Object.keys(kwargs).length > 0 ? kwargs : undefined,
       replace_existing: values.replace_existing,
     };
+  };
 
+  const handleSubmit = async (values: JobFormValues) => {
+    const args = parseArgs(values.args);
+    const kwargs = parseKwargs(values.kwargs);
+    const jobData = buildJobData(values, args, kwargs);
     await onSubmit(jobData);
   };
 

@@ -4,7 +4,7 @@ import { ArrowLeft, Building2, Edit, RefreshCw, Trash2, UserPlus, Users } from "
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { InvitationList } from "@/components/organization/invitation-list";
 import { MemberList } from "@/components/organization/member-list";
 import { OrganizationForm } from "@/components/organization/organization-form";
@@ -40,26 +40,12 @@ import {
   ORGANIZATION_SUCCESS,
 } from "@/lib/constants";
 import { formatDate } from "@/lib/utils/date";
-
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  logo?: string;
-  metadata?: {
-    description?: string;
-  };
-  createdAt: number;
-}
+import { useOrganization } from "@/lib/hooks/api/use-organizations";
 
 export default function OrganizationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const organizationId = params.id as string;
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [activeTab, setActiveTab] = useState<"members" | "invitations">("members");
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -67,57 +53,35 @@ export default function OrganizationDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeOrganizationId, setActiveOrganizationId] = useState<string | null>(null);
 
-  const loadOrganization = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const [response, sessionResult] = await Promise.all([
-        fetch(`/api/admin/organizations/${organizationId}`),
-        authClient.getSession(),
-      ]);
+  const {
+    data: organizationData,
+    isLoading,
+    error: queryError,
+    refetch,
+    isRefetching,
+  } = useOrganization(organizationId);
+  const organization = organizationData?.organization || null;
+  const error = queryError?.message || "";
 
+  useEffect(() => {
+    const loadActiveOrganization = async () => {
+      const sessionResult = await authClient.getSession();
       if (sessionResult.data?.session?.activeOrganizationId) {
         setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
       }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED);
-        return;
-      }
-
-      const data = await response.json();
-      if (data.organization) {
-        setOrganization(data.organization);
-      } else {
-        setError(ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED);
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED;
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [organizationId]);
-
-  useEffect(() => {
-    if (organizationId) {
-      loadOrganization();
-    }
-  }, [organizationId, loadOrganization]);
+    };
+    loadActiveOrganization();
+  }, []);
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    loadOrganization();
+    refetch();
   };
 
   const handleEditSuccess = () => {
     setShowEditDialog(false);
     setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_UPDATED);
     setTimeout(() => setSuccess(""), 3000);
-    loadOrganization();
+    refetch();
   };
 
   const handleDelete = async () => {
@@ -257,10 +221,10 @@ export default function OrganizationDetailPage() {
                 variant="outline"
                 size="icon"
                 onClick={handleRefresh}
-                disabled={isRefreshing}
+                disabled={isRefetching}
                 title={ORGANIZATION_LABELS.REFRESH}
               >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`} />
               </Button>
               <Button variant="outline" onClick={() => setShowEditDialog(true)}>
                 <Edit className="w-4 h-4 mr-2" />

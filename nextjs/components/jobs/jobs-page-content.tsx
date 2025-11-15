@@ -24,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { authClient } from "@/lib/auth-client";
+import { JOB_ERRORS, JOB_LABELS, PAGE_CONTAINER } from "@/lib/constants";
 import {
   useCreateJob,
   useDeleteJob,
@@ -31,8 +33,6 @@ import {
   usePauseJob,
   useResumeJob,
 } from "@/lib/hooks/api/use-jobs";
-import { authClient } from "@/lib/auth-client";
-import { JOB_ERRORS, JOB_LABELS, PAGE_CONTAINER } from "@/lib/constants";
 import type { Job, JobCreate } from "@/lib/types/job";
 
 export function JobsPageContent() {

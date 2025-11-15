@@ -70,8 +70,7 @@ import {
   USER_ROLES,
 } from "@/lib/constants";
 import { useToast } from "@/lib/hooks/use-toast";
-import { getAssignableUserRoles } from "@/lib/permissions-api";
-import type { RoleInfo } from "@/lib/permissions-utils";
+import { useAssignableUserRoles } from "@/lib/hooks/api/use-permissions";
 import { exportUsers } from "@/lib/utils/user-export";
 import { UserActions } from "./user-actions";
 import { UserBulkActions } from "./user-bulk-actions";
@@ -121,36 +120,116 @@ export function UserList() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
-  const [availableRoles, setAvailableRoles] = useState<RoleInfo[]>([]);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportFormat, setExportFormat] = useState<"csv" | "json">("csv");
 
-  const loadRoles = useCallback(async () => {
-    try {
-      const roles = await getAssignableUserRoles();
-      setAvailableRoles(roles);
-    } catch (err) {
-      console.error("Failed to load roles:", err);
-    }
-  }, []);
+  const { data: availableRoles = [] } = useAssignableUserRoles();
 
-  useEffect(() => {
-    loadRoles();
-  }, [loadRoles]);
+  const filterByRole = useCallback(
+    (users: User[]): User[] => {
+      if (filterRole === "all") return users;
+      return users.filter((u) => u.role === filterRole);
+    },
+    [filterRole]
+  );
 
-  const applyFilters = useCallback(
-    (usersToFilter: User[]) => {
-      let filtered = [...usersToFilter];
+  const getUserRoleDisplay = (role: string) => {
+    return (
+      ROLE_DISPLAY_NAMES[role as keyof typeof ROLE_DISPLAY_NAMES] || role || USER_ROLES.USER
+    );
+  };
 
-      if (filterRole !== "all") {
-        filtered = filtered.filter((u) => u.role === filterRole);
-      }
+  const renderUserRow = (user: User) => {
+    return (
+      <TableRow
+        key={user.id}
+        className="cursor-pointer"
+        onClick={() => setSelectedUser(user)}
+      >
+        <TableCell onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={selectedUserIds.has(user.id)}
+            onCheckedChange={(checked) => handleSelectUser(user.id, checked as boolean)}
+          />
+        </TableCell>
+        <TableCell>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <span className="font-medium cursor-pointer hover:underline">{user.name}</span>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <div>
+                  <h4 className="text-sm font-semibold">{user.name}</h4>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <p>
+                    <span className="font-medium">Role:</span> {getUserRoleDisplay(user.role)}
+                  </p>
+                  <p>
+                    <span className="font-medium">Status:</span>{" "}
+                    {user.banned ? ADMIN_LABELS.BANNED : ADMIN_LABELS.ACTIVE}
+                  </p>
+                  <p>
+                    <span className="font-medium">Email Verified:</span>{" "}
+                    {user.emailVerified
+                      ? ADMIN_LABELS.EMAIL_VERIFIED
+                      : ADMIN_LABELS.EMAIL_NOT_VERIFIED}
+                  </p>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        </TableCell>
+        <TableCell>{user.email}</TableCell>
+        <TableCell>
+          <Badge variant="secondary">{getUserRoleDisplay(user.role)}</Badge>
+        </TableCell>
+        <TableCell>
+          {user.banned ? (
+            <Badge variant="destructive">{ADMIN_LABELS.BANNED}</Badge>
+          ) : (
+            <Badge variant="default">{ADMIN_LABELS.ACTIVE}</Badge>
+          )}
+        </TableCell>
+        <TableCell>{formatDate(user.createdAt)}</TableCell>
+        <TableCell>
+          {user.emailVerified ? (
+            <Badge variant="default" className="gap-1">
+              <CheckCircle2 className="w-3 h-3" />
+              {ADMIN_LABELS.EMAIL_VERIFIED}
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="gap-1">
+              <XCircle className="w-3 h-3" />
+              {ADMIN_LABELS.EMAIL_NOT_VERIFIED}
+            </Badge>
+          )}
+        </TableCell>
+        <TableCell onClick={(e) => e.stopPropagation()}>
+          <UserActions user={user} />
+        </TableCell>
+      </TableRow>
+    );
+  };
 
+  const filterByStatus = useCallback(
+    (users: User[]): User[] => {
       if (filterStatus === "active") {
-        filtered = filtered.filter((u) => !u.banned);
-      } else if (filterStatus === "banned") {
-        filtered = filtered.filter((u) => u.banned);
+        return users.filter((u) => !u.banned);
       }
+      if (filterStatus === "banned") {
+        return users.filter((u) => u.banned);
+      }
+      return users;
+    },
+    [filterStatus]
+  );
+
+  const filterByDateRange = useCallback(
+    (users: User[]): User[] => {
+      let filtered = users;
 
       if (dateFrom) {
         const fromTimestamp = dateFrom.getTime();
@@ -162,11 +241,22 @@ export function UserList() {
         filtered = filtered.filter((u) => u.createdAt <= toTimestamp);
       }
 
+      return filtered;
+    },
+    [dateFrom, dateTo]
+  );
+
+  const applyFilters = useCallback(
+    (usersToFilter: User[]) => {
+      let filtered = filterByRole(usersToFilter);
+      filtered = filterByStatus(filtered);
+      filtered = filterByDateRange(filtered);
+
       setUsers(filtered);
       setTotalUsers(filtered.length);
       setCurrentPage(1);
     },
-    [filterRole, filterStatus, dateFrom, dateTo]
+    [filterByRole, filterByStatus, filterByDateRange]
   );
 
   const loadUsers = useCallback(async () => {
@@ -276,39 +366,53 @@ export function UserList() {
   const allPageSelected =
     paginatedUsers.length > 0 && paginatedUsers.every((u) => selectedUserIds.has(u.id));
 
-  const getPageNumbers = () => {
+  const buildPagesForStart = (totalPages: number): (number | "ellipsis")[] => {
     const pages: (number | "ellipsis")[] = [];
+    for (let i = 1; i <= 5; i++) {
+      pages.push(i);
+    }
+    pages.push("ellipsis");
+    pages.push(totalPages);
+    return pages;
+  };
+
+  const buildPagesForEnd = (totalPages: number): (number | "ellipsis")[] => {
+    const pages: (number | "ellipsis")[] = [1, "ellipsis"];
+    for (let i = totalPages - 4; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  const buildPagesForMiddle = (
+    currentPage: number,
+    totalPages: number
+  ): (number | "ellipsis")[] => {
+    const pages: (number | "ellipsis")[] = [1, "ellipsis"];
+    for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+      pages.push(i);
+    }
+    pages.push("ellipsis");
+    pages.push(totalPages);
+    return pages;
+  };
+
+  const getPageNumbers = (): (number | "ellipsis")[] => {
     const maxVisible = 7;
 
     if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 5; i++) {
-          pages.push(i);
-        }
-        pages.push("ellipsis");
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push("ellipsis");
-        for (let i = totalPages - 4; i <= totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        pages.push(1);
-        pages.push("ellipsis");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i);
-        }
-        pages.push("ellipsis");
-        pages.push(totalPages);
-      }
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
 
-    return pages;
+    if (currentPage <= 3) {
+      return buildPagesForStart(totalPages);
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return buildPagesForEnd(totalPages);
+    }
+
+    return buildPagesForMiddle(currentPage, totalPages);
   };
 
   return (
@@ -434,91 +538,7 @@ export function UserList() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedUsers.map((user) => (
-                      <TableRow
-                        key={user.id}
-                        className="cursor-pointer"
-                        onClick={() => setSelectedUser(user)}
-                      >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedUserIds.has(user.id)}
-                            onCheckedChange={(checked) =>
-                              handleSelectUser(user.id, checked as boolean)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <HoverCard>
-                            <HoverCardTrigger asChild>
-                              <span className="font-medium cursor-pointer hover:underline">
-                                {user.name}
-                              </span>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-80">
-                              <div className="space-y-2">
-                                <div>
-                                  <h4 className="text-sm font-semibold">{user.name}</h4>
-                                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  <p>
-                                    <span className="font-medium">Role:</span>{" "}
-                                    {ROLE_DISPLAY_NAMES[
-                                      user.role as keyof typeof ROLE_DISPLAY_NAMES
-                                    ] ||
-                                      user.role ||
-                                      USER_ROLES.USER}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Status:</span>{" "}
-                                    {user.banned ? ADMIN_LABELS.BANNED : ADMIN_LABELS.ACTIVE}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Email Verified:</span>{" "}
-                                    {user.emailVerified
-                                      ? ADMIN_LABELS.EMAIL_VERIFIED
-                                      : ADMIN_LABELS.EMAIL_NOT_VERIFIED}
-                                  </p>
-                                </div>
-                              </div>
-                            </HoverCardContent>
-                          </HoverCard>
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {ROLE_DISPLAY_NAMES[user.role as keyof typeof ROLE_DISPLAY_NAMES] ||
-                              user.role ||
-                              USER_ROLES.USER}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {user.banned ? (
-                            <Badge variant="destructive">{ADMIN_LABELS.BANNED}</Badge>
-                          ) : (
-                            <Badge variant="default">{ADMIN_LABELS.ACTIVE}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>{formatDate(user.createdAt)}</TableCell>
-                        <TableCell>
-                          {user.emailVerified ? (
-                            <Badge variant="default" className="gap-1">
-                              <CheckCircle2 className="w-3 h-3" />
-                              {ADMIN_LABELS.EMAIL_VERIFIED}
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="gap-1">
-                              <XCircle className="w-3 h-3" />
-                              {ADMIN_LABELS.EMAIL_NOT_VERIFIED}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <UserActions user={user} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {paginatedUsers.map((user) => renderUserRow(user))}
                   </TableBody>
                 </Table>
               </ScrollArea>

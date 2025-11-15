@@ -1,6 +1,6 @@
-import { PERMISSION_ERRORS, ROLE_MANAGEMENT_ERRORS } from "./constants";
-import type { Permission, RoleInfo } from "./permissions-utils";
-import { getAssignableUserRoles as getAssignableRoles } from "./utils/role-validation";
+import { PERMISSION_ERRORS, ROLE_MANAGEMENT_ERRORS } from "@/lib/constants";
+import type { Permission, RoleInfo } from "@/lib/permissions-utils";
+import { getAssignableUserRoles as getAssignableRoles } from "@/lib/utils/role-validation";
 
 export interface UserPermissionsResponse {
   user: {
@@ -69,3 +69,4 @@ export async function getUserPermissions(userId: string): Promise<UserPermission
 
   return response.json();
 }
+

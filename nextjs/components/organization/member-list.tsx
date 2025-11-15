@@ -40,6 +40,40 @@ export function MemberList({ organizationId }: MemberListProps) {
   const { success, showSuccess, clearSuccess } = useSuccessMessage();
   const { error, showError, clearError } = useErrorMessage();
 
+  const updateCurrentUserInfo = useCallback(
+    (userId: string | undefined, normalizedMembers: NormalizedMember[]) => {
+      if (!userId) return;
+
+      setCurrentUserId(userId);
+      const currentMember = normalizedMembers.find((m) => m.userId === userId);
+      if (currentMember) {
+        setCurrentUserRole(currentMember.role);
+      }
+    },
+    []
+  );
+
+  const processMembersData = useCallback(
+    (
+      membersResult: Awaited<ReturnType<typeof authClient.organization.listMembers>>,
+      sessionResult: Awaited<ReturnType<typeof authClient.getSession>>
+    ) => {
+      if (membersResult.error) {
+        showError(membersResult.error.message || MEMBER_ERRORS.LOAD_MEMBERS_FAILED);
+        return;
+      }
+
+      if (membersResult.data) {
+        const normalizedMembers = normalizeMembers(extractMembers(membersResult.data));
+        setMembers(normalizedMembers);
+        updateCurrentUserInfo(sessionResult.data?.user?.id, normalizedMembers);
+      } else {
+        updateCurrentUserInfo(sessionResult.data?.user?.id, []);
+      }
+    },
+    [showError, updateCurrentUserInfo]
+  );
+
   const loadMembers = useCallback(async () => {
     setIsLoading(true);
     clearError();
@@ -53,34 +87,14 @@ export function MemberList({ organizationId }: MemberListProps) {
         authClient.getSession(),
       ]);
 
-      if (membersResult.error) {
-        showError(membersResult.error.message || MEMBER_ERRORS.LOAD_MEMBERS_FAILED);
-      } else if (membersResult.data) {
-        const normalizedMembers = normalizeMembers(extractMembers(membersResult.data));
-        setMembers(normalizedMembers);
-
-        // Find current user's role in the organization
-        if (sessionResult.data?.user?.id) {
-          setCurrentUserId(sessionResult.data.user.id);
-          const currentMember = normalizedMembers.find(
-            (m) => m.userId === sessionResult.data?.user?.id
-          );
-          if (currentMember) {
-            setCurrentUserRole(currentMember.role);
-          }
-        }
-      } else {
-        if (sessionResult.data?.user?.id) {
-          setCurrentUserId(sessionResult.data.user.id);
-        }
-      }
+      processMembersData(membersResult, sessionResult);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.LOAD_MEMBERS_FAILED;
       showError(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [organizationId, clearError, showError]);
+  }, [organizationId, clearError, showError, processMembersData]);
 
   useEffect(() => {
     loadMembers();

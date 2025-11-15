@@ -134,21 +134,56 @@ export function UserBulkActions({
     }
   };
 
+  const separateAdminAndNonAdminUsers = (userIds: string[]) => {
+    const adminUserIds: string[] = [];
+    const nonAdminUserIds: string[] = [];
+
+    userIds.forEach((userId) => {
+      const user = users.find((u) => u.id === userId);
+      if (canBanRole(user?.role)) {
+        nonAdminUserIds.push(userId);
+      } else {
+        adminUserIds.push(userId);
+      }
+    });
+
+    return { adminUserIds, nonAdminUserIds };
+  };
+
+  const processBanResults = (
+    results: PromiseSettledResult<Awaited<ReturnType<typeof authClient.admin.banUser>>>[],
+    adminUserIds: string[],
+    nonAdminUserIds: string[]
+  ) => {
+    const failedResults = results.filter(
+      (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.error)
+    );
+    const successfulBans = results.filter((r) => r.status === "fulfilled" && !r.value.error);
+
+    if (failedResults.length > 0) {
+      if (successfulBans.length > 0) {
+        const message =
+          adminUserIds.length > 0
+            ? `${successfulBans.length} user(s) banned. ${adminUserIds.length} admin user(s) skipped. ${failedResults.length} user(s) failed.`
+            : `${successfulBans.length} user(s) banned. ${failedResults.length} user(s) failed.`;
+        onSuccess(message);
+      } else {
+        onError(`${failedResults.length} users failed to ban`);
+      }
+    } else {
+      const successMessage =
+        adminUserIds.length > 0
+          ? `${nonAdminUserIds.length} user(s) banned. ${adminUserIds.length} admin user(s) skipped.`
+          : ADMIN_SUCCESS.BULK_BAN_SUCCESS;
+      onSuccess(successMessage);
+    }
+  };
+
   const handleBulkBan = async () => {
     setIsProcessingBulk(true);
     try {
       const userIds = Array.from(selectedUserIds);
-
-      // Filter out admin users
-      const adminUserIds = userIds.filter((userId) => {
-        const user = users.find((u) => u.id === userId);
-        return !canBanRole(user?.role);
-      });
-
-      const nonAdminUserIds = userIds.filter((userId) => {
-        const user = users.find((u) => u.id === userId);
-        return canBanRole(user?.role);
-      });
+      const { adminUserIds, nonAdminUserIds } = separateAdminAndNonAdminUsers(userIds);
 
       if (nonAdminUserIds.length === 0) {
         onError(ADMIN_ERRORS.CANNOT_BAN_ADMIN);
@@ -167,31 +202,7 @@ export function UserBulkActions({
         )
       );
 
-      // Check for failed results
-      // Note: We already filtered out admin users, so any errors are not admin-related
-      const failedResults = results.filter(
-        (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.error)
-      );
-
-      const successfulBans = results.filter((r) => r.status === "fulfilled" && !r.value.error);
-
-      if (failedResults.length > 0) {
-        if (successfulBans.length > 0) {
-          const message =
-            adminUserIds.length > 0
-              ? `${successfulBans.length} user(s) banned. ${adminUserIds.length} admin user(s) skipped. ${failedResults.length} user(s) failed.`
-              : `${successfulBans.length} user(s) banned. ${failedResults.length} user(s) failed.`;
-          onSuccess(message);
-        } else {
-          onError(`${failedResults.length} users failed to ban`);
-        }
-      } else {
-        const successMessage =
-          adminUserIds.length > 0
-            ? `${nonAdminUserIds.length} user(s) banned. ${adminUserIds.length} admin user(s) skipped.`
-            : ADMIN_SUCCESS.BULK_BAN_SUCCESS;
-        onSuccess(successMessage);
-      }
+      processBanResults(results, adminUserIds, nonAdminUserIds);
       setBulkBanReason("");
       setShowBulkBanDialog(false);
       onComplete();

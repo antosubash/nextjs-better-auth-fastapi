@@ -75,6 +75,124 @@ export function MainNavbar() {
     return "U";
   };
 
+  const renderUserProfile = (showName = true) => {
+    if (!user) return null;
+
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted cursor-pointer">
+        <Avatar className="w-8 h-8">
+          {user.image ? <AvatarImage src={user.image} alt={user.name || "User"} /> : null}
+          <AvatarFallback className="text-sm">{getInitials(user.name, user.email)}</AvatarFallback>
+        </Avatar>
+        {showName && (
+          <span className="text-sm font-medium hidden lg:block">{user.name || user.email}</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderDesktopNav = () => {
+    if (!isAuthenticated) {
+      return (
+        <Button onClick={handleLogin} variant="default">
+          <LogIn className="w-4 h-4 mr-2" />
+          {AUTH_LABELS.LOGIN}
+        </Button>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-4">
+        <Button asChild variant={pathname === "/dashboard" ? "default" : "ghost"}>
+          <Link href="/dashboard">{DASHBOARD.TITLE}</Link>
+        </Button>
+        {user && (
+          <div className="flex items-center gap-3">
+            <OrganizationSwitcher />
+            <Separator orientation="vertical" className="h-6" />
+            <HoverCard>
+              <HoverCardTrigger asChild>{renderUserProfile()}</HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-12 h-12">
+                    {user.image ? <AvatarImage src={user.image} alt={user.name || "User"} /> : null}
+                    <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold">{user.name || "User"}</h4>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+            <Button onClick={handleLogout} variant="default" size="sm">
+              <LogOut className="w-4 h-4 mr-2" />
+              <span className="hidden lg:inline">{AUTH_LABELS.LOGOUT}</span>
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderMobileMenu = () => {
+    if (!isAuthenticated) {
+      return (
+        <Button
+          onClick={() => {
+            handleLogin();
+            setMobileMenuOpen(false);
+          }}
+          variant="default"
+          className="w-full"
+        >
+          <LogIn className="w-4 h-4 mr-2" />
+          {AUTH_LABELS.LOGIN}
+        </Button>
+      );
+    }
+
+    if (!user) return null;
+
+    return (
+      <div className="space-y-4">
+        <Button
+          asChild
+          variant={pathname === "/dashboard" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <Link href="/dashboard">{DASHBOARD.TITLE}</Link>
+        </Button>
+        <div>
+          <OrganizationSwitcher />
+        </div>
+        <Separator />
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
+          <Avatar className="w-10 h-10">
+            {user.image ? <AvatarImage src={user.image} alt={user.name || "User"} /> : null}
+            <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-sm font-medium">{user.name || "User"}</p>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
+          </div>
+        </div>
+        <Button
+          onClick={() => {
+            handleLogout();
+            setMobileMenuOpen(false);
+          }}
+          variant="default"
+          className="w-full"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          {AUTH_LABELS.LOGOUT}
+        </Button>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <nav className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b">
@@ -98,60 +216,7 @@ export function MainNavbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4">
-            {isAuthenticated && (
-              <Button asChild variant={pathname === "/dashboard" ? "default" : "ghost"}>
-                <Link href="/dashboard">{DASHBOARD.TITLE}</Link>
-              </Button>
-            )}
-
-            {isAuthenticated && user ? (
-              <div className="flex items-center gap-3">
-                <OrganizationSwitcher />
-                <Separator orientation="vertical" className="h-6" />
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted cursor-pointer">
-                      <Avatar className="w-8 h-8">
-                        {user.image ? (
-                          <AvatarImage src={user.image} alt={user.name || "User"} />
-                        ) : null}
-                        <AvatarFallback className="text-sm">
-                          {getInitials(user.name, user.email)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium hidden lg:block">
-                        {user.name || user.email}
-                      </span>
-                    </div>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-80">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-12 h-12">
-                        {user.image ? (
-                          <AvatarImage src={user.image} alt={user.name || "User"} />
-                        ) : null}
-                        <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-semibold">{user.name || "User"}</h4>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                      </div>
-                    </div>
-                  </HoverCardContent>
-                </HoverCard>
-                <Button onClick={handleLogout} variant="default" size="sm">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  <span className="hidden lg:inline">{AUTH_LABELS.LOGOUT}</span>
-                </Button>
-              </div>
-            ) : (
-              <Button onClick={handleLogin} variant="default">
-                <LogIn className="w-4 h-4 mr-2" />
-                {AUTH_LABELS.LOGIN}
-              </Button>
-            )}
-          </div>
+          <div className="hidden md:flex items-center gap-4">{renderDesktopNav()}</div>
 
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -165,62 +230,7 @@ export function MainNavbar() {
               <SheetHeader>
                 <SheetTitle>Menu</SheetTitle>
               </SheetHeader>
-              <div className="mt-6 space-y-4">
-                {isAuthenticated && (
-                  <Button
-                    asChild
-                    variant={pathname === "/dashboard" ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Link href="/dashboard">{DASHBOARD.TITLE}</Link>
-                  </Button>
-                )}
-
-                {isAuthenticated && user ? (
-                  <div className="space-y-4">
-                    <div>
-                      <OrganizationSwitcher />
-                    </div>
-                    <Separator />
-                    <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
-                      <Avatar className="w-10 h-10">
-                        {user.image ? (
-                          <AvatarImage src={user.image} alt={user.name || "User"} />
-                        ) : null}
-                        <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">{user.name || "User"}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => {
-                        handleLogout();
-                        setMobileMenuOpen(false);
-                      }}
-                      variant="default"
-                      className="w-full"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      {AUTH_LABELS.LOGOUT}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={() => {
-                      handleLogin();
-                      setMobileMenuOpen(false);
-                    }}
-                    variant="default"
-                    className="w-full"
-                  >
-                    <LogIn className="w-4 h-4 mr-2" />
-                    {AUTH_LABELS.LOGIN}
-                  </Button>
-                )}
-              </div>
+              <div className="mt-6 space-y-4">{renderMobileMenu()}</div>
             </SheetContent>
           </Sheet>
         </div>

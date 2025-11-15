@@ -46,6 +46,122 @@ export async function PATCH(
   return handleProxyRequest(request, path, "PATCH");
 }
 
+async function handleAuthTokenRequest() {
+  const session = await betterAuthService.session.getSession();
+  if (!session?.session) {
+    return NextResponse.json({ error: PROXY_ERRORS.NOT_AUTHENTICATED }, { status: 401 });
+  }
+  const tokenResponse = await betterAuthService.session.getToken();
+  if (!tokenResponse?.token) {
+    return NextResponse.json({ error: PROXY_ERRORS.FAILED_TO_GENERATE_TOKEN }, { status: 500 });
+  }
+  return NextResponse.json(tokenResponse);
+}
+
+function buildRequestUrl(pathSegments: string[], searchParams: string): string {
+  const endpoint = `/${pathSegments.join("/")}`;
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const url = `${apiBaseUrl}${endpoint}`;
+  return searchParams ? `${url}?${searchParams}` : url;
+}
+
+function setContentTypeHeaders(requestHeaders: Headers, contentType: string): void {
+  const isMultipart = contentType.includes("multipart/form-data");
+  if (!isMultipart) {
+    requestHeaders.set("Content-Type", "application/json");
+  } else {
+    requestHeaders.set("Content-Type", contentType);
+  }
+}
+
+async function addAuthenticationHeaders(
+  requestHeaders: Headers,
+  apiKey: string | null
+): Promise<NextResponse | null> {
+  if (apiKey) {
+    requestHeaders.set("X-API-Key", apiKey);
+  }
+
+  try {
+    const session = await betterAuthService.session.getSession();
+    if (session?.session) {
+      const tokenResponse = await betterAuthService.session.getToken();
+      if (tokenResponse?.token) {
+        requestHeaders.set("Authorization", `Bearer ${tokenResponse.token}`);
+      }
+    }
+  } catch {
+    if (!apiKey) {
+      return NextResponse.json({ error: PROXY_ERRORS.NOT_AUTHENTICATED }, { status: 401 });
+    }
+  }
+
+  if (!apiKey && !requestHeaders.has("Authorization")) {
+    return NextResponse.json({ error: PROXY_ERRORS.NOT_AUTHENTICATED }, { status: 401 });
+  }
+
+  return null;
+}
+
+async function buildRequestBody(
+  request: NextRequest,
+  method: string,
+  isMultipart: boolean
+): Promise<ArrayBuffer | string | undefined> {
+  if (method === "GET" || method === "DELETE") {
+    return undefined;
+  }
+
+  if (isMultipart) {
+    return await request.arrayBuffer();
+  }
+
+  const body = await request.text();
+  return body || undefined;
+}
+
+async function handleProxyResponse(response: Response): Promise<NextResponse> {
+  if (response.status === 204) {
+    return new NextResponse(null, {
+      status: 204,
+      statusText: response.statusText,
+    });
+  }
+
+  const responseData = await response.text();
+  let jsonData: unknown;
+  try {
+    jsonData = JSON.parse(responseData);
+  } catch {
+    jsonData = responseData;
+  }
+
+  return NextResponse.json(jsonData, {
+    status: response.status,
+    statusText: response.statusText,
+  });
+}
+
+function handleProxyError(error: unknown): NextResponse {
+  logger.error("Proxy request failed", error);
+
+  if (error instanceof Error) {
+    const errorMessage = error.message || "";
+    const causeMessage = error.cause instanceof Error ? error.cause.message : "";
+    const fullError = `${errorMessage} ${causeMessage}`.trim();
+
+    if (fullError.includes("ECONNREFUSED")) {
+      return NextResponse.json({ error: PROXY_ERRORS.BACKEND_UNAVAILABLE }, { status: 503 });
+    }
+    return NextResponse.json(
+      { error: `${PROXY_ERRORS.PROXY_REQUEST_FAILED}: ${errorMessage}` },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ error: PROXY_ERRORS.FAILED_TO_PROXY_REQUEST }, { status: 500 });
+}
+
 async function handleProxyRequest(request: NextRequest, pathSegments: string[], method: string) {
   try {
     // Handle special case: auth/get-token - requires session
@@ -54,122 +170,35 @@ async function handleProxyRequest(request: NextRequest, pathSegments: string[], 
       pathSegments[0] === "auth" &&
       pathSegments[1] === "get-token"
     ) {
-      const session = await betterAuthService.session.getSession();
-      if (!session?.session) {
-        return NextResponse.json({ error: PROXY_ERRORS.NOT_AUTHENTICATED }, { status: 401 });
-      }
-      const tokenResponse = await betterAuthService.session.getToken();
-      if (!tokenResponse?.token) {
-        return NextResponse.json({ error: PROXY_ERRORS.FAILED_TO_GENERATE_TOKEN }, { status: 500 });
-      }
-      return NextResponse.json(tokenResponse);
+      return await handleAuthTokenRequest();
     }
 
-    const endpoint = `/${pathSegments.join("/")}`;
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const url = `${apiBaseUrl}${endpoint}`;
     const searchParams = request.nextUrl.searchParams.toString();
-    const fullUrl = searchParams ? `${url}?${searchParams}` : url;
+    const fullUrl = buildRequestUrl(pathSegments, searchParams);
 
     const requestHeaders = new Headers();
-
-    // Check if this is a multipart/form-data request (file upload)
     const contentType = request.headers.get("content-type") || "";
     const isMultipart = contentType.includes("multipart/form-data");
 
-    // Only set Content-Type to JSON if it's not multipart
-    if (!isMultipart) {
-      requestHeaders.set("Content-Type", "application/json");
-    } else {
-      // For multipart, preserve the original Content-Type with boundary
-      requestHeaders.set("Content-Type", contentType);
-    }
+    setContentTypeHeaders(requestHeaders, contentType);
 
-    // Check for API key first (allows API key authentication without session)
     const apiKey = request.headers.get("X-API-Key");
-    if (apiKey) {
-      requestHeaders.set("X-API-Key", apiKey);
+    const authError = await addAuthenticationHeaders(requestHeaders, apiKey);
+    if (authError) {
+      return authError;
     }
 
-    // Try to get JWT token from session (optional if API key is present)
-    try {
-      const session = await betterAuthService.session.getSession();
-      if (session?.session) {
-        const tokenResponse = await betterAuthService.session.getToken();
-        if (tokenResponse?.token) {
-          requestHeaders.set("Authorization", `Bearer ${tokenResponse.token}`);
-        }
-      }
-    } catch {
-      // Session/JWT is optional if API key is provided
-      if (!apiKey) {
-        return NextResponse.json({ error: PROXY_ERRORS.NOT_AUTHENTICATED }, { status: 401 });
-      }
-    }
-
-    // Require either API key or JWT token
-    if (!apiKey && !requestHeaders.has("Authorization")) {
-      return NextResponse.json({ error: PROXY_ERRORS.NOT_AUTHENTICATED }, { status: 401 });
-    }
+    const body = await buildRequestBody(request, method, isMultipart);
 
     const requestOptions: RequestInit = {
       method,
       headers: requestHeaders,
+      body,
     };
 
-    if (method !== "GET" && method !== "DELETE") {
-      if (isMultipart) {
-        // For multipart/form-data, use arrayBuffer to preserve binary data
-        const body = await request.arrayBuffer();
-        requestOptions.body = body;
-      } else {
-        // For JSON, use text
-        const body = await request.text();
-        if (body) {
-          requestOptions.body = body;
-        }
-      }
-    }
-
     const response = await fetch(fullUrl, requestOptions);
-
-    // Handle 204 No Content responses (no body allowed)
-    if (response.status === 204) {
-      return new NextResponse(null, {
-        status: 204,
-        statusText: response.statusText,
-      });
-    }
-
-    const responseData = await response.text();
-    let jsonData: unknown;
-    try {
-      jsonData = JSON.parse(responseData);
-    } catch {
-      jsonData = responseData;
-    }
-
-    return NextResponse.json(jsonData, {
-      status: response.status,
-      statusText: response.statusText,
-    });
+    return await handleProxyResponse(response);
   } catch (error) {
-    logger.error("Proxy request failed", error);
-
-    if (error instanceof Error) {
-      const errorMessage = error.message || "";
-      const causeMessage = error.cause instanceof Error ? error.cause.message : "";
-      const fullError = `${errorMessage} ${causeMessage}`.trim();
-
-      if (fullError.includes("ECONNREFUSED")) {
-        return NextResponse.json({ error: PROXY_ERRORS.BACKEND_UNAVAILABLE }, { status: 503 });
-      }
-      return NextResponse.json(
-        { error: `${PROXY_ERRORS.PROXY_REQUEST_FAILED}: ${errorMessage}` },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ error: PROXY_ERRORS.FAILED_TO_PROXY_REQUEST }, { status: 500 });
+    return handleProxyError(error);
   }
 }

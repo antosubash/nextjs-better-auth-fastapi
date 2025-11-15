@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { ADMIN_ERRORS, ADMIN_SUCCESS, USER_ROLES } from "@/lib/constants";
 import { useToast } from "@/lib/hooks/use-toast";
-import { getAssignableUserRoles } from "@/lib/permissions-api";
-import type { RoleInfo } from "@/lib/permissions-utils";
+import { useAssignableUserRoles } from "@/lib/hooks/api/use-permissions";
 import { canBanRole, getValidAssignableRole } from "@/lib/utils/role-validation";
 
 interface User {
@@ -23,8 +22,7 @@ export function useUserEdit(userId: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
-  const [availableRoles, setAvailableRoles] = useState<RoleInfo[]>([]);
-  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  const { data: availableRoles = [], isLoading: isLoadingRoles } = useAssignableUserRoles();
 
   const loadUser = useCallback(async () => {
     if (!userId) return;
@@ -58,27 +56,9 @@ export function useUserEdit(userId: string) {
     }
   }, [userId]);
 
-  const loadRoles = useCallback(async () => {
-    setIsLoadingRoles(true);
-    try {
-      const roles = await getAssignableUserRoles();
-      setAvailableRoles(roles);
-    } catch (err) {
-      console.error("Failed to load roles:", err);
-    } finally {
-      setIsLoadingRoles(false);
-    }
-  }, []);
-
   useEffect(() => {
     loadUser();
   }, [loadUser]);
-
-  useEffect(() => {
-    if (user) {
-      loadRoles();
-    }
-  }, [user, loadRoles]);
 
   const reloadUser = useCallback(async () => {
     if (!userId) return;

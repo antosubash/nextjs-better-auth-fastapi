@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PROFILE_PICTURE } from "@/lib/constants";
-import { deleteProfilePicture, uploadProfilePicture } from "@/lib/storage-api";
+import { useUploadProfilePicture, useDeleteProfilePicture } from "@/lib/hooks/api/use-storage";
 import { cn } from "@/lib/utils";
 
 interface ProfilePictureUploadProps {
@@ -44,12 +44,13 @@ export function ProfilePictureUpload({
   userName,
   userEmail,
 }: ProfilePictureUploadProps) {
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  const uploadMutation = useUploadProfilePicture();
+  const deleteMutation = useDeleteProfilePicture();
 
   const handleFileSelect = useCallback(
     async (file: File) => {
@@ -76,21 +77,18 @@ export function ProfilePictureUpload({
       reader.readAsDataURL(file);
 
       // Upload file
-      setIsUploading(true);
       setError(null);
 
       try {
-        const response = await uploadProfilePicture(file);
+        const response = await uploadMutation.mutateAsync(file);
         setPreview(null);
         onUploadSuccess(response.url);
       } catch (err) {
         setError(err instanceof Error ? err.message : PROFILE_PICTURE.UPLOAD_FAILED);
         setPreview(null);
-      } finally {
-        setIsUploading(false);
       }
     },
-    [onUploadSuccess]
+    [onUploadSuccess, uploadMutation]
   );
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,16 +128,13 @@ export function ProfilePictureUpload({
   const handleDelete = async () => {
     if (!currentImageUrl) return;
 
-    setIsDeleting(true);
     setError(null);
 
     try {
-      await deleteProfilePicture(currentImageUrl);
+      await deleteMutation.mutateAsync(currentImageUrl);
       onDeleteSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : PROFILE_PICTURE.DELETE_FAILED);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -175,7 +170,7 @@ export function ProfilePictureUpload({
               type="file"
               accept={ALLOWED_TYPES.join(",")}
               onChange={handleFileInputChange}
-              disabled={disabled || isUploading}
+              disabled={disabled || uploadMutation.isPending}
               className="hidden"
             />
 
@@ -189,7 +184,7 @@ export function ProfilePictureUpload({
                 variant="outline"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={disabled || isUploading}
+                disabled={disabled || uploadMutation.isPending}
                 className="mt-2"
               >
                 <Upload className="w-4 h-4 mr-2" />
@@ -205,7 +200,7 @@ export function ProfilePictureUpload({
                 variant="outline"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={disabled || isUploading}
+                disabled={disabled || uploadMutation.isPending}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 {PROFILE_PICTURE.CHANGE}
@@ -215,9 +210,9 @@ export function ProfilePictureUpload({
                 variant="destructive"
                 size="sm"
                 onClick={handleDelete}
-                disabled={disabled || isDeleting}
+                disabled={disabled || deleteMutation.isPending}
               >
-                {isDeleting ? (
+                {deleteMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     {PROFILE_PICTURE.DELETING}
@@ -232,7 +227,7 @@ export function ProfilePictureUpload({
             </div>
           )}
 
-          {isUploading && (
+          {uploadMutation.isPending && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               {PROFILE_PICTURE.UPLOADING}

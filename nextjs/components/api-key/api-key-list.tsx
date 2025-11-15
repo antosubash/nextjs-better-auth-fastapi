@@ -37,7 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
-import { useDeleteExpiredApiKeys, useApiKeys } from "@/lib/hooks/api/use-api-keys";
+import { useApiKeys, useDeleteExpiredApiKeys } from "@/lib/hooks/api/use-api-keys";
 import { SearchInput } from "../organization/shared/search-input";
 import { ApiKeyActions } from "./api-key-actions";
 import { ApiKeyDetails } from "./api-key-details";
@@ -129,6 +129,31 @@ export function ApiKeyList() {
     if (!expiresAt) return false;
     const expiryDate = expiresAt instanceof Date ? expiresAt : new Date(expiresAt);
     return expiryDate < new Date();
+  };
+
+  const getStatusBadge = (expired: boolean, enabled?: boolean) => {
+    if (expired) {
+      return <Badge variant="destructive">{API_KEY_LABELS.EXPIRED}</Badge>;
+    }
+    if (enabled) {
+      return <Badge variant="default">{API_KEY_LABELS.ENABLED}</Badge>;
+    }
+    return <Badge variant="secondary">{API_KEY_LABELS.DISABLED}</Badge>;
+  };
+
+  const formatExpiryDate = (expiresAt: Date | number | null | undefined) => {
+    if (!expiresAt) {
+      return "Never";
+    }
+    let timestamp: number;
+    if (expiresAt instanceof Date) {
+      timestamp = expiresAt.getTime();
+    } else if (typeof expiresAt === "number") {
+      timestamp = expiresAt;
+    } else {
+      timestamp = new Date(expiresAt).getTime();
+    }
+    return formatDate(timestamp);
   };
 
   return (
@@ -305,26 +330,8 @@ export function ApiKeyList() {
                       <TableRow key={key.id}>
                         <TableCell className="font-medium">{key.name || "Unnamed"}</TableCell>
                         <TableCell className="font-mono">{key.prefix || "N/A"}</TableCell>
-                        <TableCell>
-                          {expired ? (
-                            <Badge variant="destructive">{API_KEY_LABELS.EXPIRED}</Badge>
-                          ) : key.enabled ? (
-                            <Badge variant="default">{API_KEY_LABELS.ENABLED}</Badge>
-                          ) : (
-                            <Badge variant="secondary">{API_KEY_LABELS.DISABLED}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {key.expiresAt
-                            ? formatDate(
-                                key.expiresAt instanceof Date
-                                  ? key.expiresAt.getTime()
-                                  : typeof key.expiresAt === "number"
-                                    ? key.expiresAt
-                                    : new Date(key.expiresAt).getTime()
-                              )
-                            : "Never"}
-                        </TableCell>
+                        <TableCell>{getStatusBadge(expired, key.enabled)}</TableCell>
+                        <TableCell>{formatExpiryDate(key.expiresAt)}</TableCell>
                         <TableCell>{formatDate(key.createdAt)}</TableCell>
                         <TableCell>
                           <ApiKeyActions
