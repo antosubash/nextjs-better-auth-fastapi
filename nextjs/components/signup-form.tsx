@@ -31,9 +31,7 @@ const signupSchema = z.object({
   password: z
     .string()
     .min(1, AUTH_ERRORS.PASSWORD_REQUIRED)
-    .refine((val) => val.length >= AUTH_ERRORS.PASSWORD_MIN_LENGTH, {
-      message: AUTH_ERRORS.PASSWORD_MIN_LENGTH_ERROR,
-    }),
+    .min(AUTH_ERRORS.PASSWORD_MIN_LENGTH, AUTH_ERRORS.PASSWORD_MIN_LENGTH_ERROR),
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
