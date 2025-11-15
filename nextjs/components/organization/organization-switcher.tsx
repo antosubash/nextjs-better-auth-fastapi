@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, ChevronDown, Check } from "lucide-react";
+import { Building2, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";

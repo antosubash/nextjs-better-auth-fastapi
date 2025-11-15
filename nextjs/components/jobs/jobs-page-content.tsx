@@ -3,7 +3,7 @@
 import { History, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { JobDetailsDialog } from "@/components/jobs/job-details-dialog";
 import { JobDialog } from "@/components/jobs/job-dialog";
@@ -44,7 +44,7 @@ export function JobsPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     try {
       setIsLoading(true);
       setError("");
@@ -58,7 +58,7 @@ export function JobsPageContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, pageSize]);
 
   useEffect(() => {
     const checkAuthAndLoadJobs = async () => {
@@ -80,14 +80,12 @@ export function JobsPageContent() {
     };
 
     checkAuthAndLoadJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, loadJobs]);
 
   useEffect(() => {
     if (isAuthorized) {
       loadJobs();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthorized, loadJobs]);
 
   const handleCreateClick = () => {

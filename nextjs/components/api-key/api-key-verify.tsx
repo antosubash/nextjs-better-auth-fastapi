@@ -1,7 +1,13 @@
 "use client";
 
-import { CheckCircle, X, XCircle } from "lucide-react";
+import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 
 interface ApiKeyVerifyProps {
@@ -80,84 +86,63 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 max-w-2xl w-full">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {API_KEY_LABELS.VERIFY_API_KEY}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{API_KEY_LABELS.VERIFY_API_KEY}</DialogTitle>
+        </DialogHeader>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-            {error}
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <form onSubmit={handleVerify} className="space-y-4">
-          <div>
-            <label
-              htmlFor="verify-api-key"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              {API_KEY_LABELS.KEY_TO_VERIFY}
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="verify-api-key">{API_KEY_LABELS.KEY_TO_VERIFY}</Label>
+            <Input
               id="verify-api-key"
               type="text"
               value={key}
               onChange={(e) => setKey(e.target.value)}
               placeholder={API_KEY_PLACEHOLDERS.KEY_TO_VERIFY}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white font-mono text-sm"
+              className="font-mono text-sm"
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="verify-permissions"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              {API_KEY_LABELS.VERIFY_PERMISSIONS}
-            </label>
-            <textarea
+          <div className="space-y-2">
+            <Label htmlFor="verify-permissions">{API_KEY_LABELS.VERIFY_PERMISSIONS}</Label>
+            <Textarea
               id="verify-permissions"
               value={permissions}
               onChange={(e) => setPermissions(e.target.value)}
               placeholder={API_KEY_PLACEHOLDERS.VERIFY_PERMISSIONS}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white font-mono text-sm"
+              className="font-mono text-sm"
             />
           </div>
 
           <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              disabled={isLoading || !key.trim()}
-              className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Verifying..." : API_KEY_LABELS.VERIFY_KEY}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <Button type="submit" disabled={isLoading || !key.trim()} className="flex-1">
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                API_KEY_LABELS.VERIFY_KEY
+              )}
+            </Button>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               {API_KEY_LABELS.CANCEL}
-            </button>
+            </Button>
           </div>
         </form>
 
         {result && (
-          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+          <div className="mt-6 p-4 bg-muted rounded-lg">
             <div className="flex items-center gap-2 mb-4">
               {result.valid ? (
                 <>
@@ -177,18 +162,18 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
             </div>
 
             {result.error && (
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Error:</p>
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {result.error.message} ({result.error.code})
-                </p>
-              </div>
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>
+                  <span className="font-medium">Error:</span> {result.error.message} (
+                  {result.error.code})
+                </AlertDescription>
+              </Alert>
             )}
 
             {result.key && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Key Details:</p>
-                <div className="text-sm text-gray-900 dark:text-white">
+                <p className="text-sm font-medium">Key Details:</p>
+                <div className="text-sm space-y-1">
                   <p>
                     <span className="font-medium">Name:</span> {result.key.name || "N/A"}
                   </p>
@@ -202,7 +187,7 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
                   {result.key.permissions && (
                     <div>
                       <span className="font-medium">Permissions:</span>
-                      <pre className="mt-1 p-2 bg-white dark:bg-gray-800 rounded text-xs overflow-x-auto">
+                      <pre className="mt-1 p-2 bg-background rounded text-xs overflow-x-auto border">
                         {formatJson(result.key.permissions)}
                       </pre>
                     </div>
@@ -212,7 +197,7 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
             )}
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

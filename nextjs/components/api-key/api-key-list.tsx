@@ -2,7 +2,6 @@
 
 import { Check, Copy, Key, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +17,7 @@ import { Empty, EmptyDescription } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -27,11 +27,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
+import { SearchInput } from "../organization/shared/search-input";
 import { ApiKeyActions } from "./api-key-actions";
 import { ApiKeyDetails } from "./api-key-details";
 import { ApiKeyForm } from "./api-key-form";
 import { ApiKeyVerify } from "./api-key-verify";
-import { SearchInput } from "../organization/shared/search-input";
 
 interface ApiKey {
   id: string;
@@ -45,8 +46,6 @@ interface ApiKey {
 export function ApiKeyList() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingApiKey, setEditingApiKey] = useState<ApiKey | null>(null);
@@ -54,16 +53,16 @@ export function ApiKeyList() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
   const [keyCopied, setKeyCopied] = useState(false);
+  const toast = useToast();
 
   const loadApiKeys = useCallback(async () => {
     setIsLoading(true);
-    setError("");
     try {
       const response = await fetch("/api/api-keys");
       const result = await response.json();
 
       if (!response.ok || result.error) {
-        setError(result.error || API_KEY_ERRORS.LOAD_API_KEYS_FAILED);
+        toast.error(result.error || API_KEY_ERRORS.LOAD_API_KEYS_FAILED);
       } else if (result.data) {
         const keys = Array.isArray(result.data) ? result.data : [];
         setApiKeys(
@@ -80,11 +79,11 @@ export function ApiKeyList() {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.LOAD_API_KEYS_FAILED;
-      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     void loadApiKeys();
@@ -99,27 +98,23 @@ export function ApiKeyList() {
     if (createdKey) {
       setNewlyCreatedKey(createdKey);
     }
-    setSuccess(API_KEY_SUCCESS.API_KEY_CREATED);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(API_KEY_SUCCESS.API_KEY_CREATED);
     loadApiKeys();
   };
 
   const handleApiKeyUpdated = () => {
     setEditingApiKey(null);
-    setSuccess(API_KEY_SUCCESS.API_KEY_UPDATED);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(API_KEY_SUCCESS.API_KEY_UPDATED);
     loadApiKeys();
   };
 
   const handleApiKeyDeleted = () => {
-    setSuccess(API_KEY_SUCCESS.API_KEY_DELETED);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(API_KEY_SUCCESS.API_KEY_DELETED);
     loadApiKeys();
   };
 
   const handleActionSuccess = (message: string) => {
-    setSuccess(message);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(message);
     loadApiKeys();
   };
 
@@ -135,16 +130,15 @@ export function ApiKeyList() {
       const result = await response.json();
 
       if (!response.ok || result.error) {
-        setError(result.error || API_KEY_ERRORS.DELETE_EXPIRED_FAILED);
+        toast.error(result.error || API_KEY_ERRORS.DELETE_EXPIRED_FAILED);
       } else {
-        setSuccess(API_KEY_SUCCESS.EXPIRED_DELETED);
-        setTimeout(() => setSuccess(""), 3000);
+        toast.success(API_KEY_SUCCESS.EXPIRED_DELETED);
         loadApiKeys();
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : API_KEY_ERRORS.DELETE_EXPIRED_FAILED;
-      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -200,18 +194,6 @@ export function ApiKeyList() {
           </Button>
         </div>
       </div>
-
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {success && (
-        <Alert className="mb-4">
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
 
       {showCreateForm && (
         <div className="mb-6">
@@ -291,7 +273,23 @@ export function ApiKeyList() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">{API_KEY_LABELS.LOADING}</div>
+            <div className="p-8 space-y-4">
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton loaders are static and won't reorder
+                  <div key={`skeleton-${i}`} className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-20" />
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : filteredApiKeys.length === 0 ? (
             <Empty>
               <EmptyDescription>{API_KEY_LABELS.NO_API_KEYS}</EmptyDescription>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, ChevronUp, Copy, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,7 +79,7 @@ export function JobHistoryList({
   const [jobs, setJobs] = useState<Job[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     try {
       // Load jobs with maximum allowed page size (100)
       // This should be sufficient for the filter dropdown
@@ -88,9 +88,9 @@ export function JobHistoryList({
     } catch (error) {
       console.error("Failed to load jobs:", error);
     }
-  };
+  }, []);
 
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getJobHistory(selectedJobId, page, pageSize);
@@ -103,7 +103,7 @@ export function JobHistoryList({
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedJobId, page, pageSize]);
 
   useEffect(() => {
     if (showJobFilter) {
@@ -113,7 +113,6 @@ export function JobHistoryList({
 
   useEffect(() => {
     loadHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadHistory]);
 
   const toggleExpand = (id: string) => {
@@ -166,7 +165,9 @@ export function JobHistoryList({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium">{JOB_LABELS.FILTER_BY_JOB}:</label>
+              <label htmlFor="job-filter-select" className="text-sm font-medium">
+                {JOB_LABELS.FILTER_BY_JOB}:
+              </label>
               <Select
                 value={selectedJobId || "all"}
                 onValueChange={(value) => {
@@ -174,7 +175,7 @@ export function JobHistoryList({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-[300px]">
+                <SelectTrigger id="job-filter-select" className="w-[300px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

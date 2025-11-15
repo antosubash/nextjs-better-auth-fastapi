@@ -2,6 +2,22 @@
 
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   API_KEY_CONFIG,
   API_KEY_ERRORS,
@@ -32,11 +48,14 @@ interface ApiKeyFormProps {
   onCancel: () => void;
 }
 
+interface ApiKeyFormValues {
+  name: string;
+  prefix: string;
+  expiresIn: string;
+  metadata: string;
+}
+
 export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
-  const [name, setName] = useState("");
-  const [prefix, setPrefix] = useState("");
-  const [expiresIn, setExpiresIn] = useState("");
-  const [metadata, setMetadata] = useState("");
   const [permissions, setPermissions] = useState<Record<string, string[]>>({});
   const [remaining, setRemaining] = useState("");
   const [refillAmount, setRefillAmount] = useState("");
@@ -49,19 +68,33 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
 
   const isEditing = !!apiKey;
 
+  const form = useForm<ApiKeyFormValues>({
+    defaultValues: {
+      name: "",
+      prefix: "",
+      expiresIn: "",
+      metadata: "",
+    },
+  });
+
   useEffect(() => {
     if (apiKey) {
-      setName(apiKey.name || "");
-      setPrefix(apiKey.prefix || "");
-      if (apiKey.expiresAt) {
-        const expiresDate = new Date(apiKey.expiresAt);
-        const now = new Date();
-        const daysUntilExpiry = Math.ceil(
-          (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-        );
-        setExpiresIn(daysUntilExpiry > 0 ? daysUntilExpiry.toString() : "");
-      }
-      setMetadata(apiKey.metadata ? JSON.stringify(apiKey.metadata, null, 2) : "");
+      const expiresInValue = apiKey.expiresAt
+        ? (() => {
+            const expiresDate = new Date(apiKey.expiresAt);
+            const now = new Date();
+            const daysUntilExpiry = Math.ceil(
+              (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            return daysUntilExpiry > 0 ? daysUntilExpiry.toString() : "";
+          })()
+        : "";
+      form.reset({
+        name: apiKey.name || "",
+        prefix: apiKey.prefix || "",
+        expiresIn: expiresInValue,
+        metadata: apiKey.metadata ? JSON.stringify(apiKey.metadata, null, 2) : "",
+      });
       setPermissions(apiKey.permissions || {});
       setRemaining(apiKey.remaining?.toString() || "");
       setRefillAmount(apiKey.refillAmount?.toString() || "");
@@ -70,17 +103,16 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
       setRateLimitTimeWindow(apiKey.rateLimitTimeWindow?.toString() || "");
       setRateLimitMax(apiKey.rateLimitMax?.toString() || "");
     }
-  }, [apiKey]);
+  }, [apiKey, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: ApiKeyFormValues) => {
     setError("");
 
     let parsedMetadata: Record<string, unknown> | undefined;
 
-    if (metadata.trim()) {
+    if (values.metadata.trim()) {
       try {
-        parsedMetadata = JSON.parse(metadata);
+        parsedMetadata = JSON.parse(values.metadata);
       } catch {
         setError(API_KEY_ERRORS.INVALID_METADATA);
         return;
@@ -104,11 +136,11 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           enabled?: boolean;
         } = {
           keyId: apiKey.id,
-          name: name || undefined,
+          name: values.name || undefined,
         };
 
-        if (expiresIn) {
-          const days = parseInt(expiresIn, 10);
+        if (values.expiresIn) {
+          const days = parseInt(values.expiresIn, 10);
           if (Number.isNaN(days) || days < 0) {
             setError(API_KEY_ERRORS.INVALID_EXPIRATION);
             setIsLoading(false);
@@ -117,7 +149,7 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           updateData.expiresIn = days * 24 * 60 * 60;
         }
 
-        if (prefix) updateData.prefix = prefix;
+        if (values.prefix) updateData.prefix = values.prefix;
         if (parsedMetadata) updateData.metadata = parsedMetadata;
         if (parsedPermissions) updateData.permissions = parsedPermissions;
         // Note: remaining, refillAmount, refillInterval, rateLimitEnabled,
@@ -146,11 +178,11 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           metadata?: Record<string, unknown>;
           permissions?: Record<string, string[]>;
         } = {
-          name: name || undefined,
+          name: values.name || undefined,
         };
 
-        if (expiresIn) {
-          const days = parseInt(expiresIn, 10);
+        if (values.expiresIn) {
+          const days = parseInt(values.expiresIn, 10);
           if (Number.isNaN(days) || days < 0) {
             setError(API_KEY_ERRORS.INVALID_EXPIRATION);
             setIsLoading(false);
@@ -161,7 +193,7 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           createData.expiresIn = API_KEY_CONFIG.DEFAULT_EXPIRATION_DAYS * 24 * 60 * 60;
         }
 
-        if (prefix) createData.prefix = prefix;
+        if (values.prefix) createData.prefix = values.prefix;
         if (parsedMetadata) createData.metadata = parsedMetadata;
         if (parsedPermissions) createData.permissions = parsedPermissions;
 
@@ -194,239 +226,219 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          {isEditing ? API_KEY_LABELS.EDIT_API_KEY : API_KEY_LABELS.CREATE_API_KEY}
-        </h2>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-        </button>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-          {error}
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>
+            {isEditing ? API_KEY_LABELS.EDIT_API_KEY : API_KEY_LABELS.CREATE_API_KEY}
+          </CardTitle>
+          <Button variant="ghost" size="icon" onClick={onCancel} disabled={isLoading}>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="api-key-name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            {API_KEY_LABELS.NAME}
-          </label>
-          <input
-            id="api-key-name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={API_KEY_PLACEHOLDERS.NAME}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="api-key-prefix"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            {API_KEY_LABELS.PREFIX}
-          </label>
-          <input
-            id="api-key-prefix"
-            type="text"
-            value={prefix}
-            onChange={(e) => setPrefix(e.target.value)}
-            placeholder={API_KEY_PLACEHOLDERS.PREFIX}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="api-key-expires-in"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            {API_KEY_LABELS.EXPIRES_IN}
-          </label>
-          <input
-            id="api-key-expires-in"
-            type="number"
-            value={expiresIn}
-            onChange={(e) => setExpiresIn(e.target.value)}
-            placeholder={API_KEY_PLACEHOLDERS.EXPIRES_IN}
-            min="0"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="api-key-metadata"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            {API_KEY_LABELS.METADATA}
-          </label>
-          <textarea
-            id="api-key-metadata"
-            value={metadata}
-            onChange={(e) => setMetadata(e.target.value)}
-            placeholder={API_KEY_PLACEHOLDERS.METADATA}
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white font-mono text-sm"
-          />
-        </div>
-
-        <PermissionsEditor value={permissions} onChange={setPermissions} />
-
-        {isEditing && (
-          <>
-            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>Note:</strong> The following fields are read-only and can only be modified
-                from the server: Remaining, Refill Amount, Refill Interval, and Rate Limiting
-                settings.
-              </p>
-            </div>
-
-            <div>
-              <label
-                htmlFor="api-key-remaining"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                {API_KEY_LABELS.REMAINING}{" "}
-                <span className="text-xs text-gray-500">(read-only)</span>
-              </label>
-              <input
-                id="api-key-remaining"
-                type="number"
-                value={remaining}
-                readOnly
-                placeholder={API_KEY_PLACEHOLDERS.REMAINING}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="api-key-refill-amount"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                {API_KEY_LABELS.REFILL_AMOUNT}{" "}
-                <span className="text-xs text-gray-500">(read-only)</span>
-              </label>
-              <input
-                id="api-key-refill-amount"
-                type="number"
-                value={refillAmount}
-                readOnly
-                placeholder={API_KEY_PLACEHOLDERS.REFILL_AMOUNT}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="api-key-refill-interval"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                {API_KEY_LABELS.REFILL_INTERVAL}{" "}
-                <span className="text-xs text-gray-500">(read-only)</span>
-              </label>
-              <input
-                id="api-key-refill-interval"
-                type="number"
-                value={refillInterval}
-                readOnly
-                placeholder={API_KEY_PLACEHOLDERS.REFILL_INTERVAL}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-              />
-            </div>
-
-            <div className="flex items-center gap-2 opacity-50">
-              <input
-                type="checkbox"
-                id="rateLimitEnabled"
-                checked={rateLimitEnabled}
-                disabled
-                className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 dark:focus:ring-white cursor-not-allowed"
-              />
-              <label
-                htmlFor="rateLimitEnabled"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                {API_KEY_LABELS.RATE_LIMIT_ENABLED}{" "}
-                <span className="text-xs text-gray-500">(read-only)</span>
-              </label>
-            </div>
-
-            {rateLimitEnabled && (
-              <>
-                <div>
-                  <label
-                    htmlFor="api-key-rate-limit-time-window"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}{" "}
-                    <span className="text-xs text-gray-500">(read-only)</span>
-                  </label>
-                  <input
-                    id="api-key-rate-limit-time-window"
-                    type="number"
-                    value={rateLimitTimeWindow}
-                    readOnly
-                    placeholder={API_KEY_PLACEHOLDERS.RATE_LIMIT_TIME_WINDOW}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="api-key-rate-limit-max"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    {API_KEY_LABELS.RATE_LIMIT_MAX}{" "}
-                    <span className="text-xs text-gray-500">(read-only)</span>
-                  </label>
-                  <input
-                    id="api-key-rate-limit-max"
-                    type="number"
-                    value={rateLimitMax}
-                    readOnly
-                    placeholder={API_KEY_PLACEHOLDERS.RATE_LIMIT_MAX}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                  />
-                </div>
-              </>
-            )}
-          </>
+      </CardHeader>
+      <CardContent>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
-        <div className="flex gap-3 pt-4">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? "Saving..." : API_KEY_LABELS.SAVE}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isLoading}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {API_KEY_LABELS.CANCEL}
-          </button>
-        </div>
-      </form>
-    </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{API_KEY_LABELS.NAME}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={API_KEY_PLACEHOLDERS.NAME}
+                      {...field}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="prefix"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{API_KEY_LABELS.PREFIX}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={API_KEY_PLACEHOLDERS.PREFIX}
+                      {...field}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="expiresIn"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{API_KEY_LABELS.EXPIRES_IN}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder={API_KEY_PLACEHOLDERS.EXPIRES_IN}
+                      min="0"
+                      {...field}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="metadata"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{API_KEY_LABELS.METADATA}</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder={API_KEY_PLACEHOLDERS.METADATA}
+                      rows={3}
+                      className="font-mono text-sm"
+                      {...field}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <PermissionsEditor value={permissions} onChange={setPermissions} />
+
+            {isEditing && (
+              <>
+                <Alert className="mb-4">
+                  <AlertDescription>
+                    <strong>Note:</strong> The following fields are read-only and can only be
+                    modified from the server: Remaining, Refill Amount, Refill Interval, and Rate
+                    Limiting settings.
+                  </AlertDescription>
+                </Alert>
+
+                <div>
+                  <Label htmlFor="api-key-remaining">
+                    {API_KEY_LABELS.REMAINING}{" "}
+                    <span className="text-xs text-muted-foreground">(read-only)</span>
+                  </Label>
+                  <Input
+                    id="api-key-remaining"
+                    type="number"
+                    value={remaining}
+                    readOnly
+                    placeholder={API_KEY_PLACEHOLDERS.REMAINING}
+                    className="mt-2 cursor-not-allowed"
+                    disabled
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="api-key-refill-amount">
+                    {API_KEY_LABELS.REFILL_AMOUNT}{" "}
+                    <span className="text-xs text-muted-foreground">(read-only)</span>
+                  </Label>
+                  <Input
+                    id="api-key-refill-amount"
+                    type="number"
+                    value={refillAmount}
+                    readOnly
+                    placeholder={API_KEY_PLACEHOLDERS.REFILL_AMOUNT}
+                    className="mt-2 cursor-not-allowed"
+                    disabled
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="api-key-refill-interval">
+                    {API_KEY_LABELS.REFILL_INTERVAL}{" "}
+                    <span className="text-xs text-muted-foreground">(read-only)</span>
+                  </Label>
+                  <Input
+                    id="api-key-refill-interval"
+                    type="number"
+                    value={refillInterval}
+                    readOnly
+                    placeholder={API_KEY_PLACEHOLDERS.REFILL_INTERVAL}
+                    className="mt-2 cursor-not-allowed"
+                    disabled
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 opacity-50">
+                  <Switch id="rateLimitEnabled" checked={rateLimitEnabled} disabled />
+                  <Label htmlFor="rateLimitEnabled" className="cursor-not-allowed">
+                    {API_KEY_LABELS.RATE_LIMIT_ENABLED}{" "}
+                    <span className="text-xs text-muted-foreground">(read-only)</span>
+                  </Label>
+                </div>
+
+                {rateLimitEnabled && (
+                  <>
+                    <div>
+                      <Label htmlFor="api-key-rate-limit-time-window">
+                        {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}{" "}
+                        <span className="text-xs text-muted-foreground">(read-only)</span>
+                      </Label>
+                      <Input
+                        id="api-key-rate-limit-time-window"
+                        type="number"
+                        value={rateLimitTimeWindow}
+                        readOnly
+                        placeholder={API_KEY_PLACEHOLDERS.RATE_LIMIT_TIME_WINDOW}
+                        className="mt-2 cursor-not-allowed"
+                        disabled
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="api-key-rate-limit-max">
+                        {API_KEY_LABELS.RATE_LIMIT_MAX}{" "}
+                        <span className="text-xs text-muted-foreground">(read-only)</span>
+                      </Label>
+                      <Input
+                        id="api-key-rate-limit-max"
+                        type="number"
+                        value={rateLimitMax}
+                        readOnly
+                        placeholder={API_KEY_PLACEHOLDERS.RATE_LIMIT_MAX}
+                        className="mt-2 cursor-not-allowed"
+                        disabled
+                      />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            <div className="flex gap-3 pt-4">
+              <Button type="submit" disabled={isLoading} className="flex-1">
+                {isLoading ? API_KEY_LABELS.SAVING : API_KEY_LABELS.SAVE}
+              </Button>
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+                {API_KEY_LABELS.CANCEL}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }

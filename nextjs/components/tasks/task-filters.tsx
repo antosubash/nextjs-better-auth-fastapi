@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { TASK_LABELS } from "@/lib/constants";
 import type { TaskStatus } from "@/lib/types/task";
 
@@ -18,17 +18,25 @@ export function TaskFilters({ statusFilter, onStatusFilterChange }: TaskFiltersP
   ];
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <ToggleGroup
+      type="single"
+      value={statusFilter || "all"}
+      onValueChange={(value) =>
+        onStatusFilterChange(value === "all" ? null : (value as TaskStatus))
+      }
+      variant="outline"
+      size="sm"
+      className="flex flex-wrap"
+    >
       {statuses.map((status) => (
-        <Button
+        <ToggleGroupItem
           key={status.value || "all"}
-          variant={statusFilter === status.value ? "default" : "outline"}
-          size="sm"
-          onClick={() => onStatusFilterChange(status.value)}
+          value={status.value || "all"}
+          aria-label={status.label}
         >
           {status.label}
-        </Button>
+        </ToggleGroupItem>
       ))}
-    </div>
+    </ToggleGroup>
   );
 }

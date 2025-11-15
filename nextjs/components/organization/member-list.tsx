@@ -63,7 +63,7 @@ export function MemberList({ organizationId }: MemberListProps) {
         if (sessionResult.data?.user?.id) {
           setCurrentUserId(sessionResult.data.user.id);
           const currentMember = normalizedMembers.find(
-            (m) => m.userId === sessionResult.data.user.id
+            (m) => m.userId === sessionResult.data?.user?.id
           );
           if (currentMember) {
             setCurrentUserRole(currentMember.role);

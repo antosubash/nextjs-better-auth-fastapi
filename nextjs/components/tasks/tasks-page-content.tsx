@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { TaskDialog } from "@/components/tasks/task-dialog";
 import { TaskFilters } from "@/components/tasks/task-filters";
@@ -43,7 +43,7 @@ export function TasksPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       setIsLoading(true);
       setError("");
@@ -57,7 +57,7 @@ export function TasksPageContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, pageSize, statusFilter]);
 
   useEffect(() => {
     const checkAuthAndLoadTasks = async () => {
@@ -79,14 +79,12 @@ export function TasksPageContent() {
     };
 
     checkAuthAndLoadTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, loadTasks]);
 
   useEffect(() => {
     if (isAuthorized) {
       loadTasks();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthorized, loadTasks]);
 
   const handleCreateClick = () => {

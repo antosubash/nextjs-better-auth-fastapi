@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ADMIN_NAVIGATION } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -105,19 +105,17 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               const active = isActive(item.href);
 
               return (
-                <Link
+                <Button
                   key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground"
-                  )}
+                  asChild
+                  variant={active ? "default" : "ghost"}
+                  className="w-full justify-start"
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
+                  <Link href={item.href}>
+                    <Icon className="w-5 h-5 mr-3" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                </Button>
               );
             })}
           </nav>
@@ -137,20 +135,18 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               const active = isActive(item.href);
 
               return (
-                <Link
+                <Button
                   key={item.href}
-                  href={item.href}
+                  asChild
+                  variant={active ? "default" : "ghost"}
+                  className="w-full justify-start"
                   onClick={handleLinkClick}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground"
-                  )}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
+                  <Link href={item.href}>
+                    <Icon className="w-5 h-5 mr-3" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                </Button>
               );
             })}
           </nav>

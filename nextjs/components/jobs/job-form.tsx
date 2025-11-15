@@ -1,11 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -23,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { JOB_ERRORS, JOB_LABELS, JOB_PLACEHOLDERS } from "@/lib/constants";
 import type { JobCreate, JobTriggerType } from "@/lib/types/job";
 
@@ -32,17 +32,17 @@ const jobSchema = z
     function: z.string().min(1, JOB_ERRORS.FUNCTION_REQUIRED),
     trigger_type: z.enum(["cron", "interval", "once"]),
     cron_expression: z.string().optional().nullable(),
-    weeks: z.number().min(0).default(0),
-    days: z.number().min(0).default(0),
-    hours: z.number().min(0).default(0),
-    minutes: z.number().min(0).default(0),
-    seconds: z.number().min(0).default(0),
+    weeks: z.number().min(0),
+    days: z.number().min(0),
+    hours: z.number().min(0),
+    minutes: z.number().min(0),
+    seconds: z.number().min(0),
     run_date: z.string().optional().nullable(),
     start_date: z.string().optional().nullable(),
     end_date: z.string().optional().nullable(),
     args: z.string().optional(),
     kwargs: z.string().optional(),
-    replace_existing: z.boolean().default(true),
+    replace_existing: z.boolean(),
   })
   .refine(
     (data) => {
@@ -81,7 +81,7 @@ interface JobFormProps {
 }
 
 export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValues }: JobFormProps) {
-  const getDefaultValues = (): JobFormValues => {
+  const getDefaultValues = useCallback((): JobFormValues => {
     if (initialValues) {
       return {
         job_id: initialValues.job_id || "",
@@ -118,7 +118,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
       kwargs: "",
       replace_existing: true,
     };
-  };
+  }, [initialValues]);
 
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobSchema),
@@ -129,7 +129,6 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
     if (initialValues) {
       form.reset(getDefaultValues());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues, form.reset, getDefaultValues]);
 
   const triggerType = form.watch("trigger_type");
@@ -473,14 +472,14 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
           control={form.control}
           name="replace_existing"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>{JOB_LABELS.REPLACE_EXISTING}</FormLabel>
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">{JOB_LABELS.REPLACE_EXISTING}</FormLabel>
                 <FormDescription>Replace existing job with the same ID</FormDescription>
               </div>
+              <FormControl>
+                <Switch checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
             </FormItem>
           )}
         />

@@ -2,6 +2,14 @@
 
 import { ChevronDown, ChevronUp, Code, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 import { statement } from "@/lib/permissions";
 
@@ -112,33 +120,32 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {API_KEY_LABELS.PERMISSIONS}
-        </label>
-        <button
+        <Label>{API_KEY_LABELS.PERMISSIONS}</Label>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => setShowJsonEditor(!showJsonEditor)}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
         >
-          <Code className="w-4 h-4" />
+          <Code className="w-4 h-4 mr-2" />
           {showJsonEditor ? API_KEY_LABELS.VISUAL_EDITOR : API_KEY_LABELS.JSON_EDITOR}
-        </button>
+        </Button>
       </div>
 
       {showJsonEditor ? (
-        <div>
-          <textarea
+        <div className="space-y-2">
+          <Textarea
             value={jsonValue}
             onChange={(e) => handleJsonChange(e.target.value)}
             placeholder={API_KEY_PLACEHOLDERS.PERMISSIONS}
             rows={8}
-            className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white font-mono text-sm ${
-              jsonError
-                ? "border-red-300 dark:border-red-700"
-                : "border-gray-300 dark:border-gray-700"
-            }`}
+            className={`font-mono text-sm ${jsonError ? "border-destructive" : ""}`}
           />
-          {jsonError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{jsonError}</p>}
+          {jsonError && (
+            <Alert variant="destructive">
+              <AlertDescription>{jsonError}</AlertDescription>
+            </Alert>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
@@ -148,140 +155,140 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
             const isCustom = !COMMON_RESOURCES.includes(resource as keyof typeof statement);
 
             return (
-              <div
-                key={resource}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
-              >
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900">
-                  <button
-                    type="button"
-                    onClick={() => toggleResource(resource)}
-                    className="flex items-center gap-2 flex-1 text-left"
-                  >
-                    {isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-gray-500" />
-                    ) : (
-                      <ChevronUp className="w-4 h-4 text-gray-500" />
-                    )}
-                    <span className="font-medium text-gray-900 dark:text-white capitalize">
-                      {resource}
-                    </span>
-                    {actions.length > 0 && (
-                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
-                        {actions.length}{" "}
-                        {actions.length === 1
-                          ? API_KEY_LABELS.ACTION
-                          : API_KEY_LABELS.ACTIONS_PLURAL}
-                      </span>
-                    )}
-                  </button>
-                  {isCustom && (
-                    <button
-                      type="button"
-                      onClick={() => removeResource(resource)}
-                      className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-
-                {isExpanded && (
-                  <div className="p-4 bg-white dark:bg-gray-800 space-y-3">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {getResourceActions(resource).map((action) => {
-                        const isSelected = actions.includes(action);
-                        return (
-                          <label
-                            key={action}
-                            className={`
-                              flex items-center gap-2 p-2 rounded border cursor-pointer transition-colors
-                              ${
-                                isSelected
-                                  ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
-                                  : "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-                              }
-                            `}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleAction(resource, action)}
-                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                            />
-                            <span
-                              className={`text-sm ${
-                                isSelected
-                                  ? "text-blue-900 dark:text-blue-100 font-medium"
-                                  : "text-gray-700 dark:text-gray-300"
-                              }`}
-                            >
-                              {action}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-
-                    {actions
-                      .filter((action) => !getResourceActions(resource).includes(action))
-                      .map((action) => (
-                        <div
-                          key={action}
-                          className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700"
+              <Card key={resource}>
+                <Collapsible open={isExpanded} onOpenChange={() => toggleResource(resource)}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="flex items-center gap-2 flex-1 justify-start p-0 h-auto font-medium"
                         >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={true}
-                              onChange={() => toggleAction(resource, action)}
-                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                            />
-                            <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
-                              {action}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => toggleAction(resource, action)}
-                            className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronUp className="w-4 h-4" />
+                          )}
+                          <span className="capitalize">{resource}</span>
+                          {actions.length > 0 && (
+                            <Badge variant="secondary" className="ml-2">
+                              {actions.length}{" "}
+                              {actions.length === 1
+                                ? API_KEY_LABELS.ACTION
+                                : API_KEY_LABELS.ACTIONS_PLURAL}
+                            </Badge>
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      {isCustom && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeResource(resource)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+
+                  <CollapsibleContent>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {getResourceActions(resource).map((action) => {
+                          const isSelected = actions.includes(action);
+                          return (
+                            <div
+                              key={action}
+                              className={`
+                                flex items-center gap-2 p-2 rounded border cursor-pointer transition-colors
+                                ${
+                                  isSelected
+                                    ? "bg-primary/10 border-primary"
+                                    : "bg-muted border-border hover:bg-muted/80"
+                                }
+                              `}
+                            >
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleAction(resource, action)}
+                              />
+                              <Label
+                                className={`text-sm cursor-pointer ${
+                                  isSelected ? "font-medium" : ""
+                                }`}
+                              >
+                                {action}
+                              </Label>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {actions
+                        .filter((action) => !getResourceActions(resource).includes(action))
+                        .map((action) => (
+                          <div
+                            key={action}
+                            className="flex items-center justify-between p-2 bg-muted rounded border"
                           >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={true}
+                                onCheckedChange={() => toggleAction(resource, action)}
+                              />
+                              <Label className="text-sm font-medium">{action}</Label>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => toggleAction(resource, action)}
+                              className="text-destructive hover:text-destructive h-8 w-8"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
 
-                    <button
-                      type="button"
-                      onClick={() => addCustomAction(resource)}
-                      className="w-full px-3 py-2 text-sm border border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
-                    >
-                      + {API_KEY_LABELS.ADD_CUSTOM_ACTION}
-                    </button>
-
-                    {!value[resource] && (
-                      <button
+                      <Button
                         type="button"
-                        onClick={() => removeResource(resource)}
-                        className="w-full px-3 py-2 text-sm border border-red-300 dark:border-red-700 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        variant="outline"
+                        className="w-full border-dashed"
+                        onClick={() => addCustomAction(resource)}
                       >
-                        {API_KEY_LABELS.REMOVE_RESOURCE}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+                        <Plus className="w-4 h-4 mr-2" />
+                        {API_KEY_LABELS.ADD_CUSTOM_ACTION}
+                      </Button>
+
+                      {!value[resource] && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={() => removeResource(resource)}
+                        >
+                          {API_KEY_LABELS.REMOVE_RESOURCE}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
             );
           })}
 
-          <button
+          <Button
             type="button"
+            variant="outline"
+            className="w-full border-dashed"
             onClick={addResource}
-            className="w-full px-4 py-3 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors flex items-center justify-center gap-2"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 mr-2" />
             {API_KEY_LABELS.ADD_RESOURCE}
-          </button>
+          </Button>
         </div>
       )}
     </div>

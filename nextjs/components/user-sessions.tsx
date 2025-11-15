@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Monitor, Trash, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -26,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { authClient } from "@/lib/auth-client";
 import { PROFILE, SESSION_ERRORS, SESSION_SUCCESS } from "@/lib/constants";
 import { useToast } from "@/lib/hooks/use-toast";
@@ -59,12 +59,7 @@ export function UserSessions() {
   const [isRevokingAll, setIsRevokingAll] = useState(false);
   const [currentSessionToken, setCurrentSessionToken] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSessions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadSessions]);
-
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     setIsLoading(true);
     try {
       // Get current session token
@@ -88,7 +83,11 @@ export function UserSessions() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
 
   const handleRevokeSession = async (sessionToken: string) => {
     setIsRevoking(sessionToken);

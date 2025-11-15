@@ -61,10 +61,14 @@ export function InvitationForm({ organizationId, onSuccess, onCancel }: Invitati
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="invitation-email"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             {INVITATION_LABELS.EMAIL}
           </label>
           <input
+            id="invitation-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -74,10 +78,14 @@ export function InvitationForm({ organizationId, onSuccess, onCancel }: Invitati
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="invitation-role"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             {INVITATION_LABELS.ROLE}
           </label>
           <MemberRoleSelector
+            id="invitation-role"
             value={role}
             onChange={(value) => setRole(value)}
             disabled={isLoading}

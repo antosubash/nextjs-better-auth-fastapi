@@ -382,6 +382,7 @@ export const ORGANIZATION_LABELS = {
   CANCEL: "Cancel",
   VIEW_DETAILS: "View Details",
   SAVING: "Saving...",
+  DELETING: "Deleting...",
   BACK_TO_ORGANIZATIONS: "Back to Organizations",
   CREATED_ON: "Created on",
   REFRESH: "Refresh",
@@ -512,6 +513,7 @@ export const INVITATION_LABELS = {
   CONFIRM_CANCEL: "Are you sure you want to cancel this invitation?",
   CONFIRM_REJECT: "Are you sure you want to reject this invitation?",
   SENDING: "Sending...",
+  CANCEL: "Cancel",
 } as const;
 
 export const INVITATION_PLACEHOLDERS = {
@@ -725,6 +727,8 @@ export const API_KEY_LABELS = {
   VISUAL_EDITOR: "Visual Editor",
   JSON_EDITOR: "JSON Editor",
   SERVER_ONLY_NOTE: "This field can only be set from the server",
+  SAVING: "Saving...",
+  DELETING: "Deleting...",
 } as const;
 
 export const API_KEY_PLACEHOLDERS = {

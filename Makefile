@@ -26,7 +26,7 @@ help:
 	@echo ""
 	@echo "Build:"
 	@echo "  make build           - Build both backend and frontend"
-	@echo "  make build-backend   - Build backend (if applicable)"
+	@echo "  make build-backend   - Build backend (sync deps and verify app)"
 	@echo "  make build-frontend  - Build frontend Next.js app"
 	@echo ""
 	@echo "Database:"
@@ -132,10 +132,14 @@ type-check:
 	@echo "Type checking frontend code..."
 	cd nextjs && pnpm type-check
 
-# Build backend (placeholder - add build steps if needed)
+# Build backend
 build-backend:
 	@echo "Building backend..."
-	@echo "No build step configured for backend"
+	@echo "Syncing dependencies..."
+	cd backend && uv sync
+	@echo "Verifying application can be imported..."
+	cd backend && uv run python -c "from main import app; print('✓ Application imported successfully')"
+	@echo "Backend build complete!"
 
 # Build frontend
 build-frontend:

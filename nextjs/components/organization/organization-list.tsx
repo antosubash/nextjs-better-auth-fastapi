@@ -2,13 +2,14 @@
 
 import { Building2, Plus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -30,7 +31,6 @@ import { OrganizationActions } from "./organization-actions";
 import { OrganizationForm } from "./organization-form";
 import { EmptyState } from "./shared/empty-state";
 import { ErrorMessage } from "./shared/error-message";
-import { LoadingState } from "./shared/loading-state";
 import { SearchInput } from "./shared/search-input";
 import { SuccessMessage } from "./shared/success-message";
 
@@ -52,7 +52,7 @@ export function OrganizationList() {
 
   const orgContext = useOrganizationSafe();
 
-  const loadOrganizations = async () => {
+  const loadOrganizations = useCallback(async () => {
     setIsLoading(true);
     clearError();
     try {
@@ -78,6 +78,7 @@ export function OrganizationList() {
               id: org.id,
               name: org.name,
               slug: org.slug,
+              createdAt: Date.now(),
             }))
           );
           setOrganizations(normalizedOrgs);
@@ -104,11 +105,10 @@ export function OrganizationList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAdminContext, orgContext, clearError, showError]);
 
   useEffect(() => {
     loadOrganizations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadOrganizations]);
 
   const handleOrganizationCreated = () => {
@@ -201,7 +201,23 @@ export function OrganizationList() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <LoadingState message={ORGANIZATION_LABELS.LOADING} />
+            <div className="p-8 space-y-4">
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton loaders are static and won't reorder
+                  <div key={`skeleton-${i}`} className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-20" />
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : filteredOrganizations.length === 0 ? (
             <EmptyState message={ORGANIZATION_LABELS.NO_ORGANIZATIONS} />
           ) : (

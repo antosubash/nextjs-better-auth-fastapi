@@ -1,11 +1,11 @@
 "use client";
 
 import { format } from "date-fns";
-import { Filter, X } from "lucide-react";
+import { ChevronDown, Filter, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -57,113 +57,113 @@ export function UserFilters({
   ].reduce((a, b) => a + b, 0);
 
   return (
-    <div className="mb-4 space-y-4">
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={() => onShowFiltersChange(!showFilters)}>
-          <Filter className="w-4 h-4 mr-2" />
-          {ADMIN_FILTERS.FILTER_BY_DATE}
-          {activeFilterCount > 0 && (
-            <Badge variant="secondary" className="ml-2">
-              {activeFilterCount}
-            </Badge>
-          )}
-        </Button>
-      </div>
+    <div className="mb-4">
+      <Collapsible open={showFilters} onOpenChange={onShowFiltersChange}>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline">
+            <Filter className="w-4 h-4 mr-2" />
+            {ADMIN_FILTERS.FILTER_BY_DATE}
+            {activeFilterCount > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {activeFilterCount}
+              </Badge>
+            )}
+            <ChevronDown
+              className={`w-4 h-4 ml-2 transition-transform ${showFilters ? "rotate-180" : ""}`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-4 space-y-4 rounded-lg border p-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">{ADMIN_FILTERS.FILTER_BY_DATE}</h3>
+            <Button variant="ghost" size="sm" onClick={onClearFilters}>
+              <X className="w-4 h-4 mr-2" />
+              {ADMIN_FILTERS.CLEAR_FILTERS}
+            </Button>
+          </div>
 
-      {showFilters && (
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold">{ADMIN_FILTERS.FILTER_BY_DATE}</h3>
-              <Button variant="ghost" size="sm" onClick={onClearFilters}>
-                <X className="w-4 h-4 mr-2" />
-                {ADMIN_FILTERS.CLEAR_FILTERS}
-              </Button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label>{ADMIN_FILTERS.FILTER_BY_ROLE}</Label>
+              <Select value={filterRole} onValueChange={onFilterRoleChange}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{ADMIN_FILTERS.ALL_ROLES}</SelectItem>
+                  {availableRoles.map((role) => (
+                    <SelectItem key={role.name} value={role.name}>
+                      {ROLE_DISPLAY_NAMES[role.name as keyof typeof ROLE_DISPLAY_NAMES] ||
+                        role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label>{ADMIN_FILTERS.FILTER_BY_ROLE}</Label>
-                <Select value={filterRole} onValueChange={onFilterRoleChange}>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{ADMIN_FILTERS.ALL_ROLES}</SelectItem>
-                    {availableRoles.map((role) => (
-                      <SelectItem key={role.name} value={role.name}>
-                        {ROLE_DISPLAY_NAMES[role.name as keyof typeof ROLE_DISPLAY_NAMES] ||
-                          role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>{ADMIN_FILTERS.FILTER_BY_STATUS}</Label>
-                <Select
-                  value={filterStatus}
-                  onValueChange={(value) => onFilterStatusChange(value as FilterStatus)}
-                >
-                  <SelectTrigger className="mt-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{ADMIN_FILTERS.ALL_STATUSES}</SelectItem>
-                    <SelectItem value="active">{ADMIN_LABELS.ACTIVE}</SelectItem>
-                    <SelectItem value="banned">{ADMIN_LABELS.BANNED}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>{ADMIN_FILTERS.DATE_FROM}</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full mt-2 justify-start text-left font-normal"
-                    >
-                      {dateFrom ? format(dateFrom, "PPP") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={dateFrom}
-                      onSelect={onDateFromChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div>
-                <Label>{ADMIN_FILTERS.DATE_TO}</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full mt-2 justify-start text-left font-normal"
-                    >
-                      {dateTo ? format(dateTo, "PPP") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={dateTo}
-                      onSelect={onDateToChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+            <div>
+              <Label>{ADMIN_FILTERS.FILTER_BY_STATUS}</Label>
+              <Select
+                value={filterStatus}
+                onValueChange={(value) => onFilterStatusChange(value as FilterStatus)}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{ADMIN_FILTERS.ALL_STATUSES}</SelectItem>
+                  <SelectItem value="active">{ADMIN_LABELS.ACTIVE}</SelectItem>
+                  <SelectItem value="banned">{ADMIN_LABELS.BANNED}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-      )}
+
+            <div>
+              <Label>{ADMIN_FILTERS.DATE_FROM}</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-2 justify-start text-left font-normal"
+                  >
+                    {dateFrom ? format(dateFrom, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={onDateFromChange}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div>
+              <Label>{ADMIN_FILTERS.DATE_TO}</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-2 justify-start text-left font-normal"
+                  >
+                    {dateTo ? format(dateTo, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={onDateToChange}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

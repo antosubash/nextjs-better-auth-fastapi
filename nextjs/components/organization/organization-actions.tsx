@@ -1,9 +1,26 @@
 "use client";
 
-import { CheckCircle2, Edit, MoreVertical, Trash2 } from "lucide-react";
+import { CheckCircle2, Edit, Loader2, MoreVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ErrorToast } from "@/components/ui/error-toast";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_ERRORS, ORGANIZATION_LABELS, ORGANIZATION_SUCCESS } from "@/lib/constants";
 
@@ -31,6 +48,7 @@ export function OrganizationActions({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleSetActive = async () => {
     setIsLoading(true);
@@ -55,10 +73,6 @@ export function OrganizationActions({
   };
 
   const handleDelete = async () => {
-    if (!confirm(ORGANIZATION_LABELS.CONFIRM_DELETE)) {
-      return;
-    }
-
     setIsLoading(true);
     try {
       const result = await authClient.organization.delete({
@@ -69,6 +83,7 @@ export function OrganizationActions({
         setError(result.error.message || ORGANIZATION_ERRORS.DELETE_FAILED);
       } else {
         onDelete();
+        setShowDeleteDialog(false);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : ORGANIZATION_ERRORS.DELETE_FAILED;
@@ -81,59 +96,80 @@ export function OrganizationActions({
   return (
     <>
       {error && <ErrorToast message={error} onDismiss={() => setError(null)} duration={5000} />}
-      <div className="relative">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          disabled={isLoading}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-        >
-          <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-        </button>
-
-        {isOpen && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
-              {!isActive && (
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    handleSetActive();
-                  }}
-                  disabled={isLoading}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isLoading ? <LoadingSpinner size="sm" /> : <CheckCircle2 className="w-4 h-4" />}
-                  {ORGANIZATION_LABELS.SET_ACTIVE}
-                </button>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" disabled={isLoading}>
+            <MoreVertical className="w-5 h-5" />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {!isActive && (
+            <DropdownMenuItem
+              onClick={() => {
+                setIsOpen(false);
+                handleSetActive();
+              }}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 mr-2" />
               )}
+              {ORGANIZATION_LABELS.SET_ACTIVE}
+            </DropdownMenuItem>
+          )}
+          {!isActive && <DropdownMenuSeparator />}
+          <DropdownMenuItem
+            onClick={() => {
+              setIsOpen(false);
+              onEdit();
+            }}
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            {ORGANIZATION_LABELS.EDIT_ORGANIZATION}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              setIsOpen(false);
+              setShowDeleteDialog(true);
+            }}
+            disabled={isLoading}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {ORGANIZATION_LABELS.DELETE_ORGANIZATION}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  onEdit();
-                }}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-              >
-                <Edit className="w-4 h-4" />
-                {ORGANIZATION_LABELS.EDIT_ORGANIZATION}
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  handleDelete();
-                }}
-                disabled={isLoading}
-                className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50"
-              >
-                {isLoading ? <LoadingSpinner size="sm" /> : <Trash2 className="w-4 h-4" />}
-                {ORGANIZATION_LABELS.DELETE_ORGANIZATION}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{ORGANIZATION_LABELS.DELETE_ORGANIZATION}</AlertDialogTitle>
+            <AlertDialogDescription>{ORGANIZATION_LABELS.CONFIRM_DELETE}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading}>{ORGANIZATION_LABELS.CANCEL}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {ORGANIZATION_LABELS.DELETING}
+                </>
+              ) : (
+                ORGANIZATION_LABELS.DELETE_ORGANIZATION
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -156,15 +156,15 @@ export function ProfilePictureUpload({
         </Avatar>
 
         <div className="flex-1 space-y-2">
-          <button
+          <Button
             type="button"
+            variant="outline"
             disabled={disabled}
             className={cn(
-              "w-full border-2 border-dashed rounded-lg p-6 text-center transition-colors",
+              "w-full border-2 border-dashed p-6 h-auto flex-col",
               isDragging && !disabled
                 ? "border-primary bg-primary/5"
-                : "border-muted-foreground/25 hover:border-muted-foreground/50",
-              disabled && "opacity-50 cursor-not-allowed"
+                : "border-muted-foreground/25 hover:border-muted-foreground/50"
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -180,7 +180,7 @@ export function ProfilePictureUpload({
               className="hidden"
             />
 
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <ImageIcon className="w-8 h-8 mx-auto text-muted-foreground" />
               <p className="text-sm text-muted-foreground">{PROFILE_PICTURE.DRAG_DROP}</p>
               <p className="text-xs text-muted-foreground">{PROFILE_PICTURE.MAX_SIZE}</p>
@@ -189,7 +189,10 @@ export function ProfilePictureUpload({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
                 disabled={disabled || isUploading}
                 className="mt-2"
               >
@@ -197,7 +200,7 @@ export function ProfilePictureUpload({
                 {PROFILE_PICTURE.SELECT_FILE}
               </Button>
             </div>
-          </button>
+          </Button>
 
           {currentImageUrl && !preview && (
             <div className="flex gap-2">

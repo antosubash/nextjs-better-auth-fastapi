@@ -11,12 +11,18 @@ import {
   XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -35,6 +42,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -42,7 +50,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -56,11 +63,13 @@ import { authClient } from "@/lib/auth-client";
 import {
   ADMIN_ERRORS,
   ADMIN_LABELS,
+  ADMIN_NAVIGATION,
   ADMIN_PAGINATION,
   ADMIN_SUCCESS,
   ROLE_DISPLAY_NAMES,
   USER_ROLES,
 } from "@/lib/constants";
+import { useToast } from "@/lib/hooks/use-toast";
 import { getAssignableUserRoles } from "@/lib/permissions-api";
 import type { RoleInfo } from "@/lib/permissions-utils";
 import { exportUsers } from "@/lib/utils/user-export";
@@ -98,9 +107,8 @@ export function UserList() {
   const [users, setUsers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [searchValue, setSearchValue] = useState("");
+  const toast = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
@@ -163,7 +171,6 @@ export function UserList() {
 
   const loadUsers = useCallback(async () => {
     setIsLoading(true);
-    setError("");
     try {
       const result = await authClient.admin.listUsers({
         query: {
@@ -176,7 +183,7 @@ export function UserList() {
       });
 
       if (result.error) {
-        setError(result.error.message || ADMIN_ERRORS.LOAD_USERS_FAILED);
+        toast.error(result.error.message || ADMIN_ERRORS.LOAD_USERS_FAILED);
       } else if (result.data) {
         const usersData = (result.data as { users?: User[] })?.users || [];
         const processedUsers = usersData.map((u) => ({
@@ -189,11 +196,11 @@ export function UserList() {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.LOAD_USERS_FAILED;
-      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [searchValue, applyFilters]);
+  }, [searchValue, applyFilters, toast]);
 
   useEffect(() => {
     void loadUsers();
@@ -218,8 +225,7 @@ export function UserList() {
 
   const handleUserCreated = () => {
     setShowCreateForm(false);
-    setSuccess(ADMIN_SUCCESS.USER_CREATED);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(ADMIN_SUCCESS.USER_CREATED);
     loadUsers();
   };
 
@@ -245,15 +251,13 @@ export function UserList() {
   };
 
   const handleBulkSuccess = (message: string) => {
-    setSuccess(message);
-    setTimeout(() => setSuccess(""), 3000);
+    toast.success(message);
     setSelectedUserIds(new Set());
     loadUsers();
   };
 
   const handleBulkError = (message: string) => {
-    setError(message);
-    setTimeout(() => setError(""), 5000);
+    toast.error(message);
   };
 
   const handleBulkComplete = () => {
@@ -309,6 +313,17 @@ export function UserList() {
 
   return (
     <div>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/dashboard">{ADMIN_NAVIGATION.DASHBOARD}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{ADMIN_NAVIGATION.USER_MANAGEMENT}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Users className="w-8 h-8" />
@@ -325,18 +340,6 @@ export function UserList() {
           </Button>
         </div>
       </div>
-
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {success && (
-        <Alert className="mb-4">
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
 
       <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -393,8 +396,22 @@ export function UserList() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center">
-              <Skeleton className="h-8 w-48 mx-auto" />
+            <div className="p-8 space-y-4">
+              <div className="space-y-2">
+                {Array.from({ length: itemsPerPage }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton loaders are static and won't reorder
+                  <div key={`skeleton-${i}`} className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : paginatedUsers.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">{ADMIN_LABELS.NO_USERS}</div>
