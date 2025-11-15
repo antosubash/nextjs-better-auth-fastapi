@@ -21,6 +21,7 @@ from core.middleware import (
     RateLimitMiddleware,
     RequestIDMiddleware,
 )
+from core.security_middleware import SecurityHeadersMiddleware
 from dependencies import close_http_client, get_http_client
 from routers import example, health, jobs, storage, tasks
 from services.storage_service import StorageService
@@ -56,6 +57,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         expose_headers=["*"],
     )
+
+    # Add security headers middleware (early in the stack)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # Add request ID middleware (first, so all requests get IDs)
     app.add_middleware(RequestIDMiddleware)

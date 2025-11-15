@@ -86,3 +86,15 @@ JOB_PERSISTENCE_VERIFY_RETRY_DELAY_SECONDS = float(
 # Log retrieval retry settings
 LOG_RETRY_MAX_ATTEMPTS = int(os.getenv("LOG_RETRY_MAX_ATTEMPTS", "3"))
 LOG_RETRY_DELAY_SECONDS = float(os.getenv("LOG_RETRY_DELAY_SECONDS", "0.1"))
+
+# Security headers configuration
+SECURITY_HEADERS_ENABLED = os.getenv("SECURITY_HEADERS_ENABLED", "true").lower() == "true"
+HSTS_MAX_AGE = int(os.getenv("HSTS_MAX_AGE", "31536000"))  # 1 year default (in seconds)
+CSP_POLICY = os.getenv(
+    "CSP_POLICY",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self';",
+)
+PERMISSIONS_POLICY = os.getenv(
+    "PERMISSIONS_POLICY",
+    "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), speaker=()",
+)

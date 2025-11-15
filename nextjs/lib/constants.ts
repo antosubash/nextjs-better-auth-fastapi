@@ -67,6 +67,10 @@ export const AUTH_ERRORS = {
   NAME_REQUIRED: "Name is required",
   SIGNUP_FAILED: "Failed to create account",
   LOGIN_FAILED: "Failed to log in",
+  PASSWORD_MIN_LENGTH: 8,
+  PASSWORD_MIN_LENGTH_ERROR: "Password must be at least 8 characters",
+  PASSWORDS_DO_NOT_MATCH: "Passwords do not match",
+  CONFIRM_PASSWORD_REQUIRED: "Please confirm password",
 } as const;
 
 export const STORAGE_KEYS = {
@@ -95,6 +99,7 @@ export const API_DATA = {
   NO_DATA: "No data to display",
   SEND_BUTTON: "Send",
   RESPONSE_LABEL: "Response:",
+  CONTENT_REQUIRED: "Content is required",
 } as const;
 
 export const API_KEY_TEST = {
@@ -120,6 +125,9 @@ export const API_KEY_TEST = {
   JWT_ONLY: "JWT Token Only",
   BOTH: "Both API Key and JWT",
   NO_AUTH: "No Authentication",
+  API_KEY_REQUIRED: "API key is required",
+  ENDPOINT_REQUIRED: "Endpoint is required",
+  CONTENT_REQUIRED: "Content is required",
 } as const;
 
 export const LANDING_PAGE = {
@@ -773,6 +781,8 @@ export const API_KEY_ERRORS = {
   LOAD_API_KEYS_FAILED: "Failed to load API keys",
   LOAD_API_KEY_FAILED: "Failed to load API key",
   VERIFY_FAILED: "Failed to verify API key",
+  INVALID: "Invalid API key",
+  INSUFFICIENT_PERMISSIONS: "Insufficient permissions",
   INVALID_METADATA: "Invalid metadata format. Must be valid JSON.",
   INVALID_PERMISSIONS: "Invalid permissions format. Must be valid JSON.",
   INVALID_EXPIRATION: "Invalid expiration value",

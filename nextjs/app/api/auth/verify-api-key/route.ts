@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             valid: false,
-            error: { message: "Insufficient permissions" },
+            error: { message: API_KEY_ERRORS.INSUFFICIENT_PERMISSIONS },
           },
           { status: 403 }
         );
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             valid: false,
-            error: { message: "Invalid API key" },
+            error: { message: API_KEY_ERRORS.INVALID },
           },
           { status: 401 }
         );
@@ -88,7 +88,8 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error("Failed to verify API key:", error);
+    const logger = (await import("@/lib/utils/logger")).createLogger("api/auth/verify-api-key");
+    logger.error("Failed to verify API key", error);
     return NextResponse.json(
       {
         valid: false,

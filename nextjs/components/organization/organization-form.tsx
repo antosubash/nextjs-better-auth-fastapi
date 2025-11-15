@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,11 +41,19 @@ interface OrganizationFormProps {
   hideHeader?: boolean;
 }
 
-interface OrganizationFormValues {
-  name: string;
-  slug: string;
-  description: string;
-}
+const organizationSchema = z.object({
+  name: z
+    .string()
+    .min(1, ORGANIZATION_ERRORS.INVALID_NAME)
+    .max(100, ORGANIZATION_ERRORS.NAME_TOO_LONG),
+  slug: z
+    .string()
+    .min(1, ORGANIZATION_ERRORS.SLUG_REQUIRED)
+    .regex(/^[a-z0-9-]+$/, ORGANIZATION_ERRORS.INVALID_SLUG_FORMAT),
+  description: z.string().optional(),
+});
+
+type OrganizationFormValues = z.infer<typeof organizationSchema>;
 
 export function OrganizationForm({
   organization,
@@ -57,6 +67,7 @@ export function OrganizationForm({
   const isEditing = !!organization;
 
   const form = useForm<OrganizationFormValues>({
+    resolver: zodResolver(organizationSchema),
     defaultValues: {
       name: "",
       slug: "",
@@ -133,13 +144,6 @@ export function OrganizationForm({
           <FormField
             control={form.control}
             name="name"
-            rules={{
-              required: ORGANIZATION_ERRORS.INVALID_NAME,
-              maxLength: {
-                value: 100,
-                message: ORGANIZATION_ERRORS.NAME_TOO_LONG,
-              },
-            }}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{ORGANIZATION_LABELS.NAME}</FormLabel>
@@ -159,13 +163,6 @@ export function OrganizationForm({
           <FormField
             control={form.control}
             name="slug"
-            rules={{
-              required: ORGANIZATION_ERRORS.SLUG_REQUIRED,
-              pattern: {
-                value: /^[a-z0-9-]+$/,
-                message: ORGANIZATION_ERRORS.INVALID_SLUG_FORMAT,
-              },
-            }}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{ORGANIZATION_LABELS.SLUG}</FormLabel>

@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,12 +51,45 @@ interface ApiKeyFormProps {
   onCancel: () => void;
 }
 
-interface ApiKeyFormValues {
-  name: string;
-  prefix: string;
-  expiresIn: string;
-  metadata: string;
-}
+const apiKeySchema = z
+  .object({
+    name: z.string().optional(),
+    prefix: z.string().optional(),
+    expiresIn: z.string().optional(),
+    metadata: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.expiresIn && data.expiresIn.trim() !== "") {
+        const days = parseInt(data.expiresIn, 10);
+        return !Number.isNaN(days) && days >= 0;
+      }
+      return true;
+    },
+    {
+      message: API_KEY_ERRORS.INVALID_EXPIRATION,
+      path: ["expiresIn"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.metadata && data.metadata.trim() !== "") {
+        try {
+          JSON.parse(data.metadata);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: API_KEY_ERRORS.INVALID_METADATA,
+      path: ["metadata"],
+    }
+  );
+
+type ApiKeyFormValues = z.infer<typeof apiKeySchema>;
 
 export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
   const [permissions, setPermissions] = useState<Record<string, string[]>>({});
@@ -72,6 +107,7 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   const form = useForm<ApiKeyFormValues>({
+    resolver: zodResolver(apiKeySchema),
     defaultValues: {
       name: "",
       prefix: "",
@@ -116,13 +152,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
 
     let parsedMetadata: Record<string, unknown> | undefined;
 
-    if (values.metadata.trim()) {
-      try {
-        parsedMetadata = JSON.parse(values.metadata);
-      } catch {
-        setError(API_KEY_ERRORS.INVALID_METADATA);
-        return;
-      }
+    if (values.metadata && values.metadata.trim() !== "") {
+      parsedMetadata = JSON.parse(values.metadata);
     }
 
     const parsedPermissions: Record<string, string[]> | undefined =
@@ -140,12 +171,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           name: values.name || undefined,
         };
 
-        if (values.expiresIn) {
+        if (values.expiresIn && values.expiresIn.trim() !== "") {
           const days = parseInt(values.expiresIn, 10);
-          if (Number.isNaN(days) || days < 0) {
-            setError(API_KEY_ERRORS.INVALID_EXPIRATION);
-            return;
-          }
           updateData.expiresIn = days * 24 * 60 * 60;
         }
 
@@ -166,12 +193,8 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
           name: values.name || undefined,
         };
 
-        if (values.expiresIn) {
+        if (values.expiresIn && values.expiresIn.trim() !== "") {
           const days = parseInt(values.expiresIn, 10);
-          if (Number.isNaN(days) || days < 0) {
-            setError(API_KEY_ERRORS.INVALID_EXPIRATION);
-            return;
-          }
           createData.expiresIn = days * 24 * 60 * 60;
         } else {
           createData.expiresIn = API_KEY_CONFIG.DEFAULT_EXPIRATION_DAYS * 24 * 60 * 60;

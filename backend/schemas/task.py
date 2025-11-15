@@ -6,7 +6,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from core.constants import ValidationErrorMessages
 from models.task import TaskStatus
+from utils.sanitization import sanitize_string
 
 
 class TaskCreate(BaseModel):
@@ -19,11 +21,13 @@ class TaskCreate(BaseModel):
     @field_validator("title")
     @classmethod
     def validate_title(cls, v: str) -> str:
-        """Validate title is not empty after stripping."""
-        if not v.strip():
-            error_msg = "Title cannot be empty"
-            raise ValueError(error_msg)
-        return v.strip()
+        """Validate and sanitize title."""
+        try:
+            return sanitize_string(v, max_length=255, min_length=1)
+        except ValueError as e:
+            if "at least" in str(e) or "at most" in str(e):
+                raise ValueError(str(e)) from e
+            raise ValueError(ValidationErrorMessages.TITLE_CANNOT_BE_EMPTY) from e
 
     class Config:
         json_schema_extra: ClassVar = {
@@ -45,11 +49,15 @@ class TaskUpdate(BaseModel):
     @field_validator("title")
     @classmethod
     def validate_title(cls, v: str | None) -> str | None:
-        """Validate title is not empty after stripping if provided."""
-        if v is not None and not v.strip():
-            error_msg = "Title cannot be empty"
-            raise ValueError(error_msg)
-        return v.strip() if v else None
+        """Validate and sanitize title if provided."""
+        if v is None:
+            return None
+        try:
+            return sanitize_string(v, max_length=255, min_length=1)
+        except ValueError as e:
+            if "at least" in str(e) or "at most" in str(e):
+                raise ValueError(str(e)) from e
+            raise ValueError(ValidationErrorMessages.TITLE_CANNOT_BE_EMPTY) from e
 
     class Config:
         json_schema_extra: ClassVar = {

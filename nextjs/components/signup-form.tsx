@@ -1,9 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,11 +25,18 @@ interface SignupFormProps {
   onSwitchToLogin: () => void;
 }
 
-interface SignupFormValues {
-  name: string;
-  email: string;
-  password: string;
-}
+const signupSchema = z.object({
+  name: z.string().min(1, AUTH_ERRORS.NAME_REQUIRED),
+  email: z.string().min(1, AUTH_ERRORS.EMAIL_REQUIRED).email(AUTH_ERRORS.EMAIL_REQUIRED),
+  password: z
+    .string()
+    .min(1, AUTH_ERRORS.PASSWORD_REQUIRED)
+    .refine((val) => val.length >= AUTH_ERRORS.PASSWORD_MIN_LENGTH, {
+      message: AUTH_ERRORS.PASSWORD_MIN_LENGTH_ERROR,
+    }),
+});
+
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
   const router = useRouter();
@@ -35,6 +44,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -76,9 +86,6 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         <FormField
           control={form.control}
           name="name"
-          rules={{
-            required: AUTH_ERRORS.NAME_REQUIRED,
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>{AUTH_LABELS.NAME}</FormLabel>
@@ -93,9 +100,6 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         <FormField
           control={form.control}
           name="email"
-          rules={{
-            required: AUTH_ERRORS.EMAIL_REQUIRED,
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>{AUTH_LABELS.EMAIL}</FormLabel>
@@ -110,9 +114,6 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         <FormField
           control={form.control}
           name="password"
-          rules={{
-            required: AUTH_ERRORS.PASSWORD_REQUIRED,
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>{AUTH_LABELS.PASSWORD}</FormLabel>

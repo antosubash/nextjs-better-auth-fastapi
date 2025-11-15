@@ -417,6 +417,9 @@ make type-check    # Type check frontend
 - **Rate Limiting**: Configurable per-IP rate limiting to prevent abuse
 - **Request Tracking**: Unique request IDs for all requests for traceability
 - **Dual Authentication**: Supports both JWT tokens and API keys simultaneously
+- **Security Headers**: Comprehensive security headers middleware (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, etc.) on both backend and frontend
+- **Input Sanitization**: Input validation and sanitization utilities for preventing injection attacks
+- **Error Handling**: Consistent error handling with proper logging (no console statements in production)
 
 ## Important Notes
 

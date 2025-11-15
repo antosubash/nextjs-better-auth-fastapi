@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +23,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
-import { ADMIN_ERRORS, ADMIN_LABELS, ADMIN_PLACEHOLDERS, ADMIN_SUCCESS } from "@/lib/constants";
+import {
+  ADMIN_ERRORS,
+  ADMIN_LABELS,
+  ADMIN_PLACEHOLDERS,
+  ADMIN_SUCCESS,
+  AUTH_ERRORS,
+} from "@/lib/constants";
 import { useToast } from "@/lib/hooks/use-toast";
 
 interface UserPasswordDialogProps {
@@ -31,10 +39,22 @@ interface UserPasswordDialogProps {
   onSuccess?: () => void;
 }
 
-interface PasswordFormValues {
-  newPassword: string;
-  confirmPassword: string;
-}
+const passwordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(1, AUTH_ERRORS.PASSWORD_REQUIRED)
+      .refine((val) => val.length >= AUTH_ERRORS.PASSWORD_MIN_LENGTH, {
+        message: AUTH_ERRORS.PASSWORD_MIN_LENGTH_ERROR,
+      }),
+    confirmPassword: z.string().min(1, AUTH_ERRORS.CONFIRM_PASSWORD_REQUIRED),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: AUTH_ERRORS.PASSWORDS_DO_NOT_MATCH,
+    path: ["confirmPassword"],
+  });
+
+type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export function UserPasswordDialog({
   userId,
@@ -46,6 +66,7 @@ export function UserPasswordDialog({
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
     defaultValues: {
       newPassword: "",
       confirmPassword: "",
@@ -53,16 +74,6 @@ export function UserPasswordDialog({
   });
 
   const handleSubmit = async (values: PasswordFormValues) => {
-    if (values.newPassword !== values.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (values.newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
-
     setIsLoading(true);
     try {
       const result = await authClient.admin.setUserPassword({
@@ -97,7 +108,6 @@ export function UserPasswordDialog({
             <FormField
               control={form.control}
               name="newPassword"
-              rules={{ required: "Password is required" }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{ADMIN_LABELS.NEW_PASSWORD}</FormLabel>
@@ -116,7 +126,6 @@ export function UserPasswordDialog({
             <FormField
               control={form.control}
               name="confirmPassword"
-              rules={{ required: "Please confirm password" }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{ADMIN_LABELS.CONFIRM_PASSWORD}</FormLabel>

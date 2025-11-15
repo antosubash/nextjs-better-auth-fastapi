@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +37,10 @@ import {
 import { getAssignableUserRoles } from "@/lib/permissions-api";
 import type { RoleInfo } from "@/lib/permissions-utils";
 import { getValidAssignableRole, isAssignableUserRole } from "@/lib/utils/role-validation";
+import { createLogger } from "@/lib/utils/logger";
 import { ProfilePictureUpload } from "./profile-picture-upload";
+
+const logger = createLogger("components/admin/user-form");
 
 interface User {
   id: string;
@@ -51,12 +56,22 @@ interface UserFormProps {
   onCancel: () => void;
 }
 
-interface UserFormValues {
-  name: string;
-  email: string;
-  password: string;
-  role: string;
-}
+const userSchema = z.object({
+  name: z.string().min(1, AUTH_ERRORS.NAME_REQUIRED),
+  email: z.string().min(1, AUTH_ERRORS.EMAIL_REQUIRED).email(MEMBER_ERRORS.INVALID_EMAIL),
+  password: z
+    .string()
+    .optional()
+    .refine(
+      (val) => val === undefined || val === "" || val.length >= AUTH_ERRORS.PASSWORD_MIN_LENGTH,
+      {
+        message: AUTH_ERRORS.PASSWORD_MIN_LENGTH_ERROR,
+      }
+    ),
+  role: z.string().min(1, ADMIN_ERRORS.INVALID_ROLE),
+});
+
+type UserFormValues = z.infer<typeof userSchema>;
 
 export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +82,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   const isEditing = !!user;
 
   const form = useForm<UserFormValues>({
+    resolver: zodResolver(userSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -86,7 +102,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         form.setValue("role", defaultRole);
       }
     } catch (err) {
-      console.error("Failed to load roles:", err);
+      logger.error("Failed to load roles", err);
     } finally {
       setIsLoadingRoles(false);
     }
@@ -191,7 +207,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           onSuccess();
         }
       } else {
-        if (!values.password) {
+        if (!values.password || values.password.trim() === "") {
           setError(AUTH_ERRORS.PASSWORD_REQUIRED);
           setIsLoading(false);
           return;
@@ -257,7 +273,6 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           <FormField
             control={form.control}
             name="name"
-            rules={{ required: AUTH_ERRORS.NAME_REQUIRED }}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{ADMIN_LABELS.NAME}</FormLabel>
@@ -272,13 +287,6 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           <FormField
             control={form.control}
             name="email"
-            rules={{
-              required: AUTH_ERRORS.EMAIL_REQUIRED,
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: MEMBER_ERRORS.INVALID_EMAIL,
-              },
-            }}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{ADMIN_LABELS.EMAIL}</FormLabel>
@@ -299,7 +307,6 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
             <FormField
               control={form.control}
               name="password"
-              rules={{ required: AUTH_ERRORS.PASSWORD_REQUIRED }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{ADMIN_LABELS.PASSWORD}</FormLabel>
