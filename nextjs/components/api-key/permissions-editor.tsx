@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Code, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Code, Plus, Search, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -8,8 +8,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
 import { API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 import { statement } from "@/lib/permissions";
 
@@ -21,6 +40,14 @@ interface PermissionsEditorProps {
 // Extract resources and actions from the permissions statement
 const COMMON_RESOURCES = Object.keys(statement) as Array<keyof typeof statement>;
 
+interface AddResourceFormValues {
+  resource: string;
+}
+
+interface AddActionFormValues {
+  action: string;
+}
+
 export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
   const [showJsonEditor, setShowJsonEditor] = useState(false);
   const [jsonValue, setJsonValue] = useState("");
@@ -28,6 +55,22 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
   const [expandedResources, setExpandedResources] = useState<Set<string>>(
     new Set(Object.keys(value))
   );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAddResourceDialog, setShowAddResourceDialog] = useState(false);
+  const [showAddActionDialog, setShowAddActionDialog] = useState(false);
+  const [currentResourceForAction, setCurrentResourceForAction] = useState<string>("");
+
+  const resourceForm = useForm<AddResourceFormValues>({
+    defaultValues: {
+      resource: "",
+    },
+  });
+
+  const actionForm = useForm<AddActionFormValues>({
+    defaultValues: {
+      action: "",
+    },
+  });
 
   useEffect(() => {
     setJsonValue(JSON.stringify(value, null, 2));
@@ -43,14 +86,13 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
     setExpandedResources(newExpanded);
   };
 
-  const addResource = () => {
-    const newResource = prompt(API_KEY_PLACEHOLDERS.PERMISSIONS);
-    if (newResource?.trim()) {
-      const resource = newResource.trim().toLowerCase();
-      if (!value[resource]) {
-        onChange({ ...value, [resource]: [] });
-        setExpandedResources(new Set([...expandedResources, resource]));
-      }
+  const handleAddResource = (values: AddResourceFormValues) => {
+    const resource = values.resource.trim().toLowerCase();
+    if (resource && !value[resource]) {
+      onChange({ ...value, [resource]: [] });
+      setExpandedResources(new Set([...expandedResources, resource]));
+      resourceForm.reset();
+      setShowAddResourceDialog(false);
     }
   };
 
@@ -71,15 +113,31 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
     onChange({ ...value, [resource]: newActions });
   };
 
-  const addCustomAction = (resource: string) => {
-    const newAction = prompt(API_KEY_PLACEHOLDERS.ACTION_NAME);
-    if (newAction?.trim()) {
-      const action = newAction.trim().toLowerCase();
-      const currentActions = value[resource] || [];
+  const handleAddCustomAction = (values: AddActionFormValues) => {
+    const action = values.action.trim().toLowerCase();
+    if (action && currentResourceForAction) {
+      const currentActions = value[currentResourceForAction] || [];
       if (!currentActions.includes(action)) {
-        onChange({ ...value, [resource]: [...currentActions, action] });
+        onChange({ ...value, [currentResourceForAction]: [...currentActions, action] });
       }
+      actionForm.reset();
+      setShowAddActionDialog(false);
+      setCurrentResourceForAction("");
     }
+  };
+
+  const openAddActionDialog = (resource: string) => {
+    setCurrentResourceForAction(resource);
+    setShowAddActionDialog(true);
+  };
+
+  const selectAllActions = (resource: string) => {
+    const availableActions = getResourceActions(resource);
+    onChange({ ...value, [resource]: [...availableActions] });
+  };
+
+  const deselectAllActions = (resource: string) => {
+    onChange({ ...value, [resource]: [] });
   };
 
   const handleJsonChange = (json: string) => {
@@ -111,6 +169,11 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
   const allResources: string[] = Array.from(
     new Set([...COMMON_RESOURCES.map(String), ...resources])
   ).sort();
+
+  // Filter resources based on search query
+  const filteredResources = allResources.filter((resource) =>
+    resource.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Get available actions for a specific resource
   const getResourceActions = (resource: string): readonly string[] => {
@@ -149,148 +212,326 @@ export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
         </div>
       ) : (
         <div className="space-y-3">
-          {allResources.map((resource) => {
-            const actions = value[resource] || [];
-            const isExpanded = expandedResources.has(resource);
-            const isCustom = !COMMON_RESOURCES.includes(resource as keyof typeof statement);
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="text"
+                placeholder={API_KEY_LABELS.SEARCH_RESOURCES}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            {searchQuery && (
+              <Button type="button" variant="ghost" size="icon" onClick={() => setSearchQuery("")}>
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
 
-            return (
-              <Card key={resource}>
-                <Collapsible open={isExpanded} onOpenChange={() => toggleResource(resource)}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="flex items-center gap-2 flex-1 justify-start p-0 h-auto font-medium"
-                        >
-                          {isExpanded ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronUp className="w-4 h-4" />
-                          )}
-                          <span className="capitalize">{resource}</span>
-                          {actions.length > 0 && (
-                            <Badge variant="secondary" className="ml-2">
-                              {actions.length}{" "}
-                              {actions.length === 1
-                                ? API_KEY_LABELS.ACTION
-                                : API_KEY_LABELS.ACTIONS_PLURAL}
-                            </Badge>
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                      {isCustom && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeResource(resource)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
+          {filteredResources.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              {searchQuery ? "No resources found" : "No resources available"}
+            </div>
+          ) : (
+            filteredResources.map((resource) => {
+              const actions = value[resource] || [];
+              const isExpanded = expandedResources.has(resource);
+              const isCustom = !COMMON_RESOURCES.includes(resource as keyof typeof statement);
+              const predefinedActions = getResourceActions(resource);
+              const customActions = actions.filter((action) => !predefinedActions.includes(action));
+              const allSelected =
+                predefinedActions.length > 0 &&
+                predefinedActions.every((action) => actions.includes(action));
 
-                  <CollapsibleContent>
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {getResourceActions(resource).map((action) => {
-                          const isSelected = actions.includes(action);
-                          return (
-                            <div
-                              key={action}
-                              className={`
-                                flex items-center gap-2 p-2 rounded border cursor-pointer transition-colors
-                                ${
-                                  isSelected
-                                    ? "bg-primary/10 border-primary"
-                                    : "bg-muted border-border hover:bg-muted/80"
-                                }
-                              `}
-                            >
-                              <Checkbox
-                                checked={isSelected}
-                                onCheckedChange={() => toggleAction(resource, action)}
-                              />
-                              <Label
-                                className={`text-sm cursor-pointer ${
-                                  isSelected ? "font-medium" : ""
-                                }`}
-                              >
-                                {action}
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {actions
-                        .filter((action) => !getResourceActions(resource).includes(action))
-                        .map((action) => (
-                          <div
-                            key={action}
-                            className="flex items-center justify-between p-2 bg-muted rounded border"
+              return (
+                <Card key={resource}>
+                  <Collapsible open={isExpanded} onOpenChange={() => toggleResource(resource)}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CollapsibleTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="flex items-center gap-2 flex-1 justify-start p-0 h-auto font-medium"
                           >
-                            <div className="flex items-center gap-2">
-                              <Checkbox
-                                checked={true}
-                                onCheckedChange={() => toggleAction(resource, action)}
-                              />
-                              <Label className="text-sm font-medium">{action}</Label>
+                            {isExpanded ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronUp className="w-4 h-4" />
+                            )}
+                            <span className="capitalize">{resource}</span>
+                            {actions.length > 0 && (
+                              <Badge variant="secondary" className="ml-2">
+                                {actions.length}{" "}
+                                {actions.length === 1
+                                  ? API_KEY_LABELS.ACTION
+                                  : API_KEY_LABELS.ACTIONS_PLURAL}
+                              </Badge>
+                            )}
+                          </Button>
+                        </CollapsibleTrigger>
+                        {isCustom && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeResource(resource)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+
+                    <CollapsibleContent>
+                      <CardContent className="space-y-4">
+                        {predefinedActions.length > 0 && (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-medium">
+                                {API_KEY_LABELS.PREDEFINED_ACTIONS}
+                              </Label>
+                              <div className="flex gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => selectAllActions(resource)}
+                                  disabled={allSelected}
+                                >
+                                  {API_KEY_LABELS.SELECT_ALL}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deselectAllActions(resource)}
+                                  disabled={actions.length === 0}
+                                >
+                                  {API_KEY_LABELS.DESELECT_ALL}
+                                </Button>
+                              </div>
                             </div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {predefinedActions.map((action) => {
+                                const isSelected = actions.includes(action);
+                                const actionId = `action-${resource}-${action}`;
+                                return (
+                                  <div
+                                    key={action}
+                                    className={`
+                                      flex items-center gap-2 p-2 rounded border transition-colors
+                                      ${
+                                        isSelected
+                                          ? "bg-primary/10 border-primary"
+                                          : "bg-muted border-border hover:bg-muted/80"
+                                      }
+                                    `}
+                                  >
+                                    <Checkbox
+                                      id={actionId}
+                                      checked={isSelected}
+                                      onCheckedChange={() => toggleAction(resource, action)}
+                                    />
+                                    <Label
+                                      htmlFor={actionId}
+                                      className={`text-sm cursor-pointer flex-1 ${
+                                        isSelected ? "font-medium" : ""
+                                      }`}
+                                    >
+                                      {action}
+                                    </Label>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+
+                        {customActions.length > 0 && (
+                          <>
+                            {predefinedActions.length > 0 && <Separator />}
+                            <div>
+                              <Label className="text-sm font-medium mb-2 block">
+                                {API_KEY_LABELS.CUSTOM_ACTIONS}
+                              </Label>
+                              <div className="space-y-2">
+                                {customActions.map((action) => (
+                                  <div
+                                    key={action}
+                                    className="flex items-center justify-between p-2 bg-muted rounded border"
+                                  >
+                                    <div className="flex items-center gap-2 flex-1">
+                                      <Checkbox
+                                        checked={true}
+                                        onCheckedChange={() => toggleAction(resource, action)}
+                                      />
+                                      <Label className="text-sm font-medium">{action}</Label>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => toggleAction(resource, action)}
+                                      className="text-destructive hover:text-destructive h-8 w-8"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        <Separator />
+
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="flex-1 border-dashed"
+                            onClick={() => openAddActionDialog(resource)}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            {API_KEY_LABELS.ADD_CUSTOM_ACTION}
+                          </Button>
+                          {!value[resource] && (
                             <Button
                               type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => toggleAction(resource, action)}
-                              className="text-destructive hover:text-destructive h-8 w-8"
+                              variant="outline"
+                              className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                              onClick={() => removeResource(resource)}
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              {API_KEY_LABELS.REMOVE_RESOURCE}
                             </Button>
-                          </div>
-                        ))}
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full border-dashed"
-                        onClick={() => addCustomAction(resource)}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {API_KEY_LABELS.ADD_CUSTOM_ACTION}
-                      </Button>
-
-                      {!value[resource] && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                          onClick={() => removeResource(resource)}
-                        >
-                          {API_KEY_LABELS.REMOVE_RESOURCE}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </CollapsibleContent>
-                </Collapsible>
-              </Card>
-            );
-          })}
+                          )}
+                        </div>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </Card>
+              );
+            })
+          )}
 
           <Button
             type="button"
             variant="outline"
             className="w-full border-dashed"
-            onClick={addResource}
+            onClick={() => setShowAddResourceDialog(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
             {API_KEY_LABELS.ADD_RESOURCE}
           </Button>
         </div>
       )}
+
+      <Dialog open={showAddResourceDialog} onOpenChange={setShowAddResourceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{API_KEY_LABELS.ADD_RESOURCE}</DialogTitle>
+            <DialogDescription>{API_KEY_PLACEHOLDERS.PERMISSIONS}</DialogDescription>
+          </DialogHeader>
+          <Form {...resourceForm}>
+            <form onSubmit={resourceForm.handleSubmit(handleAddResource)} className="space-y-4">
+              <FormField
+                control={resourceForm.control}
+                name="resource"
+                rules={{
+                  required: "Resource name is required",
+                  validate: (val) => {
+                    const resource = val.trim().toLowerCase();
+                    if (value[resource]) {
+                      return "Resource already exists";
+                    }
+                    return true;
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{API_KEY_LABELS.RESOURCE_NAME}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={API_KEY_PLACEHOLDERS.PERMISSIONS} {...field} autoFocus />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddResourceDialog(false);
+                    resourceForm.reset();
+                  }}
+                >
+                  {API_KEY_LABELS.CANCEL}
+                </Button>
+                <Button type="submit">{API_KEY_LABELS.ADD}</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAddActionDialog} onOpenChange={setShowAddActionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{API_KEY_LABELS.ADD_CUSTOM_ACTION}</DialogTitle>
+            <DialogDescription>
+              Add a custom action for the resource:{" "}
+              <span className="font-medium capitalize">{currentResourceForAction}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...actionForm}>
+            <form onSubmit={actionForm.handleSubmit(handleAddCustomAction)} className="space-y-4">
+              <FormField
+                control={actionForm.control}
+                name="action"
+                rules={{
+                  required: "Action name is required",
+                  validate: (val) => {
+                    const action = val.trim().toLowerCase();
+                    const currentActions = value[currentResourceForAction] || [];
+                    if (currentActions.includes(action)) {
+                      return "Action already exists";
+                    }
+                    return true;
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{API_KEY_LABELS.ACTION_NAME}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={API_KEY_PLACEHOLDERS.ACTION_NAME} {...field} autoFocus />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddActionDialog(false);
+                    actionForm.reset();
+                    setCurrentResourceForAction("");
+                  }}
+                >
+                  {API_KEY_LABELS.CANCEL}
+                </Button>
+                <Button type="submit">{API_KEY_LABELS.ADD}</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

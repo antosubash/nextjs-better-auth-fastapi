@@ -328,16 +328,16 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
               <>
                 <Alert className="mb-4">
                   <AlertDescription>
-                    <strong>Note:</strong> The following fields are read-only and can only be
-                    modified from the server: Remaining, Refill Amount, Refill Interval, and Rate
-                    Limiting settings.
+                    <strong>{API_KEY_LABELS.NOTE}</strong> {API_KEY_LABELS.SERVER_ONLY_FIELDS_NOTE}
                   </AlertDescription>
                 </Alert>
 
                 <div>
                   <Label htmlFor="api-key-remaining">
                     {API_KEY_LABELS.REMAINING}{" "}
-                    <span className="text-xs text-muted-foreground">(read-only)</span>
+                    <span className="text-xs text-muted-foreground">
+                      {API_KEY_LABELS.READ_ONLY}
+                    </span>
                   </Label>
                   <Input
                     id="api-key-remaining"
@@ -353,7 +353,9 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
                 <div>
                   <Label htmlFor="api-key-refill-amount">
                     {API_KEY_LABELS.REFILL_AMOUNT}{" "}
-                    <span className="text-xs text-muted-foreground">(read-only)</span>
+                    <span className="text-xs text-muted-foreground">
+                      {API_KEY_LABELS.READ_ONLY}
+                    </span>
                   </Label>
                   <Input
                     id="api-key-refill-amount"
@@ -369,7 +371,9 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
                 <div>
                   <Label htmlFor="api-key-refill-interval">
                     {API_KEY_LABELS.REFILL_INTERVAL}{" "}
-                    <span className="text-xs text-muted-foreground">(read-only)</span>
+                    <span className="text-xs text-muted-foreground">
+                      {API_KEY_LABELS.READ_ONLY}
+                    </span>
                   </Label>
                   <Input
                     id="api-key-refill-interval"
@@ -386,7 +390,9 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
                   <Switch id="rateLimitEnabled" checked={rateLimitEnabled} disabled />
                   <Label htmlFor="rateLimitEnabled" className="cursor-not-allowed">
                     {API_KEY_LABELS.RATE_LIMIT_ENABLED}{" "}
-                    <span className="text-xs text-muted-foreground">(read-only)</span>
+                    <span className="text-xs text-muted-foreground">
+                      {API_KEY_LABELS.READ_ONLY}
+                    </span>
                   </Label>
                 </div>
 
@@ -395,7 +401,9 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
                     <div>
                       <Label htmlFor="api-key-rate-limit-time-window">
                         {API_KEY_LABELS.RATE_LIMIT_TIME_WINDOW}{" "}
-                        <span className="text-xs text-muted-foreground">(read-only)</span>
+                        <span className="text-xs text-muted-foreground">
+                          {API_KEY_LABELS.READ_ONLY}
+                        </span>
                       </Label>
                       <Input
                         id="api-key-rate-limit-time-window"
@@ -411,7 +419,9 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
                     <div>
                       <Label htmlFor="api-key-rate-limit-max">
                         {API_KEY_LABELS.RATE_LIMIT_MAX}{" "}
-                        <span className="text-xs text-muted-foreground">(read-only)</span>
+                        <span className="text-xs text-muted-foreground">
+                          {API_KEY_LABELS.READ_ONLY}
+                        </span>
                       </Label>
                       <Input
                         id="api-key-rate-limit-max"

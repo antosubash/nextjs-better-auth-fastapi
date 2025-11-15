@@ -129,7 +129,7 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Verifying...
+                  {API_KEY_LABELS.VERIFYING}
                 </>
               ) : (
                 API_KEY_LABELS.VERIFY_KEY
@@ -164,29 +164,31 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
             {result.error && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>
-                  <span className="font-medium">Error:</span> {result.error.message} (
-                  {result.error.code})
+                  <span className="font-medium">{API_KEY_LABELS.ERROR}</span> {result.error.message}{" "}
+                  ({result.error.code})
                 </AlertDescription>
               </Alert>
             )}
 
             {result.key && (
               <div className="space-y-2">
-                <p className="text-sm font-medium">Key Details:</p>
+                <p className="text-sm font-medium">{API_KEY_LABELS.KEY_DETAILS}</p>
                 <div className="text-sm space-y-1">
                   <p>
-                    <span className="font-medium">Name:</span> {result.key.name || "N/A"}
+                    <span className="font-medium">{API_KEY_LABELS.NAME}:</span>{" "}
+                    {result.key.name || "N/A"}
                   </p>
                   <p>
-                    <span className="font-medium">Prefix:</span> {result.key.prefix || "N/A"}
+                    <span className="font-medium">{API_KEY_LABELS.PREFIX}:</span>{" "}
+                    {result.key.prefix || "N/A"}
                   </p>
                   <p>
-                    <span className="font-medium">Enabled:</span>{" "}
-                    {result.key.enabled ? "Yes" : "No"}
+                    <span className="font-medium">{API_KEY_LABELS.ENABLED}:</span>{" "}
+                    {result.key.enabled ? API_KEY_LABELS.YES : API_KEY_LABELS.NO}
                   </p>
                   {result.key.permissions && (
                     <div>
-                      <span className="font-medium">Permissions:</span>
+                      <span className="font-medium">{API_KEY_LABELS.PERMISSIONS}:</span>
                       <pre className="mt-1 p-2 bg-background rounded text-xs overflow-x-auto border">
                         {formatJson(result.key.permissions)}
                       </pre>

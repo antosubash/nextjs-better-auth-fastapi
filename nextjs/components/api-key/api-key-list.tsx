@@ -2,6 +2,16 @@
 
 import { Check, Copy, Key, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,6 +63,8 @@ export function ApiKeyList() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
   const [keyCopied, setKeyCopied] = useState(false);
+  const [showDeleteExpiredDialog, setShowDeleteExpiredDialog] = useState(false);
+  const [isDeletingExpired, setIsDeletingExpired] = useState(false);
   const toast = useToast();
 
   const loadApiKeys = useCallback(async () => {
@@ -119,10 +131,7 @@ export function ApiKeyList() {
   };
 
   const handleDeleteExpired = async () => {
-    if (!confirm(API_KEY_LABELS.CONFIRM_DELETE_EXPIRED)) {
-      return;
-    }
-
+    setIsDeletingExpired(true);
     try {
       const response = await fetch("/api/api-keys/expired", {
         method: "DELETE",
@@ -134,11 +143,14 @@ export function ApiKeyList() {
       } else {
         toast.success(API_KEY_SUCCESS.EXPIRED_DELETED);
         loadApiKeys();
+        setShowDeleteExpiredDialog(false);
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : API_KEY_ERRORS.DELETE_EXPIRED_FAILED;
       toast.error(errorMessage);
+    } finally {
+      setIsDeletingExpired(false);
     }
   };
 
@@ -224,7 +236,7 @@ export function ApiKeyList() {
             <DialogDescription>{API_KEY_LABELS.KEY_WARNING}</DialogDescription>
           </DialogHeader>
           <div className="mb-4">
-            <Label htmlFor="newly-created-api-key">Your API Key:</Label>
+            <Label htmlFor="newly-created-api-key">{API_KEY_LABELS.YOUR_API_KEY}</Label>
             <div className="flex gap-2 mt-2">
               <Input
                 id="newly-created-api-key"
@@ -264,11 +276,46 @@ export function ApiKeyList() {
             onChange={handleSearch}
           />
         </div>
-        <Button variant="outline" onClick={handleDeleteExpired} className="text-destructive">
+        <Button
+          variant="outline"
+          onClick={() => setShowDeleteExpiredDialog(true)}
+          className="text-destructive"
+        >
           <Trash2 className="w-4 h-4" />
           {API_KEY_LABELS.DELETE_ALL_EXPIRED}
         </Button>
       </div>
+
+      <AlertDialog open={showDeleteExpiredDialog} onOpenChange={setShowDeleteExpiredDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{API_KEY_LABELS.DELETE_ALL_EXPIRED}</AlertDialogTitle>
+            <AlertDialogDescription>{API_KEY_LABELS.CONFIRM_DELETE_EXPIRED}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingExpired}>
+              {API_KEY_LABELS.CANCEL}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteExpired}
+              disabled={isDeletingExpired}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingExpired ? (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2 animate-spin" />
+                  {API_KEY_LABELS.DELETING}
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {API_KEY_LABELS.DELETE_ALL_EXPIRED}
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Card>
         <CardContent className="p-0">
