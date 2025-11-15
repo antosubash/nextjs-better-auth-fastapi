@@ -11,7 +11,7 @@
  * @returns Sanitized string
  * @throws Error if string is empty after stripping or doesn't meet length requirements
  */
-export function sanitizeString(value: string, maxLength?: number, minLength: number = 0): string {
+export function sanitizeString(value: string, maxLength?: number, minLength = 0): string {
   if (typeof value !== "string") {
     throw new Error("Value must be a string");
   }

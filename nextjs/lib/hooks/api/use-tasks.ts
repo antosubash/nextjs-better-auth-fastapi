@@ -6,7 +6,7 @@ import { createTask, deleteTask, updateTask } from "@/lib/api/tasks";
 import { toast } from "sonner";
 import { TASK_ERRORS, TASK_SUCCESS } from "@/lib/constants";
 
-export function useTasks(page: number = 1, pageSize: number = 10, statusFilter?: string | null) {
+export function useTasks(page = 1, pageSize = 10, statusFilter?: string | null) {
   return useQuery({
     queryKey: queryKeys.tasks.list(page, pageSize, statusFilter),
     queryFn: () => getTasks(page, pageSize, statusFilter),

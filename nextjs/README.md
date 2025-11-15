@@ -123,9 +123,11 @@ nextjs/
 
 ## Code Conventions
 
-### Constants
+See [CODING_STANDARDS.md](./CODING_STANDARDS.md) for comprehensive coding standards.
 
-**CRITICAL**: Never hardcode strings. Always use constants from `lib/constants.ts`:
+### Quick Reference
+
+**Constants**: Never hardcode strings. Always use constants from `lib/constants.ts`:
 
 ```typescript
 // ✅ Good
@@ -136,9 +138,7 @@ import { AUTH_LABELS } from "@/lib/constants";
 <button>Log in</button>
 ```
 
-### Better Auth APIs
-
-**CRITICAL**: Always use Better Auth APIs for authentication, organization, team, and permission operations. Never query the database directly:
+**Better Auth APIs**: Always use Better Auth APIs for authentication, organization, team, and permission operations. Never query the database directly:
 
 ```typescript
 // ✅ Good - Use Better Auth APIs
@@ -150,6 +150,16 @@ const organizations = await auth.api.listOrganizations({ headers });
 import { db } from "@/lib/database";
 const user = await db.select().from(users).where(eq(users.id, userId));
 ```
+
+### Coding Standards Enforcement
+
+Coding standards are automatically enforced through:
+
+- **Biome**: Linting and formatting (runs on `pnpm lint` and `pnpm format`)
+- **Validation Script**: Custom checks for file size, naming conventions, hardcoded strings, etc. (runs automatically with `pnpm lint`)
+- **TypeScript**: Type checking (runs on `pnpm type-check`)
+
+Run `pnpm lint` to check for all standards violations.
 
 ## Development Commands
 

@@ -1,7 +1,7 @@
 import { callFastApi } from "@/lib/api-client";
 import type { Job, JobCreate, JobHistoryListResponse, JobListResponse } from "@/lib/types/job";
 
-export async function getJobs(page: number = 1, pageSize: number = 10): Promise<JobListResponse> {
+export async function getJobs(page = 1, pageSize = 10): Promise<JobListResponse> {
   const params = new URLSearchParams({
     page: page.toString(),
     page_size: pageSize.toString(),
@@ -41,8 +41,8 @@ export async function resumeJob(id: string): Promise<Job> {
 
 export async function getJobHistory(
   jobId?: string,
-  page: number = 1,
-  pageSize: number = 10
+  page = 1,
+  pageSize = 10
 ): Promise<JobHistoryListResponse> {
   const params = new URLSearchParams({
     page: page.toString(),

@@ -55,6 +55,8 @@ This is a full-stack authentication system combining:
 
 ### Frontend Patterns
 
+**See [nextjs/CODING_STANDARDS.md](nextjs/CODING_STANDARDS.md) for comprehensive frontend coding standards.**
+
 1. **Constants Usage**:
    ```typescript
    // ✅ Good
