@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Loader2, Send, XCircle } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +20,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { API_DATA } from "@/lib/constants";
 import { useApiData } from "@/lib/hooks/api/use-api-data";
 
-interface ApiDataFormValues {
-  content: string;
-}
+const apiDataSchema = z.object({
+  content: z.string().min(1, API_DATA.CONTENT_REQUIRED),
+});
+
+type ApiDataFormValues = z.infer<typeof apiDataSchema>;
 
 export function ApiData() {
   const [response, setResponse] = useState<string | null>(null);
@@ -28,6 +32,7 @@ export function ApiData() {
   const apiDataMutation = useApiData();
 
   const form = useForm<ApiDataFormValues>({
+    resolver: zodResolver(apiDataSchema),
     defaultValues: {
       content: "",
     },
@@ -67,9 +72,6 @@ export function ApiData() {
             <FormField
               control={form.control}
               name="content"
-              rules={{
-                required: "Content is required",
-              }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{API_DATA.CONTENT_PLACEHOLDER}</FormLabel>

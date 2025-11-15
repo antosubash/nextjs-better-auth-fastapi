@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Key, Loader2, Send, XCircle } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,14 +29,41 @@ import { Textarea } from "@/components/ui/textarea";
 import { API_KEY_TEST } from "@/lib/constants";
 import { useApiKeyTest } from "@/lib/hooks/api/use-api-data";
 
-interface ApiKeyTestFormValues {
-  apiKey: string;
-  endpoint: string;
-  method: string;
-  content: string;
-  includeJwt: boolean;
-  authMethod: string;
-}
+const apiKeyTestSchema = z
+  .object({
+    apiKey: z.string().optional(),
+    endpoint: z.string().min(1, API_KEY_TEST.ENDPOINT_REQUIRED),
+    method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
+    content: z.string().optional(),
+    includeJwt: z.boolean(),
+    authMethod: z.enum(["apiKey", "jwt", "both", "none"]),
+  })
+  .refine(
+    (data) => {
+      if (data.authMethod === "apiKey" || data.authMethod === "both") {
+        return data.apiKey && data.apiKey.trim() !== "";
+      }
+      return true;
+    },
+    {
+      message: API_KEY_TEST.API_KEY_REQUIRED,
+      path: ["apiKey"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.method === "POST" || data.method === "PUT" || data.method === "PATCH") {
+        return data.content !== undefined && data.content.trim() !== "";
+      }
+      return true;
+    },
+    {
+      message: API_KEY_TEST.CONTENT_REQUIRED,
+      path: ["content"],
+    }
+  );
+
+type ApiKeyTestFormValues = z.infer<typeof apiKeyTestSchema>;
 
 export function ApiKeyTest() {
   const [response, setResponse] = useState<unknown | null>(null);
@@ -51,6 +80,7 @@ export function ApiKeyTest() {
         : null;
 
   const form = useForm<ApiKeyTestFormValues>({
+    resolver: zodResolver(apiKeyTestSchema),
     defaultValues: {
       apiKey: "",
       endpoint: "/getdata",
@@ -141,9 +171,6 @@ export function ApiKeyTest() {
               <FormField
                 control={form.control}
                 name="apiKey"
-                rules={{
-                  required: "API key is required",
-                }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{API_KEY_TEST.API_KEY_LABEL}</FormLabel>
@@ -189,9 +216,6 @@ export function ApiKeyTest() {
               <FormField
                 control={form.control}
                 name="endpoint"
-                rules={{
-                  required: "Endpoint is required",
-                }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{API_KEY_TEST.ENDPOINT_LABEL}</FormLabel>

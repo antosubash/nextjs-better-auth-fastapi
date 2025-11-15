@@ -1,9 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,10 +25,12 @@ interface LoginFormProps {
   onSwitchToSignup: () => void;
 }
 
-interface LoginFormValues {
-  email: string;
-  password: string;
-}
+const loginSchema = z.object({
+  email: z.string().min(1, AUTH_ERRORS.EMAIL_REQUIRED).email(AUTH_ERRORS.EMAIL_REQUIRED),
+  password: z.string().min(1, AUTH_ERRORS.PASSWORD_REQUIRED),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const router = useRouter();
@@ -34,6 +38,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -73,9 +78,6 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         <FormField
           control={form.control}
           name="email"
-          rules={{
-            required: AUTH_ERRORS.EMAIL_REQUIRED,
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>{AUTH_LABELS.EMAIL}</FormLabel>
@@ -90,9 +92,6 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         <FormField
           control={form.control}
           name="password"
-          rules={{
-            required: AUTH_ERRORS.PASSWORD_REQUIRED,
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>{AUTH_LABELS.PASSWORD}</FormLabel>
