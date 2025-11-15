@@ -4,7 +4,7 @@ import { Image as ImageIcon, Loader2, Upload, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { PROFILE_PICTURE } from "@/lib/constants";
 import { deleteProfilePicture, uploadProfilePicture } from "@/lib/storage-api";
 import { cn } from "@/lib/utils";
@@ -156,11 +156,12 @@ export function ProfilePictureUpload({
         </Avatar>
 
         <div className="flex-1 space-y-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={disabled}
+          <div
+            role="button"
+            tabIndex={disabled ? -1 : 0}
+            aria-disabled={disabled}
             className={cn(
+              buttonVariants({ variant: "outline" }),
               "w-full border-2 border-dashed p-6 h-auto flex-col cursor-pointer",
               isDragging && !disabled
                 ? "border-primary bg-primary/5"
@@ -207,7 +208,7 @@ export function ProfilePictureUpload({
                 {PROFILE_PICTURE.SELECT_FILE}
               </Button>
             </div>
-          </Button>
+          </div>
 
           {currentImageUrl && !preview && (
             <div className="flex gap-2">

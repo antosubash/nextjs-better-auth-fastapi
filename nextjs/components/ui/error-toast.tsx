@@ -2,6 +2,7 @@
 
 import { AlertCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface ErrorToastProps {
   message: string;
@@ -47,14 +48,16 @@ export function ErrorToast({ message, onDismiss, duration = 5000 }: ErrorToastPr
         <div className="flex-1">
           <p className="text-sm font-medium text-red-800 dark:text-red-200">{message}</p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={handleDismiss}
-          className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors flex-shrink-0"
+          className="flex-shrink-0 hover:bg-red-100 dark:hover:bg-red-900/30"
           aria-label="Dismiss error"
         >
           <X className="w-4 h-4 text-red-600 dark:text-red-400" />
-        </button>
+        </Button>
       </div>
     </div>
   );
