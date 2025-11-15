@@ -156,28 +156,19 @@ export function ProfilePictureUpload({
         </Avatar>
 
         <div className="flex-1 space-y-2">
-          <div
-            role="button"
-            tabIndex={disabled ? -1 : 0}
-            aria-disabled={disabled}
+          <section
+            aria-label={PROFILE_PICTURE.TITLE}
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "w-full border-2 border-dashed p-6 h-auto flex-col cursor-pointer",
+              "w-full border-2 border-dashed p-6 h-auto flex-col",
               isDragging && !disabled
                 ? "border-primary bg-primary/5"
-                : "border-muted-foreground/25 hover:border-muted-foreground/50",
+                : "border-muted-foreground/25",
               disabled && "opacity-50 cursor-not-allowed pointer-events-none"
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onClick={() => !disabled && fileInputRef.current?.click()}
-            onKeyDown={(e) => {
-              if ((e.key === "Enter" || e.key === " ") && !disabled) {
-                e.preventDefault();
-                fileInputRef.current?.click();
-              }
-            }}
           >
             <input
               ref={fileInputRef}
@@ -197,10 +188,7 @@ export function ProfilePictureUpload({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
+                onClick={() => fileInputRef.current?.click()}
                 disabled={disabled || isUploading}
                 className="mt-2"
               >
@@ -208,7 +196,7 @@ export function ProfilePictureUpload({
                 {PROFILE_PICTURE.SELECT_FILE}
               </Button>
             </div>
-          </div>
+          </section>
 
           {currentImageUrl && !preview && (
             <div className="flex gap-2">

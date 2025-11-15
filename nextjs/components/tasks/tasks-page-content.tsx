@@ -2,8 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import { TaskDialog } from "@/components/tasks/task-dialog";
 import { TaskFilters } from "@/components/tasks/task-filters";
 import { TaskList } from "@/components/tasks/task-list";
@@ -24,43 +23,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createTask, deleteTask, getTasks, updateTask } from "@/lib/api/tasks";
+import { useCreateTask, useDeleteTask, useTasks, useUpdateTask } from "@/lib/hooks/api/use-tasks";
 import { authClient } from "@/lib/auth-client";
-import { PAGE_CONTAINER, TASK_ERRORS, TASK_LABELS, TASK_SUCCESS } from "@/lib/constants";
+import { PAGE_CONTAINER, TASK_ERRORS, TASK_LABELS } from "@/lib/constants";
 import type { Task, TaskCreate, TaskStatus } from "@/lib/types/task";
 
 export function TasksPageContent() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [statusFilter, setStatusFilter] = useState<TaskStatus | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
-  const loadTasks = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const response = await getTasks(page, pageSize, statusFilter || undefined);
-      setTasks(response.items);
-      setTotal(response.total);
-    } catch (err) {
-      console.error("Failed to load tasks:", err);
-      setError(err instanceof Error ? err.message : TASK_ERRORS.LOAD_TASKS_FAILED);
-      toast.error(TASK_ERRORS.LOAD_TASKS_FAILED);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, pageSize, statusFilter]);
+  const {
+    data: tasksData,
+    isLoading: isLoadingTasks,
+    error: tasksError,
+  } = useTasks(page, pageSize, statusFilter || undefined);
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
+
+  const tasks = tasksData?.items ?? [];
+  const total = tasksData?.total ?? 0;
 
   useEffect(() => {
-    const checkAuthAndLoadTasks = async () => {
+    const checkAuth = async () => {
       try {
         const session = await authClient.getSession();
         if (!session?.data?.session) {
@@ -69,23 +60,15 @@ export function TasksPageContent() {
         }
 
         setIsAuthorized(true);
-        await loadTasks();
       } catch (err) {
-        console.error("Failed to load tasks:", err);
-        setError(err instanceof Error ? err.message : TASK_ERRORS.LOAD_TASKS_FAILED);
+        console.error("Failed to check auth:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuthAndLoadTasks();
-  }, [router, loadTasks]);
-
-  useEffect(() => {
-    if (isAuthorized) {
-      loadTasks();
-    }
-  }, [isAuthorized, loadTasks]);
+    checkAuth();
+  }, [router]);
 
   const handleCreateClick = () => {
     setEditingTask(undefined);
@@ -99,38 +82,26 @@ export function TasksPageContent() {
 
   const handleSubmit = async (data: TaskCreate) => {
     try {
-      setIsSubmitting(true);
-      setError("");
-
       if (editingTask) {
-        await updateTask(editingTask.id, data);
-        toast.success(TASK_SUCCESS.TASK_UPDATED);
+        await updateTaskMutation.mutateAsync({ id: editingTask.id, data });
       } else {
-        await createTask(data);
-        toast.success(TASK_SUCCESS.TASK_CREATED);
+        await createTaskMutation.mutateAsync(data);
       }
 
       setIsDialogOpen(false);
       setEditingTask(undefined);
-      await loadTasks();
     } catch (err) {
+      // Error is handled by the mutation hook
       console.error("Failed to save task:", err);
-      const errorMessage = editingTask ? TASK_ERRORS.UPDATE_FAILED : TASK_ERRORS.CREATE_FAILED;
-      setError(err instanceof Error ? err.message : errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (taskId: string) => {
     try {
-      await deleteTask(taskId);
-      toast.success(TASK_SUCCESS.TASK_DELETED);
-      await loadTasks();
+      await deleteTaskMutation.mutateAsync(taskId);
     } catch (err) {
+      // Error is handled by the mutation hook
       console.error("Failed to delete task:", err);
-      toast.error(TASK_ERRORS.DELETE_FAILED);
       throw err;
     }
   };
@@ -181,10 +152,12 @@ export function TasksPageContent() {
         </div>
       </div>
 
-      {error && (
+      {tasksError && (
         <Card className="mb-6 border-destructive">
           <CardContent className="pt-6">
-            <p className="text-center text-destructive">{error}</p>
+            <p className="text-center text-destructive">
+              {tasksError instanceof Error ? tasksError.message : TASK_ERRORS.LOAD_TASKS_FAILED}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -193,7 +166,7 @@ export function TasksPageContent() {
         tasks={tasks}
         onEdit={handleEditClick}
         onDelete={handleDelete}
-        isLoading={isLoading}
+        isLoading={isLoadingTasks}
       />
 
       {totalPages > 1 && (
@@ -281,7 +254,7 @@ export function TasksPageContent() {
         onOpenChange={setIsDialogOpen}
         task={editingTask}
         onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
+        isSubmitting={createTaskMutation.isPending || updateTaskMutation.isPending}
       />
     </main>
   );

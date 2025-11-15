@@ -15,8 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { callFastApi } from "@/lib/api-client";
 import { API_DATA } from "@/lib/constants";
+import { useApiData } from "@/lib/hooks/api/use-api-data";
 
 interface ApiDataFormValues {
   content: string;
@@ -24,9 +24,8 @@ interface ApiDataFormValues {
 
 export function ApiData() {
   const [response, setResponse] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const apiDataMutation = useApiData();
 
   const form = useForm<ApiDataFormValues>({
     defaultValues: {
@@ -35,26 +34,27 @@ export function ApiData() {
   });
 
   const handleSubmit = async (values: ApiDataFormValues) => {
-    setError(null);
     setSuccess(false);
     setResponse(null);
-    setIsLoading(true);
 
     try {
-      const result = await callFastApi<{ content: string }>("/getdata", {
-        method: "POST",
-        body: JSON.stringify({ content: values.content }),
-      });
+      const result = await apiDataMutation.mutateAsync({ content: values.content });
       setResponse(result.content);
       setSuccess(true);
       form.reset();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : API_DATA.ERROR);
+    } catch {
+      // Error is handled by the mutation hook
       setSuccess(false);
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  const error =
+    apiDataMutation.error instanceof Error
+      ? apiDataMutation.error.message
+      : apiDataMutation.error
+        ? API_DATA.ERROR
+        : null;
+  const isLoading = apiDataMutation.isPending;
 
   return (
     <Card>

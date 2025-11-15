@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, ChevronUp, Copy, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,9 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getJobHistory, getJobs } from "@/lib/api/jobs";
+import { useJobHistory, useJobs } from "@/lib/hooks/api/use-jobs";
 import { JOB_ERRORS, JOB_LABELS } from "@/lib/constants";
-import type { Job, JobHistory } from "@/lib/types/job";
 import { formatDate } from "@/lib/utils/date";
 
 interface JobHistoryListProps {
@@ -68,52 +67,29 @@ export function JobHistoryList({
   jobId: initialJobId,
   showJobFilter = false,
 }: JobHistoryListProps) {
-  const [history, setHistory] = useState<JobHistory[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>(initialJobId);
-  const [jobs, setJobs] = useState<Job[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const loadJobs = useCallback(async () => {
-    try {
-      // Load jobs with maximum allowed page size (100)
-      // This should be sufficient for the filter dropdown
-      const response = await getJobs(1, 100);
-      setJobs(response.items);
-    } catch (error) {
-      console.error("Failed to load jobs:", error);
-    }
-  }, []);
+  const { data: jobsData } = useJobs(1, 100, { enabled: showJobFilter });
+  const {
+    data: historyData,
+    isLoading: loading,
+    error: historyError,
+  } = useJobHistory(selectedJobId, page, pageSize);
 
-  const loadHistory = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await getJobHistory(selectedJobId, page, pageSize);
-      setHistory(response.items);
-      setTotal(response.total);
-      setTotalPages(response.total_pages);
-    } catch (error) {
-      console.error("Failed to load job history:", error);
+  const jobs = jobsData?.items ?? [];
+  const history = historyData?.items ?? [];
+  const total = historyData?.total ?? 0;
+  const totalPages = historyData?.total_pages ?? 1;
+
+  useEffect(() => {
+    if (historyError) {
       toast.error(JOB_ERRORS.LOAD_JOB_HISTORY_FAILED);
-    } finally {
-      setLoading(false);
     }
-  }, [selectedJobId, page, pageSize]);
-
-  useEffect(() => {
-    if (showJobFilter) {
-      loadJobs();
-    }
-  }, [showJobFilter, loadJobs]);
-
-  useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
+  }, [historyError]);
 
   const toggleExpand = (id: string) => {
     const newExpanded = new Set(expandedItems);

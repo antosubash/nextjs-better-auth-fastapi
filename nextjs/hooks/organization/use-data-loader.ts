@@ -26,7 +26,7 @@ export function useDataLoader<T>(loadFn: () => Promise<T>, dependencies: unknown
 
   useEffect(() => {
     loadData();
-     
+
     // Note: Biome cannot statically verify dynamic dependency arrays, this is expected for generic hooks
     // biome-ignore lint/correctness/useExhaustiveDependencies: Generic hook requires dynamic dependency array
   }, dependencies);

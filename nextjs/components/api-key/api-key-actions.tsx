@@ -20,7 +20,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
+import { API_KEY_LABELS } from "@/lib/constants";
+import { useDeleteApiKey, useUpdateApiKey } from "@/lib/hooks/api/use-api-keys";
 
 interface ApiKey {
   id: string;
@@ -44,60 +45,34 @@ export function ApiKeyActions({
   onActionSuccess,
 }: ApiKeyActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleToggleEnabled = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/api-keys/${apiKey.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          enabled: !apiKey.enabled,
-        }),
-      });
-      const result = await response.json();
+  const updateMutation = useUpdateApiKey();
+  const deleteMutation = useDeleteApiKey();
+  const isLoading = updateMutation.isPending || deleteMutation.isPending;
 
-      if (!response.ok || result.error) {
-        // Error handling should be done via toast/error state
-        console.error(result.error || API_KEY_ERRORS.UPDATE_FAILED);
-      } else {
-        onActionSuccess(
-          apiKey.enabled ? API_KEY_SUCCESS.API_KEY_DISABLED : API_KEY_SUCCESS.API_KEY_ENABLED
-        );
-        setIsOpen(false);
-      }
+  const handleToggleEnabled = async () => {
+    try {
+      await updateMutation.mutateAsync({
+        id: apiKey.id,
+        data: { enabled: !apiKey.enabled },
+      });
+      setIsOpen(false);
+      onActionSuccess();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.UPDATE_FAILED;
-      console.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+      // Error is handled by the mutation hook
+      console.error("Failed to toggle enabled:", err);
     }
   };
 
   const handleDelete = async () => {
-    setIsLoading(true);
     try {
-      const response = await fetch(`/api/api-keys/${apiKey.id}`, {
-        method: "DELETE",
-      });
-      const result = await response.json();
-
-      if (!response.ok || result.error) {
-        // Error handling should be done via toast/error state
-        console.error(result.error || API_KEY_ERRORS.DELETE_FAILED);
-      } else {
-        onDelete();
-        setShowDeleteDialog(false);
-      }
+      await deleteMutation.mutateAsync(apiKey.id);
+      onDelete();
+      setShowDeleteDialog(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.DELETE_FAILED;
-      console.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+      // Error is handled by the mutation hook
+      console.error("Failed to delete:", err);
     }
   };
 

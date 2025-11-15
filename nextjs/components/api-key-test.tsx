@@ -24,8 +24,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { callFastApiWithApiKey } from "@/lib/api-key-client";
 import { API_KEY_TEST } from "@/lib/constants";
+import { useApiKeyTest } from "@/lib/hooks/api/use-api-data";
 
 interface ApiKeyTestFormValues {
   apiKey: string;
@@ -40,9 +40,15 @@ export function ApiKeyTest() {
   const [response, setResponse] = useState<unknown | null>(null);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
   const [responseHeaders, setResponseHeaders] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const apiKeyTestMutation = useApiKeyTest();
+  const isLoading = apiKeyTestMutation.isPending;
+  const error =
+    apiKeyTestMutation.error instanceof Error
+      ? apiKeyTestMutation.error.message
+      : apiKeyTestMutation.error
+        ? API_KEY_TEST.ERROR
+        : null;
 
   const form = useForm<ApiKeyTestFormValues>({
     defaultValues: {
@@ -56,45 +62,19 @@ export function ApiKeyTest() {
   });
 
   const handleSubmit = async (values: ApiKeyTestFormValues) => {
-    setError(null);
     setSuccess(false);
     setResponse(null);
     setResponseStatus(null);
     setResponseHeaders({});
-    setIsLoading(true);
 
     try {
-      // Determine authentication method
-      let apiKey: string | undefined;
-      let includeJwt = false;
-
-      if (values.authMethod === "apiKey" || values.authMethod === "both") {
-        apiKey = values.apiKey.trim();
-        if (!apiKey) {
-          throw new Error("API key is required");
-        }
-      }
-
-      if (values.authMethod === "jwt" || values.authMethod === "both") {
-        includeJwt = true;
-      }
-
-      // Parse content if provided
-      let body: string | undefined;
-      if (values.content.trim()) {
-        try {
-          JSON.parse(values.content);
-          body = values.content;
-        } catch {
-          throw new Error("Content must be valid JSON");
-        }
-      }
-
-      const result = await callFastApiWithApiKey(values.endpoint, {
-        method: values.method as RequestInit["method"],
-        apiKey,
-        includeJwt,
-        body: body,
+      const result = await apiKeyTestMutation.mutateAsync({
+        apiKey: values.apiKey,
+        endpoint: values.endpoint,
+        method: values.method,
+        content: values.content,
+        includeJwt: values.includeJwt,
+        authMethod: values.authMethod,
       });
 
       setResponse(result.data);
@@ -105,19 +85,11 @@ export function ApiKeyTest() {
       if (result.status >= 200 && result.status < 300) {
         setSuccess(true);
       } else {
-        // Show error for non-2xx responses
-        const errorMessage =
-          typeof result.data === "object" && result.data !== null && "detail" in result.data
-            ? String(result.data.detail)
-            : `Request failed with status ${result.status}: ${result.statusText}`;
-        setError(errorMessage);
         setSuccess(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : API_KEY_TEST.ERROR);
+    } catch {
+      // Error is handled by the mutation hook
       setSuccess(false);
-    } finally {
-      setIsLoading(false);
     }
   };
 
