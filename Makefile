@@ -166,20 +166,18 @@ docker-build-frontend:
 	@echo "Building Docker image for frontend..."
 	@if [ -f .env ]; then \
 		set -a && . ./.env && set +a && \
-		DOCKER_BUILDKIT=1 docker build \
-			--secret id=DATABASE_URL,env=DATABASE_URL \
-			--secret id=BETTER_AUTH_SECRET,env=BETTER_AUTH_SECRET \
+		docker build \
+			--build-arg DATABASE_URL="$${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/better_auth_db}" \
+			--build-arg BETTER_AUTH_SECRET="$${BETTER_AUTH_SECRET:-change-me-in-production}" \
 			--build-arg BETTER_AUTH_URL="$${BETTER_AUTH_URL:-http://localhost:3000}" \
 			--build-arg NEXT_PUBLIC_API_URL="$${NEXT_PUBLIC_API_URL:-http://localhost:8000}" \
 			-t nextjs-better-auth-frontend:latest \
 			-f nextjs/Dockerfile nextjs/; \
 	else \
 		echo "Warning: .env file not found. Using default values. Build may fail if DATABASE_URL is required."; \
-		export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/better_auth_db" && \
-		export BETTER_AUTH_SECRET="change-me-in-production" && \
-		DOCKER_BUILDKIT=1 docker build \
-			--secret id=DATABASE_URL,env=DATABASE_URL \
-			--secret id=BETTER_AUTH_SECRET,env=BETTER_AUTH_SECRET \
+		docker build \
+			--build-arg DATABASE_URL="postgresql://postgres:postgres@localhost:5432/better_auth_db" \
+			--build-arg BETTER_AUTH_SECRET="change-me-in-production" \
 			--build-arg BETTER_AUTH_URL="http://localhost:3000" \
 			--build-arg NEXT_PUBLIC_API_URL="http://localhost:8000" \
 			-t nextjs-better-auth-frontend:latest \
