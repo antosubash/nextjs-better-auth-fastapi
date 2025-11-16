@@ -72,8 +72,12 @@ export function JobDialog({ open, onOpenChange, onSubmit, isSubmitting = false }
     template: (typeof PREDEFINED_JOBS.TEMPLATES)[number],
     key: "weeks" | "days" | "hours" | "minutes" | "seconds"
   ): void => {
-    if (key in template && typeof template[key] === "number") {
-      baseValues[key] = template[key] as number;
+    if (
+      template.trigger_type === "interval" &&
+      key in template &&
+      typeof template[key as keyof typeof template] === "number"
+    ) {
+      baseValues[key] = template[key as keyof typeof template] as number;
     }
   };
 

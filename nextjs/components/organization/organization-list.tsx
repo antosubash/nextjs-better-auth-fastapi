@@ -21,13 +21,13 @@ import {
 import { useErrorMessage } from "@/hooks/organization/use-error-message";
 import { useSearch } from "@/hooks/organization/use-search";
 import { useSuccessMessage } from "@/hooks/organization/use-success-message";
-import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_ERRORS, ORGANIZATION_LABELS, ORGANIZATION_SUCCESS } from "@/lib/constants";
 import { useOrganizationSafe } from "@/lib/contexts/organization-context";
+import { useOrganizations, useSession } from "@/lib/hooks/api/use-auth";
+import { useAdminOrganizations } from "@/lib/hooks/api/use-organizations";
 import { formatDate } from "@/lib/utils/date";
 import { extractOrganizations, normalizeOrganizations } from "@/lib/utils/organization-data";
 import type { NormalizedOrganization } from "@/lib/utils/organization-types";
-import { useAdminOrganizations } from "@/lib/hooks/api/use-organizations";
 import { OrganizationActions } from "./organization-actions";
 import { OrganizationForm } from "./organization-form";
 import { EmptyState } from "./shared/empty-state";
@@ -52,7 +52,13 @@ export function OrganizationList() {
   const { error, showError, clearError } = useErrorMessage();
 
   const orgContext = useOrganizationSafe();
-  const { data: adminOrgsData, isLoading: isLoadingAdminOrgs, error: adminOrgsError } = useAdminOrganizations();
+  const {
+    data: adminOrgsData,
+    isLoading: isLoadingAdminOrgs,
+    error: adminOrgsError,
+  } = useAdminOrganizations();
+  const { data: userOrgsData, isLoading: isLoadingUserOrgs } = useOrganizations();
+  const { data: sessionData } = useSession();
 
   const loadContextOrganizations = useCallback(() => {
     if (!orgContext) return;
@@ -69,57 +75,46 @@ export function OrganizationList() {
     setActiveOrganizationId(orgContext.organization?.id || null);
   }, [orgContext]);
 
-  const loadUserOrganizations = useCallback(async () => {
-    const listResult = await authClient.organization.list();
-    if (listResult.error) {
-      showError(listResult.error.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
-      return;
-    }
-    if (listResult.data) {
-      const normalizedOrgs = normalizeOrganizations(extractOrganizations(listResult.data));
-      setOrganizations(normalizedOrgs);
-    }
+  useEffect(() => {
+    setIsLoading(true);
+    clearError();
 
-    const sessionResult = await authClient.getSession();
-    if (sessionResult.data?.session?.activeOrganizationId) {
-      setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
+    if (isAdminContext) {
+      if (adminOrgsError) {
+        showError(adminOrgsError.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
+      } else if (adminOrgsData) {
+        const orgs = adminOrgsData.organizations || [];
+        setOrganizations(normalizeOrganizations(orgs));
+      }
+      setIsLoading(isLoadingAdminOrgs);
+    } else if (orgContext) {
+      loadContextOrganizations();
+      setIsLoading(false);
+    } else if (userOrgsData) {
+      const normalizedOrgs = normalizeOrganizations(extractOrganizations(userOrgsData));
+      setOrganizations(normalizedOrgs);
+      setIsLoading(false);
+    } else {
+      setIsLoading(isLoadingUserOrgs);
     }
-  }, [showError]);
+  }, [
+    isAdminContext,
+    orgContext,
+    adminOrgsData,
+    adminOrgsError,
+    isLoadingAdminOrgs,
+    userOrgsData,
+    isLoadingUserOrgs,
+    clearError,
+    showError,
+    loadContextOrganizations,
+  ]);
 
   useEffect(() => {
-    const loadOrganizations = async () => {
-      setIsLoading(true);
-      clearError();
-
-      try {
-        if (isAdminContext) {
-          if (adminOrgsError) {
-            showError(adminOrgsError.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
-          } else if (adminOrgsData) {
-            const orgs = adminOrgsData.organizations || [];
-            setOrganizations(normalizeOrganizations(orgs));
-
-            const sessionResult = await authClient.getSession();
-            if (sessionResult.data?.session?.activeOrganizationId) {
-              setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
-            }
-          }
-        } else if (orgContext) {
-          loadContextOrganizations();
-        } else {
-          await loadUserOrganizations();
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED;
-        showError(errorMessage);
-      } finally {
-        setIsLoading(isLoadingAdminOrgs && isAdminContext);
-      }
-    };
-
-    loadOrganizations();
-  }, [isAdminContext, orgContext, adminOrgsData, adminOrgsError, isLoadingAdminOrgs, clearError, showError, loadContextOrganizations, loadUserOrganizations]);
+    if (sessionData?.session?.activeOrganizationId) {
+      setActiveOrganizationId(sessionData.session.activeOrganizationId);
+    }
+  }, [sessionData]);
 
   const handleOrganizationCreated = () => {
     setShowCreateForm(false);

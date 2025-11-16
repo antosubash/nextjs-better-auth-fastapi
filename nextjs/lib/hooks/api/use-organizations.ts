@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getAdminOrganizations, getOrganization, addOrganizationMember } from "@/lib/api/organizations";
+import {
+  getAdminOrganizations,
+  getOrganization,
+  addOrganizationMember,
+} from "@/lib/api/organizations";
 import { MEMBER_ERRORS, MEMBER_SUCCESS } from "@/lib/constants";
 import { queryKeys } from "./query-keys";
 
@@ -41,4 +45,3 @@ export function useAddOrganizationMember() {
     },
   });
 }
-

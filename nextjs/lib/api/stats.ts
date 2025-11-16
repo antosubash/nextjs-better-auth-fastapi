@@ -59,4 +59,3 @@ export async function getAdminStats(): Promise<AdminStats> {
   }
   return response.json();
 }
-

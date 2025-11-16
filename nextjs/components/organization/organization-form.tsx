@@ -18,12 +18,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { authClient } from "@/lib/auth-client";
 import {
   ORGANIZATION_ERRORS,
   ORGANIZATION_LABELS,
   ORGANIZATION_PLACEHOLDERS,
 } from "@/lib/constants";
+import { useCreateOrganization, useUpdateOrganization } from "@/lib/hooks/api/use-auth";
 
 interface Organization {
   id: string;
@@ -61,10 +61,13 @@ export function OrganizationForm({
   onCancel,
   hideHeader = false,
 }: OrganizationFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const isEditing = !!organization;
+  const createOrgMutation = useCreateOrganization();
+  const updateOrgMutation = useUpdateOrganization();
+
+  const isLoading = createOrgMutation.isPending || updateOrgMutation.isPending;
 
   const form = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationSchema),
@@ -88,34 +91,32 @@ export function OrganizationForm({
   const handleUpdate = async (values: OrganizationFormValues) => {
     if (!organization) return;
 
-    const result = await authClient.organization.update({
-      organizationId: organization.id,
-      data: {
+    try {
+      await updateOrgMutation.mutateAsync({
+        organizationId: organization.id,
         name: values.name,
         slug: values.slug,
         metadata: values.description ? { description: values.description } : undefined,
-      },
-    });
-
-    if (result.error) {
-      setError(result.error.message || ORGANIZATION_ERRORS.UPDATE_FAILED);
+      });
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : ORGANIZATION_ERRORS.UPDATE_FAILED);
       return false;
     }
-    return true;
   };
 
   const handleCreate = async (values: OrganizationFormValues) => {
-    const result = await authClient.organization.create({
-      name: values.name,
-      slug: values.slug,
-      metadata: values.description ? { description: values.description } : undefined,
-    });
-
-    if (result.error) {
-      setError(result.error.message || ORGANIZATION_ERRORS.CREATE_FAILED);
+    try {
+      await createOrgMutation.mutateAsync({
+        name: values.name,
+        slug: values.slug,
+        metadata: values.description ? { description: values.description } : undefined,
+      });
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : ORGANIZATION_ERRORS.CREATE_FAILED);
       return false;
     }
-    return true;
   };
 
   const getErrorMessage = (err: unknown, isEditing: boolean) => {
@@ -127,7 +128,6 @@ export function OrganizationForm({
 
   const handleSubmit = async (values: OrganizationFormValues) => {
     setError("");
-    setIsLoading(true);
 
     try {
       const success = isEditing ? await handleUpdate(values) : await handleCreate(values);
@@ -136,8 +136,6 @@ export function OrganizationForm({
       }
     } catch (err) {
       setError(getErrorMessage(err, isEditing));
-    } finally {
-      setIsLoading(false);
     }
   };
 

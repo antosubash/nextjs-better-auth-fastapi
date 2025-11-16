@@ -4,13 +4,14 @@ import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
 import { INVITATION_ERRORS, INVITATION_LABELS, INVITATION_SUCCESS } from "@/lib/constants";
+import { useAcceptInvitation } from "@/lib/hooks/api/use-auth";
 
 export default function AcceptInvitationPage() {
   const params = useParams();
   const router = useRouter();
   const token = params.token as string;
+  const acceptInvitationMutation = useAcceptInvitation();
   const [status, setStatus] = useState<"loading" | "success" | "error" | "processing">("loading");
   const [message, setMessage] = useState("");
 
@@ -24,20 +25,12 @@ export default function AcceptInvitationPage() {
 
       setStatus("processing");
       try {
-        const result = await authClient.organization.acceptInvitation({
-          invitationId: token,
-        });
-
-        if (result.error) {
-          setStatus("error");
-          setMessage(result.error.message || INVITATION_ERRORS.ACCEPT_FAILED);
-        } else {
-          setStatus("success");
-          setMessage(INVITATION_SUCCESS.INVITATION_ACCEPTED);
-          setTimeout(() => {
-            router.push("/admin/organizations");
-          }, 2000);
-        }
+        await acceptInvitationMutation.mutateAsync(token);
+        setStatus("success");
+        setMessage(INVITATION_SUCCESS.INVITATION_ACCEPTED);
+        setTimeout(() => {
+          router.push("/admin/organizations");
+        }, 2000);
       } catch (err) {
         setStatus("error");
         const errorMessage = err instanceof Error ? err.message : INVITATION_ERRORS.ACCEPT_FAILED;
@@ -46,12 +39,12 @@ export default function AcceptInvitationPage() {
     };
 
     acceptInvitation();
-  }, [token, router]);
+  }, [token, router, acceptInvitationMutation]);
 
   return (
     <div className="max-w-md mx-auto">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-        {status === "loading" || status === "processing" ? (
+        {status === "loading" || status === "processing" || acceptInvitationMutation.isPending ? (
           <>
             <Loader2 className="w-16 h-16 mx-auto mb-4 text-gray-600 dark:text-gray-400 animate-spin" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">

@@ -135,9 +135,9 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
     };
   }, []);
 
-  const serializeArgs = (args: unknown): string => {
+  const serializeArgs = useCallback((args: unknown): string => {
     return args ? JSON.stringify(args) : "";
-  };
+  }, []);
 
   const getDefaultValuesFromInitial = useCallback((): JobFormValues => {
     if (!initialValues) {
@@ -163,7 +163,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
     };
 
     return baseValues;
-  }, [initialValues, getEmptyDefaultValues]);
+  }, [initialValues, getEmptyDefaultValues, serializeArgs]);
 
   const getDefaultValues = useCallback((): JobFormValues => {
     return getDefaultValuesFromInitial();

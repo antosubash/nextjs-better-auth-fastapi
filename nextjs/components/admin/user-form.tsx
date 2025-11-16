@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth-client";
 import {
   ADMIN_ERRORS,
   ADMIN_LABELS,
@@ -34,10 +33,10 @@ import {
   ROLE_DISPLAY_NAMES,
   USER_ROLES,
 } from "@/lib/constants";
+import { useAdminCreateUser, useAdminUpdateUser } from "@/lib/hooks/api/use-auth";
 import { useAssignableUserRoles } from "@/lib/hooks/api/use-permissions";
 import { getValidAssignableRole, isAssignableUserRole } from "@/lib/utils/role-validation";
 import { ProfilePictureUpload } from "./profile-picture-upload";
-
 
 interface User {
   id: string;
@@ -71,11 +70,14 @@ const userSchema = z.object({
 type UserFormValues = z.infer<typeof userSchema>;
 
 export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const isEditing = !!user;
   const { data: availableRoles = [], isLoading: isLoadingRoles } = useAssignableUserRoles();
+  const updateUserMutation = useAdminUpdateUser();
+  const createUserMutation = useAdminCreateUser();
+
+  const isLoading = updateUserMutation.isPending || createUserMutation.isPending;
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -125,18 +127,13 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     if (!isEditing || !user) return;
 
     try {
-      const result = await authClient.admin.updateUser({
+      await updateUserMutation.mutateAsync({
         userId: user.id,
         data: {
           image: imageUrl,
         },
       });
-
-      if (result.error) {
-        setError(result.error.message || ADMIN_ERRORS.UPDATE_FAILED);
-      } else {
-        onSuccess();
-      }
+      onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : ADMIN_ERRORS.UPDATE_FAILED);
     }
@@ -146,18 +143,13 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     if (!isEditing || !user) return;
 
     try {
-      const result = await authClient.admin.updateUser({
+      await updateUserMutation.mutateAsync({
         userId: user.id,
         data: {
           image: null,
         },
       });
-
-      if (result.error) {
-        setError(result.error.message || ADMIN_ERRORS.UPDATE_FAILED);
-      } else {
-        onSuccess();
-      }
+      onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : ADMIN_ERRORS.UPDATE_FAILED);
     }
@@ -171,43 +163,39 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     if (!user) return;
 
     const validRole = getValidRole(values.role);
-    const result = await authClient.admin.updateUser({
-      userId: user.id,
-      data: {
-        name: values.name,
-        email: values.email,
-        role: validRole,
-      },
-    });
-
-    if (result.error) {
-      setError(result.error.message || ADMIN_ERRORS.UPDATE_FAILED);
-    } else {
+    try {
+      await updateUserMutation.mutateAsync({
+        userId: user.id,
+        data: {
+          name: values.name,
+          email: values.email,
+          role: validRole,
+        },
+      });
       onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : ADMIN_ERRORS.UPDATE_FAILED);
     }
   };
 
   const handleCreateUser = async (values: UserFormValues) => {
     if (!values.password || values.password.trim() === "") {
       setError(AUTH_ERRORS.PASSWORD_REQUIRED);
-      setIsLoading(false);
       return;
     }
 
     const validRole = getValidRole(values.role);
-    // Better Auth client types don't include custom roles, but they are supported at runtime
-    const result = await authClient.admin.createUser({
-      email: values.email,
-      password: values.password,
-      name: values.name,
-      // @ts-expect-error - Better Auth types only include "user" | "admin" but custom roles are supported
-      role: validRole,
-    });
-
-    if (result.error) {
-      setError(result.error.message || ADMIN_ERRORS.CREATE_FAILED);
-    } else {
+    try {
+      // Better Auth client types don't include custom roles, but they are supported at runtime
+      await createUserMutation.mutateAsync({
+        email: values.email,
+        password: values.password,
+        name: values.name,
+        role: validRole,
+      });
       onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : ADMIN_ERRORS.CREATE_FAILED);
     }
   };
 
@@ -223,7 +211,6 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
 
   const handleSubmit = async (values: UserFormValues) => {
     setError("");
-    setIsLoading(true);
 
     try {
       if (isEditing && user) {
@@ -233,8 +220,6 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
       }
     } catch (err) {
       handleFormError(err);
-    } finally {
-      setIsLoading(false);
     }
   };
 

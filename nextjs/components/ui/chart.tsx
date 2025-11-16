@@ -153,6 +153,118 @@ function ChartTooltipContent({
 
   const nestLabel = payload.length === 1 && indicator !== "dot";
 
+  const renderIndicator = (
+    itemConfig: { icon?: React.ComponentType } | undefined,
+    indicatorColor: string | undefined,
+    nestLabel: boolean
+  ) => {
+    if (itemConfig?.icon) {
+      return <itemConfig.icon />;
+    }
+
+    if (hideIndicator) {
+      return null;
+    }
+
+    return (
+      <div
+        className={cn("shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)", {
+          "h-2.5 w-2.5": indicator === "dot",
+          "w-1": indicator === "line",
+          "w-0 border-[1.5px] border-dashed bg-transparent": indicator === "dashed",
+          "my-0.5": nestLabel && indicator === "dashed",
+        })}
+        style={
+          {
+            "--color-bg": indicatorColor,
+            "--color-border": indicatorColor,
+          } as React.CSSProperties
+        }
+      />
+    );
+  };
+
+  const renderItemContent = (
+    payloadItem: {
+      name?: string;
+      value?: number;
+    },
+    itemConfig: { label?: React.ReactNode } | undefined,
+    nestLabel: boolean
+  ) => {
+    return (
+      <div
+        className={cn(
+          "flex flex-1 justify-between leading-none",
+          nestLabel ? "items-end" : "items-center"
+        )}
+      >
+        <div className="grid gap-1.5">
+          {nestLabel ? tooltipLabel : null}
+          <span className="text-muted-foreground">{itemConfig?.label || payloadItem.name}</span>
+        </div>
+        {payloadItem.value && (
+          <span className="text-foreground font-mono font-medium tabular-nums">
+            {payloadItem.value.toLocaleString()}
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  const renderTooltipItem = (item: unknown, index: number) => {
+    if (typeof item !== "object" || item === null) {
+      return null;
+    }
+
+    const payloadItem = item as {
+      name?: string;
+      dataKey?: string;
+      value?: number;
+      color?: string;
+      payload?: { fill?: string };
+      type?: string;
+    };
+
+    const key = `${nameKey || payloadItem.name || payloadItem.dataKey || "value"}`;
+    const itemConfig = getPayloadConfigFromPayload(config, item, key);
+    const indicatorColor = color || payloadItem.payload?.fill || payloadItem.color;
+
+    if (
+      formatter &&
+      payloadItem?.value !== undefined &&
+      payloadItem.name &&
+      payload &&
+      Array.isArray(payload)
+    ) {
+      const formatterResult = formatter(payloadItem.value, payloadItem.name, item, index, payload);
+      return (
+        <div
+          key={payloadItem.dataKey}
+          className={cn(
+            "[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5",
+            indicator === "dot" && "items-center"
+          )}
+        >
+          {formatterResult}
+        </div>
+      );
+    }
+
+    return (
+      <div
+        key={payloadItem.dataKey}
+        className={cn(
+          "[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5",
+          indicator === "dot" && "items-center"
+        )}
+      >
+        {renderIndicator(itemConfig, indicatorColor, nestLabel)}
+        {renderItemContent(payloadItem, itemConfig, nestLabel)}
+      </div>
+    );
+  };
+
   return (
     <div
       className={cn(
@@ -163,71 +275,12 @@ function ChartTooltipContent({
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
         {payload
-          .filter((item) => item.type !== "none")
-          .map((item, index) => {
-            const key = `${nameKey || item.name || item.dataKey || "value"}`;
-            const itemConfig = getPayloadConfigFromPayload(config, item, key);
-            const indicatorColor = color || item.payload.fill || item.color;
-
-            return (
-              <div
-                key={item.dataKey}
-                className={cn(
-                  "[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5",
-                  indicator === "dot" && "items-center"
-                )}
-              >
-                {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value, item.name, item, index, item.payload)
-                ) : (
-                  <>
-                    {itemConfig?.icon ? (
-                      <itemConfig.icon />
-                    ) : (
-                      !hideIndicator && (
-                        <div
-                          className={cn(
-                            "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                            {
-                              "h-2.5 w-2.5": indicator === "dot",
-                              "w-1": indicator === "line",
-                              "w-0 border-[1.5px] border-dashed bg-transparent":
-                                indicator === "dashed",
-                              "my-0.5": nestLabel && indicator === "dashed",
-                            }
-                          )}
-                          style={
-                            {
-                              "--color-bg": indicatorColor,
-                              "--color-border": indicatorColor,
-                            } as React.CSSProperties
-                          }
-                        />
-                      )
-                    )}
-                    <div
-                      className={cn(
-                        "flex flex-1 justify-between leading-none",
-                        nestLabel ? "items-end" : "items-center"
-                      )}
-                    >
-                      <div className="grid gap-1.5">
-                        {nestLabel ? tooltipLabel : null}
-                        <span className="text-muted-foreground">
-                          {itemConfig?.label || item.name}
-                        </span>
-                      </div>
-                      {item.value && (
-                        <span className="text-foreground font-mono font-medium tabular-nums">
-                          {item.value.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
+          .filter((item) => {
+            if (typeof item !== "object" || item === null) return false;
+            const payloadItem = item as { type?: string };
+            return payloadItem.type !== "none";
+          })
+          .map(renderTooltipItem)}
       </div>
     </div>
   );

@@ -85,9 +85,7 @@ export async function getApiKey(id: string): Promise<ApiKeyData> {
   return result.data;
 }
 
-export async function createApiKey(
-  data: CreateApiKeyData
-): Promise<{ data: { key: string } }> {
+export async function createApiKey(data: CreateApiKeyData): Promise<{ data: { key: string } }> {
   const response = await fetch("/api/api-keys", {
     method: "POST",
     headers: {
@@ -159,4 +157,3 @@ export async function verifyApiKey(
 
   return result;
 }
-

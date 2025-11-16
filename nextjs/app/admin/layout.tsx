@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { ImpersonationIndicator } from "@/components/admin/impersonation-indicator";
-import { authClient } from "@/lib/auth-client";
 import { ADMIN_ERRORS, ADMIN_LAYOUT, PAGE_CONTAINER, USER_ROLES } from "@/lib/constants";
+import { useSession } from "@/lib/hooks/api/use-auth";
 
 /**
  * Admin Layout Component
@@ -21,37 +21,25 @@ import { ADMIN_ERRORS, ADMIN_LAYOUT, PAGE_CONTAINER, USER_ROLES } from "@/lib/co
  */
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
+  const { data: session, isLoading } = useSession();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const user = session?.user;
+  const isAuthorized = user?.role === USER_ROLES.ADMIN;
 
   useEffect(() => {
-    const checkAdminAccess = async () => {
-      try {
-        const session = await authClient.getSession();
-        const user = session?.data?.user;
-
-        if (!user) {
-          router.push("/");
-          return;
-        }
-
-        if (user.role !== USER_ROLES.ADMIN) {
-          setIsAuthorized(false);
-        } else {
-          setIsAuthorized(true);
-        }
-      } catch (err) {
-        console.error("Failed to check admin access:", err);
+    if (!isLoading) {
+      if (!user) {
         router.push("/");
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    };
 
-    checkAdminAccess();
-  }, [router]);
+      if (user.role !== USER_ROLES.ADMIN) {
+        // Will show access denied message
+      }
+    }
+  }, [isLoading, user, router]);
 
   if (isLoading) {
     return (

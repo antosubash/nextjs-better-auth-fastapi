@@ -32,13 +32,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ErrorToast } from "@/components/ui/error-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { authClient } from "@/lib/auth-client";
 import {
   ADMIN_NAVIGATION,
   ORGANIZATION_ERRORS,
   ORGANIZATION_LABELS,
   ORGANIZATION_SUCCESS,
 } from "@/lib/constants";
+import { useDeleteOrganization, useSession } from "@/lib/hooks/api/use-auth";
 import { formatDate } from "@/lib/utils/date";
 import { useOrganization } from "@/lib/hooks/api/use-organizations";
 
@@ -47,10 +47,10 @@ export default function OrganizationDetailPage() {
   const router = useRouter();
   const organizationId = params.id as string;
   const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"members" | "invitations">("members");
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [activeOrganizationId, setActiveOrganizationId] = useState<string | null>(null);
 
   const {
@@ -60,18 +60,18 @@ export default function OrganizationDetailPage() {
     refetch,
     isRefetching,
   } = useOrganization(organizationId);
+  const { data: sessionData } = useSession();
+  const deleteOrgMutation = useDeleteOrganization();
+
   const organization = organizationData?.organization || null;
-  const error = queryError?.message || "";
+  const displayError = error || queryError?.message || "";
+  const isDeleting = deleteOrgMutation.isPending;
 
   useEffect(() => {
-    const loadActiveOrganization = async () => {
-      const sessionResult = await authClient.getSession();
-      if (sessionResult.data?.session?.activeOrganizationId) {
-        setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
-      }
-    };
-    loadActiveOrganization();
-  }, []);
+    if (sessionData?.session?.activeOrganizationId) {
+      setActiveOrganizationId(sessionData.session.activeOrganizationId);
+    }
+  }, [sessionData]);
 
   const handleRefresh = () => {
     refetch();
@@ -86,27 +86,16 @@ export default function OrganizationDetailPage() {
 
   const handleDelete = async () => {
     if (!organization) return;
-    setIsDeleting(true);
     try {
-      const result = await authClient.organization.delete({
-        organizationId: organization.id,
-      });
-
-      if (result.error) {
-        setError(result.error.message || ORGANIZATION_ERRORS.DELETE_FAILED);
-        setShowDeleteDialog(false);
-      } else {
-        setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_DELETED);
-        setTimeout(() => {
-          router.push("/admin/organizations");
-        }, 1000);
-      }
+      await deleteOrgMutation.mutateAsync(organization.id);
+      setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_DELETED);
+      setTimeout(() => {
+        router.push("/admin/organizations");
+      }, 1000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : ORGANIZATION_ERRORS.DELETE_FAILED;
       setError(errorMessage);
       setShowDeleteDialog(false);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -118,11 +107,11 @@ export default function OrganizationDetailPage() {
     );
   }
 
-  if (error || !organization) {
+  if (displayError || !organization) {
     return (
       <div className="text-center py-8">
         <p className="text-lg text-red-600 dark:text-red-400 mb-4">
-          {error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED}
+          {displayError || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED}
         </p>
         <Link href="/admin/organizations">
           <Button variant="outline">
@@ -153,7 +142,9 @@ export default function OrganizationDetailPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      {error && <ErrorToast message={error} onDismiss={() => setError("")} duration={5000} />}
+      {displayError && (
+        <ErrorToast message={displayError} onDismiss={() => setError("")} duration={5000} />
+      )}
 
       {success && (
         <div className="fixed top-4 right-4 z-50 max-w-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg shadow-lg p-4">

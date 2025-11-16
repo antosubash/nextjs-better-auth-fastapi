@@ -29,8 +29,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ErrorToast } from "@/components/ui/error-toast";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth-client";
 import { MEMBER_ERRORS, MEMBER_LABELS, MEMBER_SUCCESS } from "@/lib/constants";
+import {
+  useLeaveOrganization,
+  useRemoveMember,
+  useUpdateMemberRole,
+} from "@/lib/hooks/api/use-auth";
 import { MemberRoleSelector } from "./member-role-selector";
 
 interface Member {
@@ -60,86 +64,65 @@ export function MemberActions({
   onActionSuccess,
   onMemberRemoved,
 }: MemberActionsProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [newRole, setNewRole] = useState(member.role);
   const [error, setError] = useState<string | null>(null);
 
+  const updateRoleMutation = useUpdateMemberRole();
+  const removeMemberMutation = useRemoveMember();
+  const leaveOrgMutation = useLeaveOrganization();
+
+  const isLoading =
+    updateRoleMutation.isPending || removeMemberMutation.isPending || leaveOrgMutation.isPending;
+
   const isCurrentUser = member.userId === currentUserId;
   const isOwner = currentUserRole === "owner";
 
   const handleUpdateRole = async () => {
-    setIsLoading(true);
     try {
-      const result = await authClient.organization.updateMemberRole({
+      await updateRoleMutation.mutateAsync({
         organizationId,
         memberId: member.id,
         role: [newRole],
       });
-
-      if (result.error) {
-        setError(result.error.message || MEMBER_ERRORS.UPDATE_ROLE_FAILED);
-      } else {
-        onActionSuccess(MEMBER_SUCCESS.ROLE_UPDATED);
-        setShowRoleModal(false);
-      }
+      onActionSuccess(MEMBER_SUCCESS.ROLE_UPDATED);
+      setShowRoleModal(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.UPDATE_ROLE_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleRemove = async () => {
-    setIsLoading(true);
     try {
-      const result = await authClient.organization.removeMember({
+      await removeMemberMutation.mutateAsync({
         organizationId,
         memberIdOrEmail: member.id,
       });
-
-      if (result.error) {
-        // Better Auth returns "You are not allowed to delete this member" when user is not an owner
-        const errorMessage = result.error.message || MEMBER_ERRORS.REMOVE_FAILED;
-        if (errorMessage.includes("not allowed")) {
-          setError("Only organization owners can remove members");
-        } else {
-          setError(errorMessage);
-        }
-      } else {
-        onMemberRemoved();
-        setShowRemoveDialog(false);
-      }
+      onMemberRemoved();
+      setShowRemoveDialog(false);
     } catch (err) {
+      // Better Auth returns "You are not allowed to delete this member" when user is not an owner
       const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.REMOVE_FAILED;
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+      if (errorMessage.includes("not allowed")) {
+        setError("Only organization owners can remove members");
+      } else {
+        setError(errorMessage);
+      }
     }
   };
 
   const handleLeave = async () => {
-    setIsLoading(true);
     try {
-      const result = await authClient.organization.leave({
-        organizationId,
-      });
-
-      if (result.error) {
-        setError(result.error.message || MEMBER_ERRORS.LEAVE_FAILED);
-      } else {
-        onActionSuccess(MEMBER_SUCCESS.LEFT_ORGANIZATION);
-        setShowLeaveDialog(false);
-        window.location.href = "/admin/organizations";
-      }
+      await leaveOrgMutation.mutateAsync(organizationId);
+      onActionSuccess(MEMBER_SUCCESS.LEFT_ORGANIZATION);
+      setShowLeaveDialog(false);
+      window.location.href = "/admin/organizations";
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.LEAVE_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 

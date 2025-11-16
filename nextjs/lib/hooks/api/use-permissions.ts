@@ -44,4 +44,3 @@ export function useUserPermissions(userId: string) {
     enabled: !!userId,
   });
 }
-

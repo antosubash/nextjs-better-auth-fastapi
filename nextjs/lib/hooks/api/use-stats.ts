@@ -15,4 +15,3 @@ export function useAdminStats() {
     queryFn: () => getAdminStats(),
   });
 }
-

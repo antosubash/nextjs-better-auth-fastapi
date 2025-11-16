@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Users } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,8 +16,8 @@ import {
 import { useErrorMessage } from "@/hooks/organization/use-error-message";
 import { useSearch } from "@/hooks/organization/use-search";
 import { useSuccessMessage } from "@/hooks/organization/use-success-message";
-import { authClient } from "@/lib/auth-client";
-import { MEMBER_ERRORS, MEMBER_LABELS, MEMBER_SUCCESS } from "@/lib/constants";
+import { MEMBER_LABELS, MEMBER_SUCCESS } from "@/lib/constants";
+import { useListMembers, useSession } from "@/lib/hooks/api/use-auth";
 import { formatDate } from "@/lib/utils/date";
 import { extractMembers, normalizeMembers } from "@/lib/utils/organization-data";
 import type { MemberListProps, NormalizedMember } from "@/lib/utils/organization-types";
@@ -33,86 +33,44 @@ export function MemberList({ organizationId }: MemberListProps) {
   const [members, setMembers] = useState<NormalizedMember[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
   const [currentUserRole, setCurrentUserRole] = useState<string | undefined>();
-  const [isLoading, setIsLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   const { searchValue, handleSearch } = useSearch();
   const { success, showSuccess, clearSuccess } = useSuccessMessage();
-  const { error, showError, clearError } = useErrorMessage();
+  const { error, clearError } = useErrorMessage();
 
-  const updateCurrentUserInfo = useCallback(
-    (userId: string | undefined, normalizedMembers: NormalizedMember[]) => {
-      if (!userId) return;
-
-      setCurrentUserId(userId);
-      const currentMember = normalizedMembers.find((m) => m.userId === userId);
-      if (currentMember) {
-        setCurrentUserRole(currentMember.role);
-      }
-    },
-    []
-  );
-
-  const processMembersData = useCallback(
-    (
-      membersResult: Awaited<ReturnType<typeof authClient.organization.listMembers>>,
-      sessionResult: Awaited<ReturnType<typeof authClient.getSession>>
-    ) => {
-      if (membersResult.error) {
-        showError(membersResult.error.message || MEMBER_ERRORS.LOAD_MEMBERS_FAILED);
-        return;
-      }
-
-      if (membersResult.data) {
-        const normalizedMembers = normalizeMembers(extractMembers(membersResult.data));
-        setMembers(normalizedMembers);
-        updateCurrentUserInfo(sessionResult.data?.user?.id, normalizedMembers);
-      } else {
-        updateCurrentUserInfo(sessionResult.data?.user?.id, []);
-      }
-    },
-    [showError, updateCurrentUserInfo]
-  );
-
-  const loadMembers = useCallback(async () => {
-    setIsLoading(true);
-    clearError();
-    try {
-      const [membersResult, sessionResult] = await Promise.all([
-        authClient.organization.listMembers({
-          query: {
-            organizationId,
-          },
-        }),
-        authClient.getSession(),
-      ]);
-
-      processMembersData(membersResult, sessionResult);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.LOAD_MEMBERS_FAILED;
-      showError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [organizationId, clearError, showError, processMembersData]);
+  const { data: membersData, isLoading, refetch: refetchMembers } = useListMembers(organizationId);
+  const { data: sessionData } = useSession();
 
   useEffect(() => {
-    loadMembers();
-  }, [loadMembers]);
+    if (membersData) {
+      const normalizedMembers = normalizeMembers(extractMembers(membersData));
+      setMembers(normalizedMembers);
+
+      const userId = sessionData?.user?.id;
+      if (userId) {
+        setCurrentUserId(userId);
+        const currentMember = normalizedMembers.find((m) => m.userId === userId);
+        if (currentMember) {
+          setCurrentUserRole(currentMember.role);
+        }
+      }
+    }
+  }, [membersData, sessionData]);
 
   const handleAddMemberSuccess = () => {
     showSuccess(MEMBER_SUCCESS.MEMBER_ADDED);
-    loadMembers();
+    refetchMembers();
   };
 
   const handleActionSuccess = (message: string) => {
     showSuccess(message);
-    loadMembers();
+    refetchMembers();
   };
 
   const handleMemberRemoved = () => {
     showSuccess(MEMBER_SUCCESS.MEMBER_REMOVED);
-    loadMembers();
+    refetchMembers();
   };
 
   const filteredMembers = members.filter(

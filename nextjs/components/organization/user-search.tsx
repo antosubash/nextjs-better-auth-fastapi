@@ -2,7 +2,7 @@
 
 import { Check, User as UserIcon } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -11,8 +11,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { authClient } from "@/lib/auth-client";
 import { MEMBER_ERRORS, USER_SEARCH_LABELS, USER_SEARCH_PLACEHOLDERS } from "@/lib/constants";
+import { useAdminListUsers } from "@/lib/hooks/api/use-auth";
 import { cn } from "@/lib/utils";
 
 interface User {
@@ -37,7 +37,6 @@ export function UserSearch({
 }: UserSearchProps) {
   const [searchQuery, setSearchQuery] = useState(value || "");
   const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [error, setError] = useState("");
 
@@ -48,47 +47,33 @@ export function UserSearch({
     }
   }, [value, searchQuery]);
 
-  const searchUsers = useCallback(async (query: string) => {
-    if (!query || query.length < 2) {
-      setUsers([]);
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const result = await authClient.admin.listUsers({
-        query: {
-          searchValue: query,
-          limit: "20",
-          offset: "0",
-        },
-      });
-
-      if (result.error) {
-        setError(result.error.message || MEMBER_ERRORS.SEARCH_FAILED);
-        setUsers([]);
-      } else if (result.data) {
-        const usersData = (result.data as { users?: User[] })?.users || [];
-        setUsers(usersData);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.SEARCH_FAILED;
-      setError(errorMessage);
-      setUsers([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const {
+    data: usersData,
+    isLoading,
+    error: queryError,
+  } = useAdminListUsers({
+    searchValue: searchQuery.length >= 2 ? searchQuery : undefined,
+    limit: "20",
+    offset: "0",
+    enabled: searchQuery.length >= 2,
+  });
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      searchUsers(searchQuery);
-    }, 300);
+    if (usersData) {
+      const usersArray = (usersData as { users?: User[] })?.users || [];
+      setUsers(usersArray);
+    } else if (searchQuery.length < 2) {
+      setUsers([]);
+    }
+  }, [usersData, searchQuery]);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, searchUsers]);
+  useEffect(() => {
+    if (queryError) {
+      setError(queryError.message || MEMBER_ERRORS.SEARCH_FAILED);
+    } else {
+      setError("");
+    }
+  }, [queryError]);
 
   const handleSelect = (user: User) => {
     setSelectedUser(user);

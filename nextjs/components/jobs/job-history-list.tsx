@@ -236,8 +236,8 @@ export function JobHistoryList({
 
   const renderHistoryItem = (item: (typeof history)[0]) => {
     const isExpanded = expandedItems.has(item.id);
-    const hasLogs = item.logs && item.logs.trim().length > 0;
-    const hasError = item.error_message && item.error_message.trim().length > 0;
+    const hasLogs = !!(item.logs && item.logs.trim().length > 0);
+    const hasError = !!(item.error_message && item.error_message.trim().length > 0);
 
     return (
       <Card key={item.id}>

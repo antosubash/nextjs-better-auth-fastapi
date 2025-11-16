@@ -103,7 +103,11 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" disabled={verifyMutation.isPending || !key.trim()} className="flex-1">
+            <Button
+              type="submit"
+              disabled={verifyMutation.isPending || !key.trim()}
+              className="flex-1"
+            >
               {verifyMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -113,7 +117,12 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
                 API_KEY_LABELS.VERIFY_KEY
               )}
             </Button>
-            <Button type="button" variant="outline" onClick={onClose} disabled={verifyMutation.isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={verifyMutation.isPending}
+            >
               {API_KEY_LABELS.CANCEL}
             </Button>
           </div>

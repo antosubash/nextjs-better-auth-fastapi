@@ -3,7 +3,7 @@
 import { LogIn, LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,48 +11,26 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, DASHBOARD } from "@/lib/constants";
+import { useSession, useSignOut } from "@/lib/hooks/api/use-auth";
 
 export function MainNavbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<{ name?: string; email?: string; image?: string | null } | null>(
-    null
-  );
+  const { data: session, isLoading } = useSession();
+  const signOutMutation = useSignOut();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const session = await authClient.getSession();
-        const hasSession = !!session?.data?.session;
-        setIsAuthenticated(hasSession);
-        if (hasSession && session?.data?.user) {
-          setUser(session.data.user);
-        }
-      } catch (err) {
-        console.error("Failed to check auth:", err);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
+  const isAuthenticated = !!session?.session;
+  const user = session?.user || null;
 
   const handleLogout = async () => {
     try {
-      await authClient.signOut();
-      setIsAuthenticated(false);
-      setUser(null);
+      await signOutMutation.mutateAsync();
       router.push("/");
       router.refresh();
-    } catch (err) {
-      console.error("Failed to logout:", err);
+    } catch {
+      // Error is handled by the mutation hook
     }
   };
 

@@ -30,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { authClient } from "@/lib/auth-client";
 import {
   ADMIN_BULK_ACTIONS,
   ADMIN_ERRORS,
@@ -40,6 +39,12 @@ import {
   ROLE_DISPLAY_NAMES,
   USER_ROLES,
 } from "@/lib/constants";
+import {
+  useAdminBanUser,
+  useAdminDeleteUser,
+  useAdminSetRole,
+  useAdminUnbanUser,
+} from "@/lib/hooks/api/use-auth";
 import type { RoleInfo } from "@/lib/permissions-utils";
 import { canBanRole, getValidAssignableRole } from "@/lib/utils/role-validation";
 
@@ -71,14 +76,23 @@ export function UserBulkActions({
   const [showBulkUnbanDialog, setShowBulkUnbanDialog] = useState(false);
   const [bulkRole, setBulkRole] = useState<string>("");
   const [bulkBanReason, setBulkBanReason] = useState("");
-  const [isProcessingBulk, setIsProcessingBulk] = useState(false);
+
+  const deleteUserMutation = useAdminDeleteUser();
+  const setRoleMutation = useAdminSetRole();
+  const banUserMutation = useAdminBanUser();
+  const unbanUserMutation = useAdminUnbanUser();
+
+  const isProcessingBulk =
+    deleteUserMutation.isPending ||
+    setRoleMutation.isPending ||
+    banUserMutation.isPending ||
+    unbanUserMutation.isPending;
 
   const handleBulkDelete = async () => {
-    setIsProcessingBulk(true);
     try {
       const userIds = Array.from(selectedUserIds);
       const results = await Promise.allSettled(
-        userIds.map((userId) => authClient.admin.removeUser({ userId }))
+        userIds.map((userId) => deleteUserMutation.mutateAsync(userId))
       );
 
       const failed = results.filter((r) => r.status === "rejected").length;
@@ -91,14 +105,11 @@ export function UserBulkActions({
       onComplete();
     } catch {
       onError(ADMIN_ERRORS.BULK_DELETE_FAILED);
-    } finally {
-      setIsProcessingBulk(false);
     }
   };
 
   const handleBulkRoleChange = async () => {
     if (!bulkRole) return;
-    setIsProcessingBulk(true);
     try {
       const userIds = Array.from(selectedUserIds);
       // Ensure only assignable roles are used
@@ -110,9 +121,8 @@ export function UserBulkActions({
       // Better Auth client types don't include custom roles, but they are supported at runtime
       const results = await Promise.allSettled(
         userIds.map((userId) =>
-          authClient.admin.setRole({
+          setRoleMutation.mutateAsync({
             userId,
-            // @ts-expect-error - Better Auth types only include "user" | "admin" but custom roles are supported
             role: validRole,
           })
         )
@@ -129,8 +139,6 @@ export function UserBulkActions({
       onComplete();
     } catch {
       onError(ADMIN_ERRORS.BULK_ROLE_SET_FAILED);
-    } finally {
-      setIsProcessingBulk(false);
     }
   };
 
@@ -151,14 +159,12 @@ export function UserBulkActions({
   };
 
   const processBanResults = (
-    results: PromiseSettledResult<Awaited<ReturnType<typeof authClient.admin.banUser>>>[],
+    results: PromiseSettledResult<unknown>[],
     adminUserIds: string[],
     nonAdminUserIds: string[]
   ) => {
-    const failedResults = results.filter(
-      (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.error)
-    );
-    const successfulBans = results.filter((r) => r.status === "fulfilled" && !r.value.error);
+    const failedResults = results.filter((r) => r.status === "rejected");
+    const successfulBans = results.filter((r) => r.status === "fulfilled");
 
     if (failedResults.length > 0) {
       if (successfulBans.length > 0) {
@@ -180,7 +186,6 @@ export function UserBulkActions({
   };
 
   const handleBulkBan = async () => {
-    setIsProcessingBulk(true);
     try {
       const userIds = Array.from(selectedUserIds);
       const { adminUserIds, nonAdminUserIds } = separateAdminAndNonAdminUsers(userIds);
@@ -189,15 +194,14 @@ export function UserBulkActions({
         onError(ADMIN_ERRORS.CANNOT_BAN_ADMIN);
         setBulkBanReason("");
         setShowBulkBanDialog(false);
-        setIsProcessingBulk(false);
         return;
       }
 
       const results = await Promise.allSettled(
         nonAdminUserIds.map((userId) =>
-          authClient.admin.banUser({
+          banUserMutation.mutateAsync({
             userId,
-            banReason: bulkBanReason || undefined,
+            reason: bulkBanReason || undefined,
           })
         )
       );
@@ -208,17 +212,14 @@ export function UserBulkActions({
       onComplete();
     } catch {
       onError(ADMIN_ERRORS.BULK_BAN_FAILED);
-    } finally {
-      setIsProcessingBulk(false);
     }
   };
 
   const handleBulkUnban = async () => {
-    setIsProcessingBulk(true);
     try {
       const userIds = Array.from(selectedUserIds);
       const results = await Promise.allSettled(
-        userIds.map((userId) => authClient.admin.unbanUser({ userId }))
+        userIds.map((userId) => unbanUserMutation.mutateAsync(userId))
       );
 
       const failed = results.filter((r) => r.status === "rejected").length;
@@ -231,8 +232,6 @@ export function UserBulkActions({
       onComplete();
     } catch {
       onError(ADMIN_ERRORS.BULK_UNBAN_FAILED);
-    } finally {
-      setIsProcessingBulk(false);
     }
   };
 

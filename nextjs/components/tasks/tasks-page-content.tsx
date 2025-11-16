@@ -23,15 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { authClient } from "@/lib/auth-client";
 import { PAGE_CONTAINER, TASK_ERRORS, TASK_LABELS } from "@/lib/constants";
+import { useSession } from "@/lib/hooks/api/use-auth";
 import { useCreateTask, useDeleteTask, useTasks, useUpdateTask } from "@/lib/hooks/api/use-tasks";
 import type { Task, TaskCreate, TaskStatus } from "@/lib/types/task";
 
 export function TasksPageContent() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { data: session, isLoading } = useSession();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [statusFilter, setStatusFilter] = useState<TaskStatus | null>(null);
@@ -49,26 +48,13 @@ export function TasksPageContent() {
 
   const tasks = tasksData?.items ?? [];
   const total = tasksData?.total ?? 0;
+  const isAuthorized = !!session?.session;
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const session = await authClient.getSession();
-        if (!session?.data?.session) {
-          router.push("/");
-          return;
-        }
-
-        setIsAuthorized(true);
-      } catch (err) {
-        console.error("Failed to check auth:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
+    if (!isLoading && !isAuthorized) {
+      router.push("/");
+    }
+  }, [isLoading, isAuthorized, router]);
 
   const handleCreateClick = () => {
     setEditingTask(undefined);
@@ -113,7 +99,7 @@ export function TasksPageContent() {
 
   const totalPages = Math.ceil(total / pageSize) || 0;
 
-  if (isLoading && !isAuthorized) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-lg text-gray-600 dark:text-gray-400">{TASK_LABELS.LOADING}</div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Monitor, Trash, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,9 +26,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { authClient } from "@/lib/auth-client";
 import { PROFILE } from "@/lib/constants";
+import { useSession } from "@/lib/hooks/api/use-auth";
 import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/lib/hooks/api/use-sessions";
+import type { Session } from "@/lib/api/sessions";
 
 function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleString("en-US", {
@@ -40,8 +41,78 @@ function formatDate(timestamp: number): string {
   });
 }
 
+interface SessionRowProps {
+  session: Session;
+  isExpired: boolean;
+  isCurrent: boolean;
+  revokingSessionToken: string | null;
+  revokeSessionMutation: {
+    isPending: boolean;
+  };
+  onRevokeSession: (token: string) => void;
+}
+
+function SessionRow({
+  session,
+  isExpired,
+  isCurrent,
+  revokingSessionToken,
+  revokeSessionMutation,
+  onRevokeSession,
+}: SessionRowProps) {
+  const canRevoke = !isCurrent;
+
+  return (
+    <TableRow key={session.id || session.token}>
+      <TableCell>{session.ipAddress ?? "N/A"}</TableCell>
+      <TableCell className="max-w-lg truncate" title={session.userAgent ?? "N/A"}>
+        {session.userAgent ?? "N/A"}
+      </TableCell>
+      <TableCell>{formatDate(session.createdAt)}</TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          {formatDate(session.expiresAt)}
+          {isExpired && <Badge variant="secondary">{PROFILE.EXPIRED}</Badge>}
+        </div>
+      </TableCell>
+      <TableCell>
+        {isCurrent ? (
+          <Badge variant="default">{PROFILE.CURRENT_SESSION}</Badge>
+        ) : isExpired ? (
+          <Badge variant="secondary">{PROFILE.EXPIRED}</Badge>
+        ) : (
+          <Badge variant="outline">Active</Badge>
+        )}
+      </TableCell>
+      <TableCell>
+        {canRevoke ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRevokeSession(session.token)}
+                disabled={revokingSessionToken === session.token || revokeSessionMutation.isPending}
+              >
+                {revokingSessionToken === session.token ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{PROFILE.REVOKE_SESSION}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <span className="text-sm text-muted-foreground">-</span>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export function UserSessions() {
-  const [currentSessionToken, setCurrentSessionToken] = useState<string | null>(null);
+  const { data: session } = useSession();
   const [showRevokeAllDialog, setShowRevokeAllDialog] = useState(false);
   const [revokingSessionToken, setRevokingSessionToken] = useState<string | null>(null);
 
@@ -50,15 +121,7 @@ export function UserSessions() {
   const revokeAllSessionsMutation = useRevokeAllSessions();
 
   const sessions = sessionsData?.sessions || [];
-
-  useEffect(() => {
-    const loadCurrentSession = async () => {
-      const sessionResult = await authClient.getSession();
-      const currentToken = sessionResult?.data?.session?.token || null;
-      setCurrentSessionToken(currentToken);
-    };
-    loadCurrentSession();
-  }, []);
+  const currentSessionToken = session?.session?.token || null;
 
   const handleRevokeSession = async (sessionToken: string) => {
     setRevokingSessionToken(sessionToken);
@@ -148,62 +211,17 @@ export function UserSessions() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sessions.map((session) => {
-                        const expired = isExpired(session.expiresAt);
-                        const isCurrent = isCurrentSession(session.token);
-                        const canRevoke = !isCurrent;
-
-                        return (
-                          <TableRow key={session.id || session.token}>
-                            <TableCell>{session.ipAddress || "N/A"}</TableCell>
-                            <TableCell
-                              className="max-w-lg truncate"
-                              title={session.userAgent || "N/A"}
-                            >
-                              {session.userAgent || "N/A"}
-                            </TableCell>
-                            <TableCell>{formatDate(session.createdAt)}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {formatDate(session.expiresAt)}
-                                {expired && <Badge variant="secondary">{PROFILE.EXPIRED}</Badge>}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {isCurrent ? (
-                                <Badge variant="default">{PROFILE.CURRENT_SESSION}</Badge>
-                              ) : expired ? (
-                                <Badge variant="secondary">{PROFILE.EXPIRED}</Badge>
-                              ) : (
-                                <Badge variant="outline">Active</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {canRevoke ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleRevokeSession(session.token)}
-                                      disabled={revokingSessionToken === session.token || revokeSessionMutation.isPending}
-                                    >
-                                      {revokingSessionToken === session.token ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                      ) : (
-                                        <Trash2 className="h-4 w-4" />
-                                      )}
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>{PROFILE.REVOKE_SESSION}</TooltipContent>
-                                </Tooltip>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">-</span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                      {sessions.map((session) => (
+                        <SessionRow
+                          key={session.id || session.token}
+                          session={session}
+                          isExpired={isExpired(session.expiresAt)}
+                          isCurrent={isCurrentSession(session.token)}
+                          revokingSessionToken={revokingSessionToken}
+                          revokeSessionMutation={revokeSessionMutation}
+                          onRevokeSession={handleRevokeSession}
+                        />
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
@@ -220,7 +238,9 @@ export function UserSessions() {
             <AlertDialogDescription>{PROFILE.CONFIRM_REVOKE_ALL_SESSIONS}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={revokeAllSessionsMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={revokeAllSessionsMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRevokeAllSessions}
               disabled={revokeAllSessionsMutation.isPending}

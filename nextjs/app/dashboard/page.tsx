@@ -4,8 +4,8 @@ import { Activity, Calendar, CheckCircle2, Clock, Users, XCircle } from "lucide-
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { authClient } from "@/lib/auth-client";
 import { DASHBOARD, PAGE_CONTAINER, USER_ROLES } from "@/lib/constants";
+import { useSession } from "@/lib/hooks/api/use-auth";
 import { useUserStats } from "@/lib/hooks/api/use-stats";
 
 function formatDate(timestamp: number) {
@@ -49,25 +49,21 @@ function formatTimestamp(timestamp: number): string {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const { data: stats, isLoading, error } = useUserStats();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const session = await authClient.getSession();
-      if (!session?.data?.session) {
-        router.push("/");
-        return;
-      }
+    if (!session?.session) {
+      router.push("/");
+      return;
+    }
 
-      const userRole = session?.data?.user?.role;
-      if (userRole === USER_ROLES.ADMIN) {
-        router.push("/admin/dashboard");
-        return;
-      }
-    };
-
-    checkAuth();
-  }, [router]);
+    const userRole = session?.user?.role;
+    if (userRole === USER_ROLES.ADMIN) {
+      router.push("/admin/dashboard");
+      return;
+    }
+  }, [session, router]);
 
   if (isLoading) {
     return (

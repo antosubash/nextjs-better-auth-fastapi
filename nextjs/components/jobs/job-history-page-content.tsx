@@ -3,43 +3,25 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { JobHistoryList } from "@/components/jobs/job-history-list";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { authClient } from "@/lib/auth-client";
-import { JOB_ERRORS, JOB_LABELS, PAGE_CONTAINER } from "@/lib/constants";
+import { JobHistoryList } from "@/components/jobs/job-history-list";
+import { JOB_LABELS, PAGE_CONTAINER } from "@/lib/constants";
+import { useSession } from "@/lib/hooks/api/use-auth";
 
 export function JobHistoryPageContent() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [error, setError] = useState("");
+  const { data: session, isLoading } = useSession();
+
+  const isAuthorized = !!session?.session;
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const session = await authClient.getSession();
-        if (!session?.data?.session) {
-          router.push("/");
-          return;
-        }
+    if (!isLoading && !isAuthorized) {
+      router.push("/");
+    }
+  }, [isLoading, isAuthorized, router]);
 
-        setIsAuthorized(true);
-      } catch (err) {
-        console.error("Failed to check auth:", err);
-        setError(err instanceof Error ? err.message : JOB_ERRORS.LOAD_JOB_HISTORY_FAILED);
-        toast.error(JOB_ERRORS.LOAD_JOB_HISTORY_FAILED);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
-
-  if (isLoading && !isAuthorized) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-lg text-gray-600 dark:text-gray-400">{JOB_LABELS.LOADING}</div>
@@ -72,14 +54,6 @@ export function JobHistoryPageContent() {
           </div>
         </div>
       </div>
-
-      {error && (
-        <Card className="mb-6 border-destructive">
-          <CardContent className="pt-6">
-            <p className="text-center text-destructive">{error}</p>
-          </CardContent>
-        </Card>
-      )}
 
       <JobHistoryList showJobFilter={true} />
     </main>

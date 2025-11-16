@@ -69,4 +69,3 @@ export async function getUserPermissions(userId: string): Promise<UserPermission
 
   return response.json();
 }
-

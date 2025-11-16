@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, Plus } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,8 +16,8 @@ import {
 import { useErrorMessage } from "@/hooks/organization/use-error-message";
 import { useSearch } from "@/hooks/organization/use-search";
 import { useSuccessMessage } from "@/hooks/organization/use-success-message";
-import { authClient } from "@/lib/auth-client";
-import { INVITATION_ERRORS, INVITATION_LABELS, INVITATION_SUCCESS } from "@/lib/constants";
+import { INVITATION_LABELS, INVITATION_SUCCESS } from "@/lib/constants";
+import { useListInvitations } from "@/lib/hooks/api/use-auth";
 import { formatDate } from "@/lib/utils/date";
 import { extractInvitations, normalizeInvitations } from "@/lib/utils/organization-data";
 import type {
@@ -36,57 +36,40 @@ import { SuccessMessage } from "./shared/success-message";
 
 export function InvitationList({ organizationId }: InvitationListProps) {
   const [invitations, setInvitations] = useState<NormalizedInvitation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showInviteForm, setShowInviteForm] = useState(false);
 
   const { searchValue, handleSearch } = useSearch();
   const { success, showSuccess, clearSuccess } = useSuccessMessage();
-  const { error, showError, clearError } = useErrorMessage();
+  const { error, clearError } = useErrorMessage();
 
-  const loadInvitations = useCallback(async () => {
-    setIsLoading(true);
-    clearError();
-    try {
-      const result = await authClient.organization.listInvitations({
-        query: {
-          organizationId,
-        },
-      });
-
-      if (result.error) {
-        showError(result.error.message || INVITATION_ERRORS.LOAD_INVITATIONS_FAILED);
-      } else if (result.data) {
-        const normalizedInvitations = normalizeInvitations(
-          extractInvitations(result.data as InvitationListResponse | Invitation[])
-        );
-        setInvitations(normalizedInvitations);
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : INVITATION_ERRORS.LOAD_INVITATIONS_FAILED;
-      showError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [organizationId, clearError, showError]);
+  const {
+    data: invitationsData,
+    isLoading,
+    refetch: refetchInvitations,
+  } = useListInvitations(organizationId);
 
   useEffect(() => {
-    loadInvitations();
-  }, [loadInvitations]);
+    if (invitationsData) {
+      const normalizedInvitations = normalizeInvitations(
+        extractInvitations(invitationsData as InvitationListResponse | Invitation[])
+      );
+      setInvitations(normalizedInvitations);
+    }
+  }, [invitationsData]);
 
   const handleInvitationSent = () => {
     setShowInviteForm(false);
     showSuccess(INVITATION_SUCCESS.INVITATION_SENT);
-    loadInvitations();
+    refetchInvitations();
   };
 
   const handleActionSuccess = (message: string) => {
     showSuccess(message);
-    loadInvitations();
+    refetchInvitations();
   };
 
   const handleInvitationRemoved = () => {
-    loadInvitations();
+    refetchInvitations();
   };
 
   const filteredInvitations = invitations.filter((inv) =>

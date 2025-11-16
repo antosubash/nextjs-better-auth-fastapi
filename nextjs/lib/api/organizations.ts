@@ -54,4 +54,3 @@ export async function addOrganizationMember(
     throw new Error(result.error || "Failed to add member");
   }
 }
-

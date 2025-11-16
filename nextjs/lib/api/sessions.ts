@@ -50,4 +50,3 @@ export async function revokeAllSessions(): Promise<void> {
     throw new Error(error.error || "Failed to revoke sessions");
   }
 }
-
