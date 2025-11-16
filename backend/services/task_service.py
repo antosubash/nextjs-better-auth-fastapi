@@ -177,7 +177,8 @@ class TaskService:
             if update_data:
                 for field, value in update_data.items():
                     setattr(task, field, value)
-                task.updated_at = datetime.now(tz=UTC)
+                # Use naive datetime to match TIMESTAMP WITHOUT TIME ZONE column
+                task.updated_at = datetime.now(UTC).replace(tzinfo=None)
 
                 await self.session.commit()
                 await self.session.refresh(task)
