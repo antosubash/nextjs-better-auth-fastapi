@@ -81,7 +81,7 @@ function SessionRow({
         ) : isExpired ? (
           <Badge variant="secondary">{PROFILE.EXPIRED}</Badge>
         ) : (
-          <Badge variant="outline">Active</Badge>
+          <Badge variant="outline">{PROFILE.ACTIVE}</Badge>
         )}
       </TableCell>
       <TableCell>
@@ -170,7 +170,7 @@ export function UserSessions() {
                 {revokeAllSessionsMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Revoking...
+                    {PROFILE.REVOKING}
                   </>
                 ) : (
                   <>
@@ -206,8 +206,8 @@ export function UserSessions() {
                         <TableHead>{PROFILE.SESSION_USER_AGENT}</TableHead>
                         <TableHead>{PROFILE.SESSION_CREATED_AT}</TableHead>
                         <TableHead>{PROFILE.SESSION_EXPIRES_AT}</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead>{PROFILE.STATUS}</TableHead>
+                        <TableHead>{PROFILE.ACTIONS}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -239,7 +239,7 @@ export function UserSessions() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={revokeAllSessionsMutation.isPending}>
-              Cancel
+              {PROFILE.CANCEL}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRevokeAllSessions}
@@ -249,7 +249,7 @@ export function UserSessions() {
               {revokeAllSessionsMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Revoking...
+                  {PROFILE.REVOKING}
                 </>
               ) : (
                 PROFILE.REVOKE_ALL_SESSIONS

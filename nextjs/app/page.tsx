@@ -1,17 +1,16 @@
 "use client";
 
 import { Code, Shield, Zap } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { LoginForm } from "@/components/login-form";
-import { SignupForm } from "@/components/signup-form";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { LANDING_PAGE, PAGE_CONTAINER } from "@/lib/constants";
 import { useSession } from "@/lib/hooks/api/use-auth";
 import { getDashboardPath } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
-  const [isLogin, setIsLogin] = useState(true);
   const { data: session, isLoading } = useSession();
 
   const isAuthenticated = !!session?.session;
@@ -55,61 +54,46 @@ export default function Home() {
           <p className="text-lg md:text-xl lg:text-2xl text-gray-700 dark:text-gray-300 mb-4 font-medium">
             {LANDING_PAGE.HERO_SUBTITLE}
           </p>
-          <p className="text-sm md:text-base lg:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-sm md:text-base lg:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8">
             {LANDING_PAGE.HERO_DESCRIPTION}
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button asChild size="lg" className="w-full sm:w-auto">
+              <Link href="/signup">{LANDING_PAGE.CTA_SIGNUP}</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
+              <Link href="/login">{LANDING_PAGE.CTA_LOGIN}</Link>
+            </Button>
+          </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start w-full">
-          {/* Features Section */}
-          <div className="w-full space-y-6 lg:order-1">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-6">
-              {LANDING_PAGE.FEATURES_TITLE}
-            </h2>
-            <div className="space-y-4">
-              {features.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <div
-                    key={feature.TITLE}
-                    className="flex gap-4 p-6 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
-                  >
-                    <div className="shrink-0">
-                      <div className="w-12 h-12 rounded-lg bg-linear-to-br from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 flex items-center justify-center">
-                        <Icon className="w-6 h-6 text-white dark:text-gray-900" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                        {feature.TITLE}
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400">{feature.DESCRIPTION}</p>
+        {/* Features Section */}
+        <div className="w-full max-w-4xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+            {LANDING_PAGE.FEATURES_TITLE}
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {features.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <div
+                  key={feature.TITLE}
+                  className="flex flex-col gap-4 p-6 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
+                >
+                  <div className="shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-linear-to-br from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 flex items-center justify-center">
+                      <Icon className="w-6 h-6 text-white dark:text-gray-900" />
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Auth Form Section */}
-          <div className="w-full lg:order-2">
-            <div className="lg:sticky lg:top-8">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 md:p-8 lg:p-10">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    {isLogin ? LANDING_PAGE.GET_STARTED : LANDING_PAGE.CREATE_ACCOUNT}
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {isLogin ? LANDING_PAGE.SIGN_IN_DESCRIPTION : LANDING_PAGE.SIGN_UP_DESCRIPTION}
-                  </p>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                      {feature.TITLE}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">{feature.DESCRIPTION}</p>
+                  </div>
                 </div>
-                {isLogin ? (
-                  <LoginForm onSwitchToSignup={() => setIsLogin(false)} />
-                ) : (
-                  <SignupForm onSwitchToLogin={() => setIsLogin(true)} />
-                )}
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </div>

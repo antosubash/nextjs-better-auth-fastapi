@@ -4,6 +4,7 @@ import { LogIn, LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { Logo } from "@/components/branding/logo";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ export function MainNavbar() {
   };
 
   const handleLogin = () => {
-    router.push("/");
+    router.push("/login");
   };
 
   const getInitials = (name?: string, email?: string) => {
@@ -91,14 +92,18 @@ export function MainNavbar() {
             <HoverCard>
               <HoverCardTrigger asChild>{renderUserProfile()}</HoverCardTrigger>
               <HoverCardContent className="w-80">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-12 h-12">
-                    {user.image ? <AvatarImage src={user.image} alt={user.name || "User"} /> : null}
-                    <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-semibold">{user.name || "User"}</h4>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12">
+                      {user.image ? (
+                        <AvatarImage src={user.image} alt={user.name || "User"} />
+                      ) : null}
+                      <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
+                    </Avatar>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold">{user.name || "User"}</h4>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
                   </div>
                 </div>
               </HoverCardContent>
@@ -189,9 +194,7 @@ export function MainNavbar() {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo/Brand */}
-          <Link href="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
-            Better Auth
-          </Link>
+          <Logo size="md" />
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">{renderDesktopNav()}</div>

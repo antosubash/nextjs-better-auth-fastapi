@@ -7,14 +7,16 @@ import {
   Key,
   LayoutDashboard,
   Stethoscope,
+  User,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Logo } from "@/components/branding/logo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ADMIN_NAVIGATION } from "@/lib/constants";
+import { ADMIN_NAVIGATION, AUTH_LABELS, BRANDING } from "@/lib/constants";
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -60,6 +62,11 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       label: ADMIN_NAVIGATION.DOCTOR,
       icon: Stethoscope,
     },
+    {
+      href: "/profile",
+      label: AUTH_LABELS.PROFILE,
+      icon: User,
+    },
   ];
 
   const handleLinkClick = () => {
@@ -87,6 +94,9 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     if (href === "/admin/users") {
       return pathname === "/admin/users";
     }
+    if (href === "/profile") {
+      return pathname === "/profile";
+    }
     return pathname === href;
   };
 
@@ -95,8 +105,9 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block lg:fixed lg:top-0 lg:left-0 lg:h-full lg:w-64 lg:border-r lg:bg-background lg:z-40">
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4">
-            <h2 className="text-lg font-semibold">Admin Panel</h2>
+          <div className="flex items-center gap-2 p-4">
+            <Logo size="sm" />
+            <span className="text-sm font-medium text-muted-foreground">Admin</span>
           </div>
           <Separator />
           <nav className="flex-1 p-4 space-y-2">
@@ -126,7 +137,10 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent side="left" className="w-64 p-0">
           <SheetHeader className="p-4">
-            <SheetTitle>Admin Panel</SheetTitle>
+            <div className="flex items-center gap-2">
+              <Logo size="sm" />
+              <SheetTitle className="text-base">{BRANDING.appName} Admin</SheetTitle>
+            </div>
           </SheetHeader>
           <Separator />
           <nav className="flex-1 p-4 space-y-2">

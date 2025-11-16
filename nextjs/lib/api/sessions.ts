@@ -1,3 +1,5 @@
+import { authClient } from "@/lib/auth-client";
+
 export interface Session {
   id: string;
   token: string;
@@ -13,40 +15,59 @@ export interface SessionsResponse {
 }
 
 export async function getSessions(): Promise<SessionsResponse> {
-  const response = await fetch("/api/sessions");
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to load sessions");
+  const result = await authClient.listSessions();
+  if (result.error) {
+    throw new Error(result.error.message || "Failed to load sessions");
   }
-  return response.json();
+
+  // Transform Better Auth session format to our expected format
+  const sessions = (result.data || []).map((session) => {
+    const createdAt =
+      session.createdAt instanceof Date
+        ? session.createdAt.getTime()
+        : typeof session.createdAt === "number"
+          ? session.createdAt
+          : 0;
+    const expiresAt =
+      session.expiresAt instanceof Date
+        ? session.expiresAt.getTime()
+        : typeof session.expiresAt === "number"
+          ? session.expiresAt
+          : 0;
+
+    return {
+      id: session.id || session.token || "",
+      token: session.token || "",
+      ipAddress: session.ipAddress || null,
+      userAgent: session.userAgent || null,
+      createdAt,
+      expiresAt,
+      isActive: expiresAt > Date.now(),
+    };
+  });
+
+  return { sessions };
 }
 
 export async function revokeSession(sessionToken: string): Promise<void> {
-  const response = await fetch("/api/sessions", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ sessionToken }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to revoke session");
+  const result = await authClient.revokeSession({ token: sessionToken });
+  if (result.error) {
+    throw new Error(result.error.message || "Failed to revoke session");
   }
 }
 
 export async function revokeAllSessions(): Promise<void> {
-  const response = await fetch("/api/sessions", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ revokeAll: true }),
-  });
+  // Revoke all other sessions (excluding current session)
+  const result = await authClient.revokeOtherSessions();
+  if (result.error) {
+    throw new Error(result.error.message || "Failed to revoke sessions");
+  }
+}
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to revoke sessions");
+export async function revokeAllSessionsIncludingCurrent(): Promise<void> {
+  // Revoke all sessions including the current one
+  const result = await authClient.revokeSessions();
+  if (result.error) {
+    throw new Error(result.error.message || "Failed to revoke all sessions");
   }
 }

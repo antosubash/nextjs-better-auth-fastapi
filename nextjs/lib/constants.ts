@@ -1,3 +1,40 @@
+import { type BrandingConfig, branding } from "@/lib/branding/config";
+
+/**
+ * Get branding configuration
+ * This function returns the branding config, which can be used throughout the app
+ */
+function getBranding(): BrandingConfig {
+  return branding();
+}
+
+export const BRANDING = {
+  get appName() {
+    return getBranding().appName;
+  },
+  get appDescription() {
+    return getBranding().appDescription;
+  },
+  get logo() {
+    return getBranding().logo;
+  },
+  get colors() {
+    return getBranding().colors;
+  },
+  get fonts() {
+    return getBranding().fonts;
+  },
+  get meta() {
+    return getBranding().meta;
+  },
+  get favicon() {
+    return getBranding().favicon;
+  },
+  get social() {
+    return getBranding().social;
+  },
+} as const;
+
 export const AUTH_LABELS = {
   EMAIL: "Email",
   PASSWORD: "Password",
@@ -9,6 +46,8 @@ export const AUTH_LABELS = {
   DONT_HAVE_ACCOUNT: "Don't have an account?",
   WELCOME: "Welcome",
   LOGGED_IN_AS: "Logged in as",
+  FORGOT_PASSWORD: "Forgot password?",
+  PROFILE: "Profile",
 } as const;
 
 export const PROFILE = {
@@ -32,6 +71,15 @@ export const PROFILE = {
   NO_SESSIONS: "No sessions found",
   CURRENT_SESSION: "Current Session",
   EXPIRED: "Expired",
+  ACTIVE: "Active",
+  STATUS: "Status",
+  ACTIONS: "Actions",
+  REVOKING: "Revoking...",
+  SECURITY: "Security",
+  EDIT_PROFILE: "Edit Profile",
+  SAVE_CHANGES: "Save Changes",
+  CANCEL: "Cancel",
+  SAVING: "Saving...",
 } as const;
 
 export const PROFILE_PICTURE = {
@@ -58,6 +106,9 @@ export const AUTH_PLACEHOLDERS = {
   EMAIL: "Enter your email",
   PASSWORD: "Enter your password",
   NAME: "Enter your name",
+  CURRENT_PASSWORD: "Enter your current password",
+  NEW_PASSWORD: "Enter your new password",
+  CONFIRM_NEW_PASSWORD: "Confirm your new password",
 } as const;
 
 export const AUTH_ERRORS = {
@@ -71,6 +122,8 @@ export const AUTH_ERRORS = {
   PASSWORD_MIN_LENGTH_ERROR: "Password must be at least 8 characters",
   PASSWORDS_DO_NOT_MATCH: "Passwords do not match",
   CONFIRM_PASSWORD_REQUIRED: "Please confirm password",
+  CURRENT_PASSWORD_REQUIRED: "Current password is required",
+  CURRENT_PASSWORD_INVALID: "Current password is incorrect",
 } as const;
 
 export const STORAGE_KEYS = {
@@ -131,15 +184,21 @@ export const API_KEY_TEST = {
 } as const;
 
 export const LANDING_PAGE = {
-  HERO_TITLE: "Welcome to Better Auth",
+  get HERO_TITLE() {
+    return `Welcome to ${BRANDING.appName}`;
+  },
   HERO_SUBTITLE: "Secure, fast, and easy authentication for your applications",
-  HERO_DESCRIPTION:
-    "Get started in minutes with our powerful authentication system built on Next.js and FastAPI.",
+  get HERO_DESCRIPTION() {
+    return BRANDING.appDescription;
+  },
   GET_STARTED: "Get Started",
   CREATE_ACCOUNT: "Create Account",
   SIGN_IN_DESCRIPTION: "Sign in to your account to continue",
   SIGN_UP_DESCRIPTION: "Join us today and get started",
   FEATURES_TITLE: "Why choose us?",
+  CTA_LOGIN: "Sign In",
+  CTA_SIGNUP: "Get Started",
+  CTA_DESCRIPTION: "Ready to get started?",
   FEATURES: [
     {
       TITLE: "Secure by Default",
@@ -169,7 +228,7 @@ export const USER_ROLES = {
 } as const;
 
 export const ADMIN_LABELS = {
-  TITLE: "User Management",
+  TITLE: "Users",
   CREATE_USER: "Create User",
   EDIT_USER: "Edit User",
   DELETE_USER: "Delete User",
@@ -237,6 +296,7 @@ export const ADMIN_LABELS = {
   EXPORT_JSON: "JSON",
   SAVING: "Saving...",
   BACK_TO_USERS: "Back to Users",
+  MANAGE_USER_ACCOUNT_DESCRIPTION: "Manage user account and settings",
 } as const;
 
 export const ADMIN_PLACEHOLDERS = {
@@ -304,6 +364,7 @@ export const DOCTOR = {
 export const DASHBOARD = {
   TITLE: "Dashboard",
   WELCOME: "Welcome to your dashboard",
+  WELCOME_BACK: "Welcome back",
   LOADING: "Loading dashboard...",
   ERROR: "Failed to load dashboard data",
   ACCOUNT_INFO: "Account Information",
@@ -315,6 +376,29 @@ export const DASHBOARD = {
   NO_ACTIVITY: "No recent activity",
   SESSION_CREATED: "Session created",
   VIEW_DETAILS: "View Details",
+  ITEMS: "items",
+  IP_ADDRESS: "IP",
+  TIME_JUST_NOW: "Just now",
+  TIME_AGO_MINUTE: "minute ago",
+  TIME_AGO_MINUTES: "minutes ago",
+  TIME_AGO_HOUR: "hour ago",
+  TIME_AGO_HOURS: "hours ago",
+  TIME_AGO_DAY: "day ago",
+  TIME_AGO_DAYS: "days ago",
+  QUICK_ACTIONS: "Quick Actions",
+  VIEW_PROFILE: "View Profile",
+  MANAGE_TASKS: "Manage Tasks",
+  ACCOUNT_OVERVIEW: "Account Overview",
+  YOUR_ACCOUNT: "Your Account",
+  GET_STARTED: "Get Started",
+  VERIFY_EMAIL: "Verify your email address to secure your account",
+  VIEW_ALL_ACTIVITY: "View All Activity",
+  ACTIVE_SESSION: "Active session",
+  ACTIVE_SESSIONS_PLURAL: "active sessions",
+  MEMBER_SINCE: "Member since",
+  ACCOUNT_SECURITY: "Account security",
+  YOUR_RECENT_ACTIVITY: "Your recent account activity",
+  COMMON_TASKS: "Common tasks",
 } as const;
 
 export const ADMIN_DASHBOARD = {
@@ -331,7 +415,7 @@ export const ADMIN_DASHBOARD = {
   RECENT_SESSIONS: "Recent Sessions",
   NO_USERS: "No users found",
   NO_SESSIONS: "No sessions found",
-  USER_MANAGEMENT: "User Management",
+  USER_MANAGEMENT: "Users",
   VIEW_ALL_USERS: "View All Users",
   NEW_USER: "New user registered",
   NEW_SESSION: "New session created",
@@ -339,7 +423,7 @@ export const ADMIN_DASHBOARD = {
 
 export const ADMIN_NAVIGATION = {
   DASHBOARD: "Dashboard",
-  USER_MANAGEMENT: "User Management",
+  USER_MANAGEMENT: "Users",
   ORGANIZATIONS: "Organizations",
   PERMISSIONS: "Permissions",
   ROLES: "Roles",
@@ -354,6 +438,68 @@ export const ADMIN_NAVIGATION = {
 export const ADMIN_LAYOUT = {
   LOADING: "Loading...",
   ACCESS_DENIED: "Access Denied",
+} as const;
+
+export const USER_NAVIGATION = {
+  DASHBOARD: "Dashboard",
+  TASKS: "Tasks",
+  PROFILE: "Profile",
+  MENU_TOGGLE: "Toggle menu",
+  CLOSE_MENU: "Close menu",
+} as const;
+
+export const USER_LAYOUT = {
+  LOADING: "Loading...",
+  ACCESS_DENIED: "Access Denied",
+  LOGIN_REQUIRED: "Please log in to continue",
+  get APP_NAME() {
+    return BRANDING.appName;
+  },
+  USER_PANEL: "User Panel",
+} as const;
+
+export const SIDEBAR = {
+  MOBILE_SIDEBAR_DESCRIPTION: "Displays the mobile sidebar.",
+} as const;
+
+export const LOGIN_PAGE = {
+  TITLE: "Sign In",
+  DESCRIPTION: "Sign in to your account to continue",
+  SAMPLE_ACCOUNTS_TITLE: "Sample Accounts",
+  SAMPLE_ACCOUNTS_DESCRIPTION: "Click on an account to quickly fill in the form",
+  USE_SAMPLE_ACCOUNT: "Use this account",
+} as const;
+
+export const SAMPLE_ACCOUNTS = [
+  {
+    email: "admin@example.com",
+    password: "admin123",
+    role: "admin",
+    label: "Admin Account",
+  },
+  {
+    email: "user1@example.com",
+    password: "user1234",
+    role: "user",
+    label: "User Account",
+  },
+  {
+    email: "member@example.com",
+    password: "user1234",
+    role: "member",
+    label: "Member Account",
+  },
+  {
+    email: "owner@example.com",
+    password: "user1234",
+    role: "owner",
+    label: "Owner Account",
+  },
+] as const;
+
+export const SIGNUP_PAGE = {
+  TITLE: "Create Account",
+  DESCRIPTION: "Join us today and get started",
 } as const;
 
 export const ORGANIZATION_ROLES = {
@@ -881,6 +1027,7 @@ export const STATS_LABELS = {
 
 export const SESSION_ERRORS = {
   USER_NOT_FOUND: "User not found",
+  USER_NOT_AUTHENTICATED: "User not authenticated",
   LOAD_SESSIONS_FAILED: "Failed to load sessions",
   REVOKE_SESSION_FAILED: "Failed to revoke session",
   SESSION_NOT_FOUND: "Session not found",
@@ -1083,6 +1230,15 @@ export const JOB_LABELS = {
   BACK_TO_JOBS: "Back to Jobs",
   RECORD: "record",
   RECORDS: "records",
+  JOB_DETAILS_DESCRIPTION: "Job details, status, and execution history",
+  ADDITIONAL_INFORMATION: "Additional Information",
+  CREATE_JOB_DESCRIPTION: "Create a new background job",
+  LEAVE_EMPTY_FOR_IMMEDIATE: "Leave empty for immediate execution",
+  OPTIONAL_START_DATE: "Optional: When to start the job",
+  OPTIONAL_END_DATE: "Optional: When to end the job",
+  JSON_ARRAY_FORMAT: "JSON array format",
+  JSON_OBJECT_FORMAT: "JSON object format",
+  REPLACE_EXISTING_DESCRIPTION: "Replace existing job with the same ID",
 } as const;
 
 export const JOB_PLACEHOLDERS = {
@@ -1200,4 +1356,141 @@ export const PAGE_LOADING = {
   ADMIN_ORGANIZATION_INVITATION: "Loading invitation...",
   ADMIN_API_KEYS: "Loading API keys...",
   DASHBOARD_TASKS: "Loading tasks...",
+  PROFILE: "Loading profile...",
+  FORGOT_PASSWORD: "Loading...",
+  RESET_PASSWORD: "Loading...",
+} as const;
+
+export const FORGOT_PASSWORD = {
+  TITLE: "Forgot Password",
+  DESCRIPTION: "Enter your email address and we'll send you a link to reset your password.",
+  EMAIL_LABEL: "Email address",
+  SUBMIT_BUTTON: "Send Reset Link",
+  SENDING: "Sending...",
+  BACK_TO_LOGIN: "Back to login",
+  SUCCESS_TITLE: "Check your email",
+  SUCCESS_MESSAGE: "If an account exists with that email, we've sent you a password reset link.",
+} as const;
+
+export const FORGOT_PASSWORD_PLACEHOLDERS = {
+  EMAIL: "Enter your email address",
+} as const;
+
+export const FORGOT_PASSWORD_ERRORS = {
+  EMAIL_REQUIRED: "Email is required",
+  INVALID_EMAIL: "Please enter a valid email address",
+  REQUEST_FAILED: "Failed to send password reset email. Please try again.",
+} as const;
+
+export const FORGOT_PASSWORD_SUCCESS = {
+  EMAIL_SENT: "Password reset email sent successfully",
+} as const;
+
+export const RESET_PASSWORD = {
+  TITLE: "Reset Password",
+  DESCRIPTION: "Enter your new password below.",
+  NEW_PASSWORD_LABEL: "New password",
+  CONFIRM_PASSWORD_LABEL: "Confirm new password",
+  SUBMIT_BUTTON: "Reset Password",
+  RESETTING: "Resetting...",
+  SUCCESS_TITLE: "Password reset successful",
+  SUCCESS_MESSAGE:
+    "Your password has been reset successfully. You can now log in with your new password.",
+  BACK_TO_LOGIN: "Back to login",
+} as const;
+
+export const RESET_PASSWORD_PLACEHOLDERS = {
+  NEW_PASSWORD: "Enter your new password",
+  CONFIRM_PASSWORD: "Confirm your new password",
+} as const;
+
+export const RESET_PASSWORD_ERRORS = {
+  TOKEN_REQUIRED: "Reset token is required",
+  TOKEN_INVALID: "Invalid or expired reset token",
+  NEW_PASSWORD_REQUIRED: "New password is required",
+  CONFIRM_PASSWORD_REQUIRED: "Please confirm your new password",
+  PASSWORDS_DO_NOT_MATCH: "Passwords do not match",
+  RESET_FAILED: "Failed to reset password. Please try again.",
+} as const;
+
+export const RESET_PASSWORD_SUCCESS = {
+  PASSWORD_RESET: "Password reset successfully",
+} as const;
+
+export const CHANGE_PASSWORD = {
+  TITLE: "Change Password",
+  DESCRIPTION: "Update your password to keep your account secure.",
+  CURRENT_PASSWORD_LABEL: "Current password",
+  NEW_PASSWORD_LABEL: "New password",
+  CONFIRM_PASSWORD_LABEL: "Confirm new password",
+  REVOKE_OTHER_SESSIONS: "Revoke all other sessions",
+  REVOKE_OTHER_SESSIONS_DESCRIPTION: "Sign out of all other devices after changing your password",
+  SUBMIT_BUTTON: "Change Password",
+  CHANGING: "Changing...",
+} as const;
+
+export const CHANGE_PASSWORD_PLACEHOLDERS = {
+  CURRENT_PASSWORD: "Enter your current password",
+  NEW_PASSWORD: "Enter your new password",
+  CONFIRM_PASSWORD: "Confirm your new password",
+} as const;
+
+export const CHANGE_PASSWORD_ERRORS = {
+  CURRENT_PASSWORD_REQUIRED: "Current password is required",
+  NEW_PASSWORD_REQUIRED: "New password is required",
+  CONFIRM_PASSWORD_REQUIRED: "Please confirm your new password",
+  PASSWORDS_DO_NOT_MATCH: "Passwords do not match",
+  CURRENT_PASSWORD_INVALID: "Current password is incorrect",
+  CHANGE_FAILED: "Failed to change password. Please try again.",
+} as const;
+
+export const CHANGE_PASSWORD_SUCCESS = {
+  PASSWORD_CHANGED: "Password changed successfully",
+} as const;
+
+export const PROFILE_UPDATE = {
+  TITLE: "Update Profile",
+  NAME_LABEL: "Full name",
+  EMAIL_LABEL: "Email address",
+  UPDATE_BUTTON: "Update Profile",
+  UPDATING: "Updating...",
+} as const;
+
+export const PROFILE_UPDATE_PLACEHOLDERS = {
+  NAME: "Enter your full name",
+  EMAIL: "Enter your email address",
+} as const;
+
+export const PROFILE_UPDATE_ERRORS = {
+  NAME_REQUIRED: "Name is required",
+  EMAIL_REQUIRED: "Email is required",
+  INVALID_EMAIL: "Please enter a valid email address",
+  UPDATE_FAILED: "Failed to update profile. Please try again.",
+  EMAIL_ALREADY_IN_USE: "This email is already in use",
+  USER_NOT_AUTHENTICATED: "User not authenticated",
+} as const;
+
+export const PROFILE_UPDATE_SUCCESS = {
+  PROFILE_UPDATED: "Profile updated successfully",
+} as const;
+
+export const EMAIL_VERIFICATION = {
+  TITLE: "Email Verification",
+  VERIFIED: "Email verified",
+  NOT_VERIFIED: "Email not verified",
+  VERIFIED_DESCRIPTION: "Your email address has been verified.",
+  NOT_VERIFIED_DESCRIPTION: "Please verify your email address to access all features.",
+  RESEND_BUTTON: "Resend verification email",
+  RESENDING: "Sending...",
+  CHECK_EMAIL: "Check your email",
+  VERIFICATION_SENT: "Verification email sent. Please check your inbox.",
+} as const;
+
+export const EMAIL_VERIFICATION_ERRORS = {
+  RESEND_FAILED: "Failed to send verification email. Please try again.",
+  EMAIL_REQUIRED: "Email is required",
+} as const;
+
+export const EMAIL_VERIFICATION_SUCCESS = {
+  EMAIL_SENT: "Verification email sent successfully",
 } as const;

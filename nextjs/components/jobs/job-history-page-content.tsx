@@ -17,7 +17,7 @@ export function JobHistoryPageContent() {
 
   useEffect(() => {
     if (!isLoading && !isAuthorized) {
-      router.push("/");
+      router.push("/login");
     }
   }, [isLoading, isAuthorized, router]);
 

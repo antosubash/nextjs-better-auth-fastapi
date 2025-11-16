@@ -1,9 +1,155 @@
-import { desc, eq, gt, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { session, user } from "@/auth-schema";
+import { betterAuthService } from "@/lib/better-auth-service/index";
 import { STATS_ERRORS } from "@/lib/constants";
-import { db } from "@/lib/database";
 import { requireAdmin } from "@/lib/permission-check-server";
+
+type User = {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  createdAt?: string | Date;
+  banned?: boolean;
+};
+
+type Session = {
+  id?: string;
+  token?: string;
+  createdAt?: Date | number;
+  expiresAt?: Date | number;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+};
+
+type SessionData = {
+  id: string;
+  userId: string;
+  createdAt: number;
+  expiresAt: number;
+  ipAddress: string | null;
+  userAgent: string | null;
+  userName: string;
+  userEmail: string;
+};
+
+async function getAllUsers() {
+  const allUsersResult = await betterAuthService.admin.listUsers({
+    sortBy: "createdAt",
+    sortDirection: "desc",
+  });
+  return (allUsersResult as { users?: unknown[] })?.users || [];
+}
+
+async function getBannedUsersCount() {
+  const bannedUsersResult = await betterAuthService.admin.listUsers({
+    filterField: "banned",
+    filterValue: true,
+    filterOperator: "eq",
+  });
+  return ((bannedUsersResult as { users?: unknown[] })?.users || []).length;
+}
+
+function getRecentUsers(allUsers: unknown[]) {
+  return allUsers.slice(0, 10).map((u: unknown) => {
+    const user = u as User;
+    return {
+      id: user.id || "",
+      name: user.name || "",
+      email: user.email || "",
+      role: user.role || null,
+      createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
+      banned: user.banned || false,
+    };
+  });
+}
+
+function getRecentRegistrationsCount(allUsers: unknown[], sevenDaysAgo: string) {
+  return allUsers.filter((u: unknown) => {
+    const user = u as { createdAt?: string | Date };
+    if (!user.createdAt) return false;
+    const createdAt = new Date(user.createdAt).getTime();
+    return createdAt >= new Date(sevenDaysAgo).getTime();
+  }).length;
+}
+
+function processSession(
+  session: unknown,
+  userId: string,
+  userName: string,
+  userEmail: string
+): SessionData | null {
+  const s = session as Session;
+  const expiresAt =
+    s.expiresAt instanceof Date ? s.expiresAt.getTime() : (s.expiresAt as number) || 0;
+  const createdAt =
+    s.createdAt instanceof Date ? s.createdAt.getTime() : (s.createdAt as number) || 0;
+
+  return {
+    id: s.id || s.token || "",
+    userId,
+    createdAt,
+    expiresAt,
+    ipAddress: s.ipAddress || null,
+    userAgent: s.userAgent || null,
+    userName,
+    userEmail,
+  };
+}
+
+async function getUserSessions(
+  userId: string,
+  userName: string,
+  userEmail: string
+): Promise<SessionData[]> {
+  try {
+    const sessionsResult = await betterAuthService.admin.listUserSessions({
+      userId,
+    });
+    const sessions = (sessionsResult as { sessions?: unknown[] })?.sessions || [];
+
+    return sessions
+      .map((session) => processSession(session, userId, userName, userEmail))
+      .filter((s): s is SessionData => s !== null);
+  } catch (err) {
+    console.error(`Error fetching sessions for user ${userId}:`, err);
+    return [];
+  }
+}
+
+async function getAllSessions(allUsers: unknown[]) {
+  const usersToCheck = allUsers.slice(0, 50);
+  const allSessions: SessionData[] = [];
+
+  for (const user of usersToCheck) {
+    const u = user as { id?: string; name?: string; email?: string };
+    if (!u.id) continue;
+
+    const sessions = await getUserSessions(u.id, u.name || "", u.email || "");
+    allSessions.push(...sessions);
+  }
+
+  return allSessions;
+}
+
+function getActiveSessionsCount(allSessions: SessionData[], now: number) {
+  return allSessions.filter((s) => s.expiresAt > now).length;
+}
+
+function getRecentSessions(allSessions: SessionData[]) {
+  return allSessions
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, 10)
+    .map((s) => ({
+      id: s.id,
+      userId: s.userId,
+      createdAt: new Date(s.createdAt).toISOString(),
+      expiresAt: new Date(s.expiresAt).toISOString(),
+      ipAddress: s.ipAddress,
+      userAgent: s.userAgent,
+      userName: s.userName,
+      userEmail: s.userEmail,
+    }));
+}
 
 export async function GET() {
   try {
@@ -12,92 +158,26 @@ export async function GET() {
       return adminCheck;
     }
 
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const now = Date.now();
+    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Count total users
-    const totalUsersResult = await db.select({ count: sql<number>`count(*)` }).from(user);
+    const allUsers = await getAllUsers();
+    const totalUsers = allUsers.length;
+    const bannedUsers = await getBannedUsersCount();
+    const recentUsers = getRecentUsers(allUsers);
+    const recentRegistrations = getRecentRegistrationsCount(allUsers, sevenDaysAgo);
 
-    const totalUsers = Number(totalUsersResult[0]?.count ?? 0);
-
-    // Count active sessions
-    const activeSessionsResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(session)
-      .where(gt(session.expiresAt, now));
-
-    const activeSessions = Number(activeSessionsResult[0]?.count ?? 0);
-
-    // Count banned users
-    const bannedUsersResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(user)
-      .where(eq(user.banned, true));
-
-    const bannedUsers = Number(bannedUsersResult[0]?.count ?? 0);
-
-    // Count recent registrations (last 7 days)
-    const recentRegistrationsResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(user)
-      .where(gt(user.createdAt, sevenDaysAgo));
-
-    const recentRegistrations = Number(recentRegistrationsResult[0]?.count ?? 0);
-
-    // Get recent users (last 10)
-    const recentUsers = await db
-      .select({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt,
-        banned: user.banned,
-      })
-      .from(user)
-      .orderBy(desc(user.createdAt))
-      .limit(10);
-
-    // Get recent sessions (last 10) with user info
-    const recentSessions = await db
-      .select({
-        id: session.id,
-        userId: session.userId,
-        createdAt: session.createdAt,
-        expiresAt: session.expiresAt,
-        ipAddress: session.ipAddress,
-        userAgent: session.userAgent,
-        userName: user.name,
-        userEmail: user.email,
-      })
-      .from(session)
-      .innerJoin(user, eq(session.userId, user.id))
-      .orderBy(desc(session.createdAt))
-      .limit(10);
+    const allSessions = await getAllSessions(allUsers);
+    const activeSessions = getActiveSessionsCount(allSessions, now);
+    const recentSessions = getRecentSessions(allSessions);
 
     return NextResponse.json({
       totalUsers,
       activeSessions,
       bannedUsers,
       recentRegistrations,
-      recentUsers: recentUsers.map((u) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        role: u.role,
-        createdAt: u.createdAt,
-        banned: u.banned,
-      })),
-      recentSessions: recentSessions.map((s) => ({
-        id: s.id,
-        userId: s.userId,
-        createdAt: s.createdAt,
-        expiresAt: s.expiresAt,
-        ipAddress: s.ipAddress,
-        userAgent: s.userAgent,
-        userName: s.userName,
-        userEmail: s.userEmail,
-      })),
+      recentUsers,
+      recentSessions,
     });
   } catch (error) {
     console.error("Failed to fetch admin stats:", error);

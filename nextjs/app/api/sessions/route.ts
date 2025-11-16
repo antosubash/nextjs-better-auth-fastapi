@@ -1,3 +1,13 @@
+/**
+ * @deprecated This API route is deprecated. Use Better Auth client methods directly instead:
+ * - authClient.listSessions() for listing sessions
+ * - authClient.revokeSession({ token }) for revoking a session
+ * - authClient.revokeOtherSessions() for revoking all other sessions
+ * - authClient.revokeSessions() for revoking all sessions
+ *
+ * See: nextjs/lib/api/sessions.ts for the new implementation
+ */
+
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { betterAuthService } from "@/lib/better-auth-service";
