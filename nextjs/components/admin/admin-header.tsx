@@ -2,11 +2,10 @@
 
 import { Loader2, LogOut, Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
 import { ADMIN_NAVIGATION, AUTH_LABELS } from "@/lib/constants";
+import { useSignOut } from "@/lib/hooks/api/use-auth";
 
 interface AdminHeaderProps {
   onMenuToggle: () => void;
@@ -14,18 +13,15 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
   const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const signOutMutation = useSignOut();
 
   const handleLogout = async () => {
     try {
-      setIsLoggingOut(true);
-      await authClient.signOut();
+      await signOutMutation.mutateAsync();
       router.push("/");
       router.refresh();
-    } catch (err) {
-      console.error("Failed to logout:", err);
-    } finally {
-      setIsLoggingOut(false);
+    } catch {
+      // Error is handled by the mutation hook
     }
   };
 
@@ -44,8 +40,13 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
         <div className="flex-1 lg:ml-0" />
         <div className="flex items-center gap-3">
           <OrganizationSwitcher />
-          <Button onClick={handleLogout} disabled={isLoggingOut} variant="default" size="sm">
-            {isLoggingOut ? (
+          <Button
+            onClick={handleLogout}
+            disabled={signOutMutation.isPending}
+            variant="default"
+            size="sm"
+          >
+            {signOutMutation.isPending ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
               <LogOut className="w-4 h-4 mr-2" />

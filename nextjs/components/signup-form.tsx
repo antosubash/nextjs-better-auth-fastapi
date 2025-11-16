@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -17,8 +17,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
 import { AUTH_ERRORS, AUTH_LABELS, AUTH_PLACEHOLDERS } from "@/lib/constants";
+import { useSignUp, useSession } from "@/lib/hooks/api/use-auth";
 import { getDashboardPath } from "@/lib/utils";
 
 interface SignupFormProps {
@@ -40,8 +40,8 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
   const router = useRouter();
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const signUpMutation = useSignUp();
+  const { data: session } = useSession();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -52,29 +52,18 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     },
   });
 
-  const handleSubmit = async (values: SignupFormValues) => {
-    setError("");
-    setIsLoading(true);
-
-    try {
-      const result = await authClient.signUp.email({
-        email: values.email,
-        password: values.password,
-        name: values.name,
-      });
-
-      if (result.error) {
-        setError(result.error.message || AUTH_ERRORS.SIGNUP_FAILED);
-      } else {
-        const session = await authClient.getSession();
-        const userRole = session?.data?.user?.role;
-        router.push(getDashboardPath(userRole));
-      }
-    } catch {
-      setError(AUTH_ERRORS.SIGNUP_FAILED);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (session?.user?.role) {
+      router.push(getDashboardPath(session.user.role));
     }
+  }, [session, router]);
+
+  const handleSubmit = async (values: SignupFormValues) => {
+    await signUpMutation.mutateAsync({
+      email: values.email,
+      password: values.password,
+      name: values.name,
+    });
   };
 
   return (
@@ -125,14 +114,16 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           )}
         />
 
-        {error && (
+        {signUpMutation.isError && (
           <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>
+              {signUpMutation.error?.message || AUTH_ERRORS.SIGNUP_FAILED}
+            </AlertDescription>
           </Alert>
         )}
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
+        <Button type="submit" disabled={signUpMutation.isPending}>
+          {signUpMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Loading...

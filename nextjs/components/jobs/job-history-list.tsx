@@ -22,8 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useJobHistory, useJobs } from "@/lib/hooks/api/use-jobs";
 import { JOB_ERRORS, JOB_LABELS } from "@/lib/constants";
+import { useJobHistory, useJobs } from "@/lib/hooks/api/use-jobs";
 import { formatDate } from "@/lib/utils/date";
 
 interface JobHistoryListProps {
@@ -112,6 +112,146 @@ export function JobHistoryList({
     }
   };
 
+  const renderExpandedContent = (item: (typeof history)[0]) => {
+    const hasLogs = item.logs && item.logs.trim().length > 0;
+    const hasError = item.error_message && item.error_message.trim().length > 0;
+
+    if (!hasLogs && !hasError) {
+      return <p className="text-sm text-muted-foreground">{JOB_LABELS.NO_LOGS}</p>;
+    }
+
+    return (
+      <div className="space-y-4">
+        {hasError && (
+          <div>
+            <h4 className="font-semibold mb-2 text-destructive">{JOB_LABELS.ERROR_MESSAGE}</h4>
+            <ScrollArea className="h-32 w-full rounded-md border p-4 bg-destructive/10">
+              <pre className="text-sm text-destructive whitespace-pre-wrap font-mono">
+                {item.error_message}
+              </pre>
+            </ScrollArea>
+          </div>
+        )}
+        {hasLogs && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-semibold">{JOB_LABELS.EXECUTION_LOGS}</h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyLogs(item.logs || "", item.id)}
+                className="h-8"
+              >
+                {copiedId === item.id ? (
+                  <>
+                    <Check className="h-3 w-3 mr-2" />
+                    {JOB_LABELS.LOGS_COPIED}
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3 mr-2" />
+                    {JOB_LABELS.COPY_LOGS}
+                  </>
+                )}
+              </Button>
+            </div>
+            <ScrollArea className="h-64 w-full rounded-md border p-4 bg-muted/50">
+              <pre className="text-sm whitespace-pre-wrap font-mono">{item.logs}</pre>
+            </ScrollArea>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderItemHeader = (item: (typeof history)[0]) => {
+    return (
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-2">
+          <CardTitle className="text-base">{getStatusLabel(item.status)}</CardTitle>
+          <Badge variant={getStatusBadgeVariant(item.status)}>{item.status}</Badge>
+        </div>
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-2">
+          <div>
+            <span className="font-medium">{JOB_LABELS.JOB_ID}:</span> {item.job_id}
+          </div>
+          <div>
+            <span className="font-medium">{JOB_LABELS.FUNCTION_NAME}:</span> {item.function}
+          </div>
+          <div>
+            <span className="font-medium">{JOB_LABELS.TRIGGER_TYPE}:</span> {item.trigger_type}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+          <div>
+            <span className="font-medium">{JOB_LABELS.EXECUTED_AT}:</span>{" "}
+            {formatDate(item.created_at, "long")}
+          </div>
+          {item.next_run_time && (
+            <div>
+              <span className="font-medium">{JOB_LABELS.NEXT_RUN_TIME}:</span>{" "}
+              {formatDate(item.next_run_time, "long")}
+            </div>
+          )}
+          {item.user_id && (
+            <div>
+              <span className="font-medium">{JOB_LABELS.USER_ID}:</span> {item.user_id}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderItemActions = (item: (typeof history)[0], hasLogs: boolean, hasError: boolean) => {
+    const isExpanded = expandedItems.has(item.id);
+
+    return (
+      <div className="flex items-center gap-2">
+        {hasLogs && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => copyLogs(item.logs || "", item.id)}
+            aria-label={JOB_LABELS.COPY_LOGS}
+            title={JOB_LABELS.COPY_LOGS}
+          >
+            {copiedId === item.id ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          </Button>
+        )}
+        {(hasLogs || hasError) && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => toggleExpand(item.id)}
+            aria-label={isExpanded ? JOB_LABELS.COLLAPSE_LOGS : JOB_LABELS.EXPAND_LOGS}
+            title={isExpanded ? JOB_LABELS.COLLAPSE_LOGS : JOB_LABELS.EXPAND_LOGS}
+          >
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  const renderHistoryItem = (item: (typeof history)[0]) => {
+    const isExpanded = expandedItems.has(item.id);
+    const hasLogs = !!(item.logs && item.logs.trim().length > 0);
+    const hasError = !!(item.error_message && item.error_message.trim().length > 0);
+
+    return (
+      <Card key={item.id}>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            {renderItemHeader(item)}
+            {renderItemActions(item, hasLogs, hasError)}
+          </div>
+        </CardHeader>
+        {isExpanded && <CardContent>{renderExpandedContent(item)}</CardContent>}
+      </Card>
+    );
+  };
+
   if (loading && history.length === 0) {
     return (
       <Card>
@@ -168,135 +308,7 @@ export function JobHistoryList({
         </Card>
       )}
 
-      {history.map((item) => {
-        const isExpanded = expandedItems.has(item.id);
-        const hasLogs = item.logs && item.logs.trim().length > 0;
-        const hasError = item.error_message && item.error_message.trim().length > 0;
-
-        return (
-          <Card key={item.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CardTitle className="text-base">{getStatusLabel(item.status)}</CardTitle>
-                    <Badge variant={getStatusBadgeVariant(item.status)}>{item.status}</Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-2">
-                    <div>
-                      <span className="font-medium">{JOB_LABELS.JOB_ID}:</span> {item.job_id}
-                    </div>
-                    <div>
-                      <span className="font-medium">{JOB_LABELS.FUNCTION_NAME}:</span>{" "}
-                      {item.function}
-                    </div>
-                    <div>
-                      <span className="font-medium">{JOB_LABELS.TRIGGER_TYPE}:</span>{" "}
-                      {item.trigger_type}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <div>
-                      <span className="font-medium">{JOB_LABELS.EXECUTED_AT}:</span>{" "}
-                      {formatDate(item.created_at, "long")}
-                    </div>
-                    {item.next_run_time && (
-                      <div>
-                        <span className="font-medium">{JOB_LABELS.NEXT_RUN_TIME}:</span>{" "}
-                        {formatDate(item.next_run_time, "long")}
-                      </div>
-                    )}
-                    {item.user_id && (
-                      <div>
-                        <span className="font-medium">{JOB_LABELS.USER_ID}:</span> {item.user_id}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {hasLogs && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => copyLogs(item.logs || "", item.id)}
-                      aria-label={JOB_LABELS.COPY_LOGS}
-                      title={JOB_LABELS.COPY_LOGS}
-                    >
-                      {copiedId === item.id ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  )}
-                  {(hasLogs || hasError) && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => toggleExpand(item.id)}
-                      aria-label={isExpanded ? JOB_LABELS.COLLAPSE_LOGS : JOB_LABELS.EXPAND_LOGS}
-                      title={isExpanded ? JOB_LABELS.COLLAPSE_LOGS : JOB_LABELS.EXPAND_LOGS}
-                    >
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            {isExpanded && (
-              <CardContent className="space-y-4">
-                {hasError && (
-                  <div>
-                    <h4 className="font-semibold mb-2 text-destructive">
-                      {JOB_LABELS.ERROR_MESSAGE}
-                    </h4>
-                    <ScrollArea className="h-32 w-full rounded-md border p-4 bg-destructive/10">
-                      <pre className="text-sm text-destructive whitespace-pre-wrap font-mono">
-                        {item.error_message}
-                      </pre>
-                    </ScrollArea>
-                  </div>
-                )}
-                {hasLogs && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold">{JOB_LABELS.EXECUTION_LOGS}</h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyLogs(item.logs || "", item.id)}
-                        className="h-8"
-                      >
-                        {copiedId === item.id ? (
-                          <>
-                            <Check className="h-3 w-3 mr-2" />
-                            {JOB_LABELS.LOGS_COPIED}
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3 w-3 mr-2" />
-                            {JOB_LABELS.COPY_LOGS}
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                    <ScrollArea className="h-64 w-full rounded-md border p-4 bg-muted/50">
-                      <pre className="text-sm whitespace-pre-wrap font-mono">{item.logs}</pre>
-                    </ScrollArea>
-                  </div>
-                )}
-                {!hasLogs && !hasError && (
-                  <p className="text-sm text-muted-foreground">{JOB_LABELS.NO_LOGS}</p>
-                )}
-              </CardContent>
-            )}
-          </Card>
-        );
-      })}
+      {history.map((item) => renderHistoryItem(item))}
 
       {total > 0 && (
         <Card>

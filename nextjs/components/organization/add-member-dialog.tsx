@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth-client";
 import {
   ADD_MEMBER_DIALOG_LABELS,
   INVITATION_ERRORS,
@@ -22,6 +21,8 @@ import {
   USER_SEARCH_LABELS,
   USER_SEARCH_PLACEHOLDERS,
 } from "@/lib/constants";
+import { useCreateInvitation } from "@/lib/hooks/api/use-auth";
+import { useAddOrganizationMember } from "@/lib/hooks/api/use-organizations";
 import { cn } from "@/lib/utils";
 import type { NormalizedMember } from "@/lib/utils/organization-types";
 import { MemberRoleSelector } from "./member-role-selector";
@@ -51,11 +52,11 @@ export function AddMemberDialog({
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [emailInput, setEmailInput] = useState("");
   const [role, setRole] = useState<string>(ORGANIZATION_ROLES.MEMBER);
-  const [isAdding, setIsAdding] = useState(false);
-  const [isInviting, setIsInviting] = useState(false);
   const [error, setError] = useState("");
   const [useEmailInput, setUseEmailInput] = useState(false);
 
+  const addMemberMutation = useAddOrganizationMember();
+  const createInvitationMutation = useCreateInvitation();
   const existingMemberIds = new Set(existingMembers.map((m) => m.userId));
 
   useEffect(() => {
@@ -65,8 +66,6 @@ export function AddMemberDialog({
       setRole(ORGANIZATION_ROLES.MEMBER);
       setError("");
       setUseEmailInput(false);
-      setIsAdding(false);
-      setIsInviting(false);
     }
   }, [open]);
 
@@ -81,35 +80,19 @@ export function AddMemberDialog({
       return;
     }
 
-    setIsAdding(true);
     setError("");
 
     try {
-      const response = await fetch("/api/auth/organization/add-member", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          organizationId,
-          userId: selectedUser.id,
-          role,
-        }),
+      await addMemberMutation.mutateAsync({
+        organizationId,
+        userId: selectedUser.id,
+        role,
       });
-
-      const result = await response.json();
-
-      if (!response.ok || result.error) {
-        setError(result.error || MEMBER_ERRORS.ADD_FAILED);
-      } else {
-        onSuccess();
-        onOpenChange(false);
-      }
+      onSuccess();
+      onOpenChange(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : MEMBER_ERRORS.ADD_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsAdding(false);
     }
   };
 
@@ -119,28 +102,19 @@ export function AddMemberDialog({
       return;
     }
 
-    setIsInviting(true);
     setError("");
 
     try {
-      // @ts-expect-error - better-auth organization client API method
-      const result = await authClient.organization.createInvitation({
+      await createInvitationMutation.mutateAsync({
         organizationId,
         email: emailInput,
         role,
       });
-
-      if (result.error) {
-        setError(result.error.message || INVITATION_ERRORS.SEND_FAILED);
-      } else {
-        onSuccess();
-        onOpenChange(false);
-      }
+      onSuccess();
+      onOpenChange(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : INVITATION_ERRORS.SEND_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsInviting(false);
     }
   };
 
@@ -155,6 +129,57 @@ export function AddMemberDialog({
   const canSubmit = useEmailInput
     ? emailInput?.includes("@")
     : selectedUser !== null && !existingMemberIds.has(selectedUser.id);
+
+  const renderUserSearchSection = () => {
+    if (useEmailInput) return null;
+
+    return (
+      <div className="space-y-2">
+        <Label>{USER_SEARCH_LABELS.SELECT_USER}</Label>
+        <UserSearch
+          onSelect={setSelectedUser}
+          existingMemberIds={existingMemberIds}
+          disabled={addMemberMutation.isPending || createInvitationMutation.isPending}
+        />
+        {selectedUser && (
+          <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded text-sm">
+            <div className="font-medium">{selectedUser.name || selectedUser.email}</div>
+            {selectedUser.name && <div className="text-gray-500">{selectedUser.email}</div>}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderEmailInputSection = () => {
+    if (!useEmailInput) return null;
+
+    return (
+      <div className="space-y-2">
+        <Label htmlFor="email">{MEMBER_LABELS.EMAIL}</Label>
+        <Input
+          id="email"
+          type="email"
+          value={emailInput}
+          onChange={(e) => {
+            setEmailInput(e.target.value);
+            setError("");
+          }}
+          placeholder={USER_SEARCH_PLACEHOLDERS.EMAIL}
+          disabled={addMemberMutation.isPending || createInvitationMutation.isPending}
+        />
+      </div>
+    );
+  };
+
+  const getSubmitButtonText = () => {
+    if (addMemberMutation.isPending || createInvitationMutation.isPending) {
+      return MEMBER_LABELS.ADDING;
+    }
+    return useEmailInput
+      ? ADD_MEMBER_DIALOG_LABELS.INVITE_BUTTON
+      : ADD_MEMBER_DIALOG_LABELS.ADD_BUTTON;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -208,41 +233,16 @@ export function AddMemberDialog({
             </Button>
           </div>
 
-          {!useEmailInput ? (
-            <div className="space-y-2">
-              <Label>{USER_SEARCH_LABELS.SELECT_USER}</Label>
-              <UserSearch
-                onSelect={setSelectedUser}
-                existingMemberIds={existingMemberIds}
-                disabled={isAdding || isInviting}
-              />
-              {selectedUser && (
-                <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded text-sm">
-                  <div className="font-medium">{selectedUser.name || selectedUser.email}</div>
-                  {selectedUser.name && <div className="text-gray-500">{selectedUser.email}</div>}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="email">{MEMBER_LABELS.EMAIL}</Label>
-              <Input
-                id="email"
-                type="email"
-                value={emailInput}
-                onChange={(e) => {
-                  setEmailInput(e.target.value);
-                  setError("");
-                }}
-                placeholder={USER_SEARCH_PLACEHOLDERS.EMAIL}
-                disabled={isAdding || isInviting}
-              />
-            </div>
-          )}
+          {renderUserSearchSection()}
+          {renderEmailInputSection()}
 
           <div className="space-y-2">
             <Label htmlFor="role">{MEMBER_LABELS.ROLE}</Label>
-            <MemberRoleSelector value={role} onChange={setRole} disabled={isAdding || isInviting} />
+            <MemberRoleSelector
+              value={role}
+              onChange={setRole}
+              disabled={addMemberMutation.isPending || createInvitationMutation.isPending}
+            />
           </div>
         </div>
 
@@ -251,20 +251,18 @@ export function AddMemberDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isAdding || isInviting}
+            disabled={addMemberMutation.isPending || createInvitationMutation.isPending}
           >
             {ADD_MEMBER_DIALOG_LABELS.CANCEL}
           </Button>
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={!canSubmit || isAdding || isInviting}
+            disabled={
+              !canSubmit || addMemberMutation.isPending || createInvitationMutation.isPending
+            }
           >
-            {isAdding || isInviting
-              ? MEMBER_LABELS.ADDING
-              : useEmailInput
-                ? ADD_MEMBER_DIALOG_LABELS.INVITE_BUTTON
-                : ADD_MEMBER_DIALOG_LABELS.ADD_BUTTON}
+            {getSubmitButtonText()}
           </Button>
         </DialogFooter>
       </DialogContent>

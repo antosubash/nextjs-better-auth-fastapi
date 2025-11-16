@@ -21,8 +21,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ErrorToast } from "@/components/ui/error-toast";
-import { authClient } from "@/lib/auth-client";
 import { INVITATION_ERRORS, INVITATION_LABELS, INVITATION_SUCCESS } from "@/lib/constants";
+import { useCancelInvitation, useCreateInvitation } from "@/lib/hooks/api/use-auth";
 
 interface Invitation {
   id: string;
@@ -46,52 +46,40 @@ export function InvitationActions({
   onActionSuccess,
   onInvitationRemoved,
 }: InvitationActionsProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
-  const handleCancel = async () => {
-    setIsLoading(true);
-    try {
-      const result = await authClient.organization.cancelInvitation({
-        invitationId: invitation.id,
-      });
+  const cancelInvitationMutation = useCancelInvitation();
+  const createInvitationMutation = useCreateInvitation();
 
-      if (result.error) {
-        setError(result.error.message || INVITATION_ERRORS.CANCEL_FAILED);
-      } else {
-        onActionSuccess(INVITATION_SUCCESS.INVITATION_CANCELLED);
-        onInvitationRemoved();
-        setShowCancelDialog(false);
-      }
+  const isLoading = cancelInvitationMutation.isPending || createInvitationMutation.isPending;
+
+  const handleCancel = async () => {
+    try {
+      await cancelInvitationMutation.mutateAsync({
+        invitationId: invitation.id,
+        organizationId,
+      });
+      onActionSuccess(INVITATION_SUCCESS.INVITATION_CANCELLED);
+      onInvitationRemoved();
+      setShowCancelDialog(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : INVITATION_ERRORS.CANCEL_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleResend = async () => {
-    setIsLoading(true);
     try {
-      // @ts-expect-error - better-auth organization client API method
-      const result = await authClient.organization.createInvitation({
+      await createInvitationMutation.mutateAsync({
         organizationId,
         email: invitation.email,
         role: invitation.role,
       });
-
-      if (result.error) {
-        setError(result.error.message || INVITATION_ERRORS.RESEND_FAILED);
-      } else {
-        onActionSuccess(INVITATION_SUCCESS.INVITATION_RESENT);
-      }
+      onActionSuccess(INVITATION_SUCCESS.INVITATION_RESENT);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : INVITATION_ERRORS.RESEND_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 

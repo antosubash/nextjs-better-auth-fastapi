@@ -2,8 +2,8 @@ import { callFastApi } from "@/lib/api-client";
 import type { Task, TaskCreate, TaskListResponse, TaskUpdate } from "@/lib/types/task";
 
 export async function getTasks(
-  page: number = 1,
-  pageSize: number = 10,
+  page = 1,
+  pageSize = 10,
   statusFilter?: string | null
 ): Promise<TaskListResponse> {
   const params = new URLSearchParams({

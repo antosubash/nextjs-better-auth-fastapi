@@ -1,12 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getJob, getJobHistory, getJobs } from "@/lib/api/jobs";
-import { queryKeys } from "./query-keys";
-import type { JobCreate } from "@/lib/types/job";
-import { createJob, deleteJob, pauseJob, resumeJob } from "@/lib/api/jobs";
 import { toast } from "sonner";
+import {
+  createJob,
+  deleteJob,
+  getJob,
+  getJobHistory,
+  getJobs,
+  pauseJob,
+  resumeJob,
+} from "@/lib/api/jobs";
 import { JOB_ERRORS, JOB_SUCCESS } from "@/lib/constants";
+import type { JobCreate } from "@/lib/types/job";
+import { queryKeys } from "./query-keys";
 
-export function useJobs(page: number = 1, pageSize: number = 10, options?: { enabled?: boolean }) {
+export function useJobs(page = 1, pageSize = 10, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.jobs.list(page, pageSize),
     queryFn: () => getJobs(page, pageSize),
@@ -22,7 +29,7 @@ export function useJob(id: string) {
   });
 }
 
-export function useJobHistory(jobId: string | undefined, page: number = 1, pageSize: number = 10) {
+export function useJobHistory(jobId: string | undefined, page = 1, pageSize = 10) {
   return useQuery({
     queryKey: queryKeys.jobs.historyList(jobId, page, pageSize),
     queryFn: () => getJobHistory(jobId, page, pageSize),

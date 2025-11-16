@@ -59,9 +59,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { authClient } from "@/lib/auth-client";
 import {
-  ADMIN_ERRORS,
   ADMIN_LABELS,
   ADMIN_NAVIGATION,
   ADMIN_PAGINATION,
@@ -69,9 +67,9 @@ import {
   ROLE_DISPLAY_NAMES,
   USER_ROLES,
 } from "@/lib/constants";
+import { useAdminListUsers } from "@/lib/hooks/api/use-auth";
 import { useToast } from "@/lib/hooks/use-toast";
-import { getAssignableUserRoles } from "@/lib/permissions-api";
-import type { RoleInfo } from "@/lib/permissions-utils";
+import { useAssignableUserRoles } from "@/lib/hooks/api/use-permissions";
 import { exportUsers } from "@/lib/utils/user-export";
 import { UserActions } from "./user-actions";
 import { UserBulkActions } from "./user-bulk-actions";
@@ -103,10 +101,264 @@ function formatDate(timestamp: number): string {
   });
 }
 
+function buildPagesForStart(totalPages: number): (number | "ellipsis")[] {
+  const pages: (number | "ellipsis")[] = [];
+  for (let i = 1; i <= 5; i++) {
+    pages.push(i);
+  }
+  pages.push("ellipsis");
+  pages.push(totalPages);
+  return pages;
+}
+
+function buildPagesForEnd(totalPages: number): (number | "ellipsis")[] {
+  const pages: (number | "ellipsis")[] = [1, "ellipsis"];
+  for (let i = totalPages - 4; i <= totalPages; i++) {
+    pages.push(i);
+  }
+  return pages;
+}
+
+function buildPagesForMiddle(currentPage: number, totalPages: number): (number | "ellipsis")[] {
+  const pages: (number | "ellipsis")[] = [1, "ellipsis"];
+  for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+    pages.push(i);
+  }
+  pages.push("ellipsis");
+  pages.push(totalPages);
+  return pages;
+}
+
+function getPageNumbers(currentPage: number, totalPages: number): (number | "ellipsis")[] {
+  const maxVisible = 7;
+
+  if (totalPages <= maxVisible) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  if (currentPage <= 3) {
+    return buildPagesForStart(totalPages);
+  }
+
+  if (currentPage >= totalPages - 2) {
+    return buildPagesForEnd(totalPages);
+  }
+
+  return buildPagesForMiddle(currentPage, totalPages);
+}
+
+interface UserRowProps {
+  user: User;
+  selectedUserIds: Set<string>;
+  onSelectUser: (userId: string, checked: boolean) => void;
+  onUserClick: (user: User) => void;
+}
+
+function getUserRoleDisplay(role?: string) {
+  return (
+    (role && ROLE_DISPLAY_NAMES[role as keyof typeof ROLE_DISPLAY_NAMES]) || role || USER_ROLES.USER
+  );
+}
+
+function UserRow({ user, selectedUserIds, onSelectUser, onUserClick }: UserRowProps) {
+  return (
+    <TableRow key={user.id} className="cursor-pointer" onClick={() => onUserClick(user)}>
+      <TableCell onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={selectedUserIds.has(user.id)}
+          onCheckedChange={(checked) => onSelectUser(user.id, checked as boolean)}
+        />
+      </TableCell>
+      <TableCell>
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <span className="font-medium cursor-pointer hover:underline">{user.name}</span>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-80">
+            <div className="space-y-2">
+              <div>
+                <h4 className="text-sm font-semibold">{user.name}</h4>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                <p>
+                  <span className="font-medium">Role:</span> {getUserRoleDisplay(user.role)}
+                </p>
+                <p>
+                  <span className="font-medium">Status:</span>{" "}
+                  {user.banned ? ADMIN_LABELS.BANNED : ADMIN_LABELS.ACTIVE}
+                </p>
+                <p>
+                  <span className="font-medium">Email Verified:</span>{" "}
+                  {user.emailVerified
+                    ? ADMIN_LABELS.EMAIL_VERIFIED
+                    : ADMIN_LABELS.EMAIL_NOT_VERIFIED}
+                </p>
+              </div>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
+      </TableCell>
+      <TableCell>{user.email}</TableCell>
+      <TableCell>
+        <Badge variant="secondary">{getUserRoleDisplay(user.role)}</Badge>
+      </TableCell>
+      <TableCell>
+        {user.banned ? (
+          <Badge variant="destructive">{ADMIN_LABELS.BANNED}</Badge>
+        ) : (
+          <Badge variant="default">{ADMIN_LABELS.ACTIVE}</Badge>
+        )}
+      </TableCell>
+      <TableCell>{formatDate(user.createdAt)}</TableCell>
+      <TableCell>
+        {user.emailVerified ? (
+          <Badge variant="default" className="gap-1">
+            <CheckCircle2 className="w-3 h-3" />
+            {ADMIN_LABELS.EMAIL_VERIFIED}
+          </Badge>
+        ) : (
+          <Badge variant="secondary" className="gap-1">
+            <XCircle className="w-3 h-3" />
+            {ADMIN_LABELS.EMAIL_NOT_VERIFIED}
+          </Badge>
+        )}
+      </TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}>
+        <UserActions user={user} />
+      </TableCell>
+    </TableRow>
+  );
+}
+
+interface UserPaginationProps {
+  currentPage: number;
+  totalPages: number;
+  totalUsers: number;
+  pageStart: number;
+  pageEnd: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange: (itemsPerPage: number) => void;
+}
+
+function UserPagination({
+  currentPage,
+  totalPages,
+  totalUsers,
+  pageStart,
+  pageEnd,
+  itemsPerPage,
+  onPageChange,
+  onItemsPerPageChange,
+}: UserPaginationProps) {
+  return (
+    <div className="px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">
+          {ADMIN_PAGINATION.SHOWING} {pageStart + 1} {ADMIN_PAGINATION.TO}{" "}
+          {Math.min(pageEnd, totalUsers)} {ADMIN_PAGINATION.OF} {totalUsers}{" "}
+          {ADMIN_PAGINATION.USERS}
+        </span>
+        <Select
+          value={itemsPerPage.toString()}
+          onValueChange={(value) => {
+            onItemsPerPageChange(Number(value));
+          }}
+        >
+          <SelectTrigger className="w-20 h-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="10">10</SelectItem>
+            <SelectItem value="25">25</SelectItem>
+            <SelectItem value="50">50</SelectItem>
+            <SelectItem value="100">100</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationLink
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(1);
+                }}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(Math.max(1, currentPage - 1));
+                }}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            {getPageNumbers(currentPage, totalPages).map((page, idx, arr) => {
+              const key =
+                typeof page === "number"
+                  ? `page-${page}`
+                  : `ellipsis-${arr[idx - 1]}-${arr[idx + 1]}`;
+              return (
+                <PaginationItem key={key}>
+                  {page === "ellipsis" ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onPageChange(page);
+                      }}
+                      isActive={currentPage === page}
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              );
+            })}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(Math.min(totalPages, currentPage + 1));
+                }}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(totalPages);
+                }}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </PaginationLink>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+    </div>
+  );
+}
+
 export function UserList() {
   const [users, setUsers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchValue, setSearchValue] = useState("");
   const toast = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -121,36 +373,47 @@ export function UserList() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
-  const [availableRoles, setAvailableRoles] = useState<RoleInfo[]>([]);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportFormat, setExportFormat] = useState<"csv" | "json">("csv");
 
-  const loadRoles = useCallback(async () => {
-    try {
-      const roles = await getAssignableUserRoles();
-      setAvailableRoles(roles);
-    } catch (err) {
-      console.error("Failed to load roles:", err);
-    }
-  }, []);
+  const { data: availableRoles = [] } = useAssignableUserRoles();
 
-  useEffect(() => {
-    loadRoles();
-  }, [loadRoles]);
+  const {
+    data: usersData,
+    isLoading,
+    refetch: refetchUsers,
+  } = useAdminListUsers({
+    searchValue: searchValue || undefined,
+    limit: "1000",
+    offset: "0",
+    sortBy: "createdAt",
+    sortDirection: "desc",
+  });
 
-  const applyFilters = useCallback(
-    (usersToFilter: User[]) => {
-      let filtered = [...usersToFilter];
+  const filterByRole = useCallback(
+    (users: User[]): User[] => {
+      if (filterRole === "all") return users;
+      return users.filter((u) => u.role === filterRole);
+    },
+    [filterRole]
+  );
 
-      if (filterRole !== "all") {
-        filtered = filtered.filter((u) => u.role === filterRole);
-      }
-
+  const filterByStatus = useCallback(
+    (users: User[]): User[] => {
       if (filterStatus === "active") {
-        filtered = filtered.filter((u) => !u.banned);
-      } else if (filterStatus === "banned") {
-        filtered = filtered.filter((u) => u.banned);
+        return users.filter((u) => !u.banned);
       }
+      if (filterStatus === "banned") {
+        return users.filter((u) => u.banned);
+      }
+      return users;
+    },
+    [filterStatus]
+  );
+
+  const filterByDateRange = useCallback(
+    (users: User[]): User[] => {
+      let filtered = users;
 
       if (dateFrom) {
         const fromTimestamp = dateFrom.getTime();
@@ -162,55 +425,36 @@ export function UserList() {
         filtered = filtered.filter((u) => u.createdAt <= toTimestamp);
       }
 
+      return filtered;
+    },
+    [dateFrom, dateTo]
+  );
+
+  const applyFilters = useCallback(
+    (usersToFilter: User[]) => {
+      let filtered = filterByRole(usersToFilter);
+      filtered = filterByStatus(filtered);
+      filtered = filterByDateRange(filtered);
+
       setUsers(filtered);
       setTotalUsers(filtered.length);
       setCurrentPage(1);
     },
-    [filterRole, filterStatus, dateFrom, dateTo]
+    [filterByRole, filterByStatus, filterByDateRange]
   );
 
-  const loadUsers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const result = await authClient.admin.listUsers({
-        query: {
-          searchValue: searchValue || undefined,
-          limit: "1000",
-          offset: "0",
-          sortBy: "createdAt",
-          sortDirection: "desc",
-        },
-      });
-
-      if (result.error) {
-        toast.error(result.error.message || ADMIN_ERRORS.LOAD_USERS_FAILED);
-      } else if (result.data) {
-        const usersData = (result.data as { users?: User[] })?.users || [];
-        const processedUsers = usersData.map((u) => ({
-          ...u,
-          banned: u.banned ?? false,
-          emailVerified: u.emailVerified ?? false,
-        }));
-        setAllUsers(processedUsers);
-        applyFilters(processedUsers);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.LOAD_USERS_FAILED;
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchValue, applyFilters, toast]);
-
   useEffect(() => {
-    void loadUsers();
-  }, [loadUsers]);
-
-  useEffect(() => {
-    if (allUsers.length > 0) {
-      applyFilters(allUsers);
+    if (usersData) {
+      const usersArray = (usersData as { users?: User[] })?.users || [];
+      const processedUsers = usersArray.map((u) => ({
+        ...u,
+        banned: u.banned ?? false,
+        emailVerified: u.emailVerified ?? false,
+      }));
+      setAllUsers(processedUsers);
+      applyFilters(processedUsers);
     }
-  }, [applyFilters, allUsers]);
+  }, [usersData, applyFilters]);
 
   const handleSearch = (value: string) => {
     setSearchValue(value);
@@ -226,7 +470,7 @@ export function UserList() {
   const handleUserCreated = () => {
     setShowCreateForm(false);
     toast.success(ADMIN_SUCCESS.USER_CREATED);
-    loadUsers();
+    refetchUsers();
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -253,7 +497,7 @@ export function UserList() {
   const handleBulkSuccess = (message: string) => {
     toast.success(message);
     setSelectedUserIds(new Set());
-    loadUsers();
+    refetchUsers();
   };
 
   const handleBulkError = (message: string) => {
@@ -261,7 +505,7 @@ export function UserList() {
   };
 
   const handleBulkComplete = () => {
-    loadUsers();
+    refetchUsers();
   };
 
   const handleExport = () => {
@@ -275,41 +519,6 @@ export function UserList() {
   const paginatedUsers = users.slice(pageStart, pageEnd);
   const allPageSelected =
     paginatedUsers.length > 0 && paginatedUsers.every((u) => selectedUserIds.has(u.id));
-
-  const getPageNumbers = () => {
-    const pages: (number | "ellipsis")[] = [];
-    const maxVisible = 7;
-
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 5; i++) {
-          pages.push(i);
-        }
-        pages.push("ellipsis");
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push("ellipsis");
-        for (let i = totalPages - 4; i <= totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        pages.push(1);
-        pages.push("ellipsis");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i);
-        }
-        pages.push("ellipsis");
-        pages.push(totalPages);
-      }
-    }
-
-    return pages;
-  };
 
   return (
     <div>
@@ -435,201 +644,31 @@ export function UserList() {
                   </TableHeader>
                   <TableBody>
                     {paginatedUsers.map((user) => (
-                      <TableRow
+                      <UserRow
                         key={user.id}
-                        className="cursor-pointer"
-                        onClick={() => setSelectedUser(user)}
-                      >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedUserIds.has(user.id)}
-                            onCheckedChange={(checked) =>
-                              handleSelectUser(user.id, checked as boolean)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <HoverCard>
-                            <HoverCardTrigger asChild>
-                              <span className="font-medium cursor-pointer hover:underline">
-                                {user.name}
-                              </span>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-80">
-                              <div className="space-y-2">
-                                <div>
-                                  <h4 className="text-sm font-semibold">{user.name}</h4>
-                                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  <p>
-                                    <span className="font-medium">Role:</span>{" "}
-                                    {ROLE_DISPLAY_NAMES[
-                                      user.role as keyof typeof ROLE_DISPLAY_NAMES
-                                    ] ||
-                                      user.role ||
-                                      USER_ROLES.USER}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Status:</span>{" "}
-                                    {user.banned ? ADMIN_LABELS.BANNED : ADMIN_LABELS.ACTIVE}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Email Verified:</span>{" "}
-                                    {user.emailVerified
-                                      ? ADMIN_LABELS.EMAIL_VERIFIED
-                                      : ADMIN_LABELS.EMAIL_NOT_VERIFIED}
-                                  </p>
-                                </div>
-                              </div>
-                            </HoverCardContent>
-                          </HoverCard>
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {ROLE_DISPLAY_NAMES[user.role as keyof typeof ROLE_DISPLAY_NAMES] ||
-                              user.role ||
-                              USER_ROLES.USER}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {user.banned ? (
-                            <Badge variant="destructive">{ADMIN_LABELS.BANNED}</Badge>
-                          ) : (
-                            <Badge variant="default">{ADMIN_LABELS.ACTIVE}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>{formatDate(user.createdAt)}</TableCell>
-                        <TableCell>
-                          {user.emailVerified ? (
-                            <Badge variant="default" className="gap-1">
-                              <CheckCircle2 className="w-3 h-3" />
-                              {ADMIN_LABELS.EMAIL_VERIFIED}
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="gap-1">
-                              <XCircle className="w-3 h-3" />
-                              {ADMIN_LABELS.EMAIL_NOT_VERIFIED}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <UserActions user={user} />
-                        </TableCell>
-                      </TableRow>
+                        user={user}
+                        selectedUserIds={selectedUserIds}
+                        onSelectUser={handleSelectUser}
+                        onUserClick={setSelectedUser}
+                      />
                     ))}
                   </TableBody>
                 </Table>
               </ScrollArea>
 
-              <div className="px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {ADMIN_PAGINATION.SHOWING} {pageStart + 1} {ADMIN_PAGINATION.TO}{" "}
-                    {Math.min(pageEnd, totalUsers)} {ADMIN_PAGINATION.OF} {totalUsers}{" "}
-                    {ADMIN_PAGINATION.USERS}
-                  </span>
-                  <Select
-                    value={itemsPerPage.toString()}
-                    onValueChange={(value) => {
-                      setItemsPerPage(Number(value));
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <SelectTrigger className="w-20 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {totalPages > 1 && (
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage(1);
-                          }}
-                          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                        >
-                          <ChevronsLeft className="w-4 h-4" />
-                        </PaginationLink>
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage((p) => Math.max(1, p - 1));
-                          }}
-                          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                        />
-                      </PaginationItem>
-                      {getPageNumbers().map((page, idx, arr) => {
-                        // For numbers, use the number itself as key
-                        // For ellipsis, use position relative to surrounding pages for uniqueness
-                        const key =
-                          typeof page === "number"
-                            ? `page-${page}`
-                            : `ellipsis-${arr[idx - 1]}-${arr[idx + 1]}`;
-                        return (
-                          <PaginationItem key={key}>
-                            {page === "ellipsis" ? (
-                              <PaginationEllipsis />
-                            ) : (
-                              <PaginationLink
-                                href="#"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setCurrentPage(page);
-                                }}
-                                isActive={currentPage === page}
-                              >
-                                {page}
-                              </PaginationLink>
-                            )}
-                          </PaginationItem>
-                        );
-                      })}
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage((p) => Math.min(totalPages, p + 1));
-                          }}
-                          className={
-                            currentPage === totalPages ? "pointer-events-none opacity-50" : ""
-                          }
-                        />
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage(totalPages);
-                          }}
-                          className={
-                            currentPage === totalPages ? "pointer-events-none opacity-50" : ""
-                          }
-                        >
-                          <ChevronsRight className="w-4 h-4" />
-                        </PaginationLink>
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                )}
-              </div>
+              <UserPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalUsers={totalUsers}
+                pageStart={pageStart}
+                pageEnd={pageEnd}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={(value) => {
+                  setItemsPerPage(value);
+                  setCurrentPage(1);
+                }}
+              />
             </>
           )}
         </CardContent>

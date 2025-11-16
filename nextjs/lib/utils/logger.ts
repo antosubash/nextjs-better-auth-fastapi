@@ -35,7 +35,7 @@ function shouldLog(level: LogLevel): boolean {
 class Logger {
   private context: string;
 
-  constructor(context: string = "app") {
+  constructor(context = "app") {
     this.context = context;
   }
 

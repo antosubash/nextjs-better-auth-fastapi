@@ -24,4 +24,56 @@ export const queryKeys = {
     details: () => [...queryKeys.apiKeys.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.apiKeys.details(), id] as const,
   },
+  organizations: {
+    all: ["organizations"] as const,
+    lists: () => [...queryKeys.organizations.all, "list"] as const,
+    list: () => [...queryKeys.organizations.lists()] as const,
+    details: () => [...queryKeys.organizations.all, "detail"] as const,
+    detail: (id: string) => [...queryKeys.organizations.details(), id] as const,
+  },
+  sessions: {
+    all: ["sessions"] as const,
+    lists: () => [...queryKeys.sessions.all, "list"] as const,
+    list: () => [...queryKeys.sessions.lists()] as const,
+  },
+  stats: {
+    all: ["stats"] as const,
+    user: () => [...queryKeys.stats.all, "user"] as const,
+    admin: () => [...queryKeys.stats.all, "admin"] as const,
+  },
+  permissions: {
+    all: ["permissions"] as const,
+    lists: () => [...queryKeys.permissions.all, "list"] as const,
+    list: () => [...queryKeys.permissions.lists()] as const,
+    roles: () => [...queryKeys.permissions.all, "roles"] as const,
+    role: (roleName: string) => [...queryKeys.permissions.roles(), roleName] as const,
+    assignableRoles: () => [...queryKeys.permissions.all, "assignableRoles"] as const,
+    userPermissions: (userId: string) =>
+      [...queryKeys.permissions.all, "userPermissions", userId] as const,
+  },
+  storage: {
+    all: ["storage"] as const,
+  },
+  auth: {
+    all: ["auth"] as const,
+    session: () => [...queryKeys.auth.all, "session"] as const,
+    organizations: () => [...queryKeys.auth.all, "organizations"] as const,
+    organization: (id: string) => [...queryKeys.auth.all, "organization", id] as const,
+    members: (organizationId: string) =>
+      [...queryKeys.auth.all, "members", organizationId] as const,
+    invitations: {
+      all: () => [...queryKeys.auth.all, "invitations"] as const,
+      list: (organizationId: string) =>
+        [...queryKeys.auth.all, "invitations", organizationId] as const,
+    },
+    admin: (() => {
+      const adminAll = ["auth", "admin"] as const;
+      return {
+        all: adminAll,
+        users: () => [...adminAll, "users"] as const,
+        user: (id: string) => [...adminAll, "user", id] as const,
+        userSessions: (userId: string) => [...adminAll, "userSessions", userId] as const,
+      };
+    })(),
+  },
 } as const;

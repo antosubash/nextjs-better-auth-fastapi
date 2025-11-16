@@ -21,8 +21,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ErrorToast } from "@/components/ui/error-toast";
-import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_ERRORS, ORGANIZATION_LABELS, ORGANIZATION_SUCCESS } from "@/lib/constants";
+import { useDeleteOrganization, useSetActiveOrganization } from "@/lib/hooks/api/use-auth";
 
 interface Organization {
   id: string;
@@ -46,50 +46,34 @@ export function OrganizationActions({
   isActive,
 }: OrganizationActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleSetActive = async () => {
-    setIsLoading(true);
-    try {
-      const result = await authClient.organization.setActive({
-        organizationId: organization.id,
-      });
+  const setActiveMutation = useSetActiveOrganization();
+  const deleteMutation = useDeleteOrganization();
 
-      if (result.error) {
-        setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-      } else {
-        onActionSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_ACTIVATED);
-        setIsOpen(false);
-      }
+  const isLoading = setActiveMutation.isPending || deleteMutation.isPending;
+
+  const handleSetActive = async () => {
+    try {
+      await setActiveMutation.mutateAsync(organization.id);
+      onActionSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_ACTIVATED);
+      setIsOpen(false);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : ORGANIZATION_ERRORS.SET_ACTIVE_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    setIsLoading(true);
     try {
-      const result = await authClient.organization.delete({
-        organizationId: organization.id,
-      });
-
-      if (result.error) {
-        setError(result.error.message || ORGANIZATION_ERRORS.DELETE_FAILED);
-      } else {
-        onDelete();
-        setShowDeleteDialog(false);
-      }
+      await deleteMutation.mutateAsync(organization.id);
+      onDelete();
+      setShowDeleteDialog(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : ORGANIZATION_ERRORS.DELETE_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 

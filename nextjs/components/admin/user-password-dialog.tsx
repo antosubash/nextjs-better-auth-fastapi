@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -22,15 +21,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
-import {
-  ADMIN_ERRORS,
-  ADMIN_LABELS,
-  ADMIN_PLACEHOLDERS,
-  ADMIN_SUCCESS,
-  AUTH_ERRORS,
-} from "@/lib/constants";
-import { useToast } from "@/lib/hooks/use-toast";
+import { ADMIN_LABELS, ADMIN_PLACEHOLDERS, AUTH_ERRORS } from "@/lib/constants";
+import { useAdminSetUserPassword } from "@/lib/hooks/api/use-auth";
 
 interface UserPasswordDialogProps {
   userId: string;
@@ -62,8 +54,7 @@ export function UserPasswordDialog({
   onOpenChange,
   onSuccess,
 }: UserPasswordDialogProps) {
-  const toast = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const setPasswordMutation = useAdminSetUserPassword();
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
@@ -74,26 +65,16 @@ export function UserPasswordDialog({
   });
 
   const handleSubmit = async (values: PasswordFormValues) => {
-    setIsLoading(true);
     try {
-      const result = await authClient.admin.setUserPassword({
+      await setPasswordMutation.mutateAsync({
         userId,
         newPassword: values.newPassword,
       });
-
-      if (result.error) {
-        toast.error(result.error.message || ADMIN_ERRORS.PASSWORD_RESET_FAILED);
-      } else {
-        toast.success(ADMIN_SUCCESS.PASSWORD_RESET);
-        form.reset();
-        onOpenChange(false);
-        onSuccess?.();
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.PASSWORD_RESET_FAILED;
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+      form.reset();
+      onOpenChange(false);
+      onSuccess?.();
+    } catch (_err) {
+      // Error is handled by the mutation hook
     }
   };
 
@@ -149,12 +130,12 @@ export function UserPasswordDialog({
                   form.reset();
                   onOpenChange(false);
                 }}
-                disabled={isLoading}
+                disabled={setPasswordMutation.isPending}
               >
                 {ADMIN_LABELS.CANCEL}
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" disabled={setPasswordMutation.isPending}>
+                {setPasswordMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Resetting...

@@ -2,34 +2,9 @@
 
 import { Activity, Ban, Clock, Link as LinkIcon, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ADMIN_DASHBOARD } from "@/lib/constants";
-
-interface AdminStats {
-  totalUsers: number;
-  activeSessions: number;
-  bannedUsers: number;
-  recentRegistrations: number;
-  recentUsers: Array<{
-    id: string;
-    name: string;
-    email: string;
-    role?: string;
-    createdAt: number;
-    banned?: boolean;
-  }>;
-  recentSessions: Array<{
-    id: string;
-    userId: string;
-    createdAt: number;
-    expiresAt: number;
-    ipAddress?: string;
-    userAgent?: string;
-    userName?: string;
-    userEmail?: string;
-  }>;
-}
+import { useAdminStats } from "@/lib/hooks/api/use-stats";
 
 function formatActivityItems(
   recentUsers: Array<{
@@ -117,33 +92,7 @@ function formatTimestamp(timestamp: number): string {
 }
 
 export default function AdminDashboardPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const response = await fetch("/api/stats/admin", {
-          credentials: "include",
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || ADMIN_DASHBOARD.ERROR);
-        }
-
-        setStats(data);
-      } catch (err) {
-        console.error("Failed to load admin dashboard:", err);
-        setError(err instanceof Error ? err.message : ADMIN_DASHBOARD.ERROR);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadStats();
-  }, []);
+  const { data: stats, isLoading, error } = useAdminStats();
 
   if (isLoading) {
     return (
@@ -153,21 +102,13 @@ export default function AdminDashboardPage() {
     );
   }
 
-  if (error) {
+  if (error || !stats) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-red-600 dark:text-red-400">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-red-600 dark:text-red-400">{ADMIN_DASHBOARD.ERROR}</p>
+          <p className="text-lg text-red-600 dark:text-red-400">
+            {error?.message || ADMIN_DASHBOARD.ERROR}
+          </p>
         </div>
       </div>
     );

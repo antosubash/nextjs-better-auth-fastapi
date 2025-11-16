@@ -5,36 +5,22 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LoginForm } from "@/components/login-form";
 import { SignupForm } from "@/components/signup-form";
-import { authClient } from "@/lib/auth-client";
 import { LANDING_PAGE, PAGE_CONTAINER } from "@/lib/constants";
+import { useSession } from "@/lib/hooks/api/use-auth";
 import { getDashboardPath } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: session, isLoading } = useSession();
+
+  const isAuthenticated = !!session?.session;
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const session = await authClient.getSession();
-        const hasSession = !!session?.data?.session;
-        setIsAuthenticated(hasSession);
-
-        if (hasSession) {
-          const userRole = session?.data?.user?.role;
-          router.push(getDashboardPath(userRole));
-        }
-      } catch (err) {
-        console.error("Failed to check auth:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
+    if (isAuthenticated && session?.user?.role) {
+      router.push(getDashboardPath(session.user.role));
+    }
+  }, [isAuthenticated, session, router]);
 
   if (isLoading) {
     return (

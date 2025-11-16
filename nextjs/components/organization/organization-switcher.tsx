@@ -2,7 +2,7 @@
 
 import { Building2, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ErrorToast } from "@/components/ui/error-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_ERRORS, ORGANIZATION_SWITCHER } from "@/lib/constants";
+import { useOrganizations, useSession, useSetActiveOrganization } from "@/lib/hooks/api/use-auth";
 import { useOrganizationSafe } from "@/lib/contexts/organization-context";
 
 interface Organization {
@@ -26,59 +26,22 @@ export function OrganizationSwitcher() {
   const router = useRouter();
   const orgContext = useOrganizationSafe();
 
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [activeOrganization, setActiveOrganization] = useState<Organization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Fallback hooks when context is not available
+  const { data: organizationsData, isLoading: isLoadingOrgs } = useOrganizations();
+  const { data: session } = useSession();
+  const setActiveOrgMutation = useSetActiveOrganization();
+
   const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadOrganizationsFallback = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [listResult, sessionResult] = await Promise.all([
-        authClient.organization.list(),
-        authClient.getSession(),
-      ]);
-
-      if (listResult.data) {
-        const orgs = Array.isArray(listResult.data) ? listResult.data : [];
-        setOrganizations(orgs);
-
-        if (sessionResult.data?.session?.activeOrganizationId) {
-          const active = orgs.find(
-            (o: Organization) => o.id === sessionResult.data?.session?.activeOrganizationId
-          );
-          if (active) {
-            setActiveOrganization(active);
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load organizations:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (orgContext) {
-      setOrganizations(orgContext.organizations);
-      setActiveOrganization(orgContext.organization);
-      setIsLoading(orgContext.isLoading);
-      setError(orgContext.error);
-      setIsSwitching(orgContext.isSwitching);
-    } else {
-      loadOrganizationsFallback();
-    }
-  }, [
-    orgContext,
-    orgContext?.organizations,
-    orgContext?.organization,
-    orgContext?.isLoading,
-    orgContext?.error,
-    orgContext?.isSwitching,
-    loadOrganizationsFallback,
-  ]);
+  // Use context if available, otherwise use React Query hooks directly
+  const organizations = orgContext?.organizations || organizationsData || [];
+  const activeOrganization =
+    orgContext?.organization ||
+    organizations.find((o: Organization) => o.id === session?.session?.activeOrganizationId) ||
+    null;
+  const isLoading = orgContext?.isLoading ?? isLoadingOrgs;
+  const isSwitchingContext = orgContext?.isSwitching ?? isSwitching;
 
   const handleSwitch = async (organizationId: string) => {
     if (organizationId === activeOrganization?.id) {
@@ -91,23 +54,11 @@ export function OrganizationSwitcher() {
       setIsSwitching(true);
       setError(null);
       try {
-        const result = await authClient.organization.setActive({
-          organizationId,
-        });
-
-        if (result.error) {
-          setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-        } else {
-          const org = organizations.find((o) => o.id === organizationId);
-          if (org) {
-            setActiveOrganization(org);
-          }
-          router.refresh();
-          window.location.reload();
-        }
+        await setActiveOrgMutation.mutateAsync(organizationId);
+        router.refresh();
+        window.location.reload();
       } catch (err) {
-        console.error("Failed to switch organization:", err);
-        setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+        setError(err instanceof Error ? err.message : ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
       } finally {
         setIsSwitching(false);
       }
@@ -130,8 +81,8 @@ export function OrganizationSwitcher() {
     return null;
   }
 
-  const displayError = orgContext ? orgContext.error : error;
-  const displayIsSwitching = orgContext ? orgContext.isSwitching : isSwitching;
+  const displayError = orgContext?.error || error;
+  const displayIsSwitching = isSwitchingContext;
 
   return (
     <>

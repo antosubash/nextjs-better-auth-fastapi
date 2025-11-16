@@ -1,46 +1,31 @@
 "use client";
 
 import { CheckCircle2, LogOut, Mail, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { authClient } from "@/lib/auth-client";
 import { AUTH_LABELS, PROFILE } from "@/lib/constants";
+import { useSession, useSignOut } from "@/lib/hooks/api/use-auth";
 import { ApiData } from "./api-data";
 import { UserSessions } from "./user-sessions";
 
 export function UserProfile() {
-  const [user, setUser] = useState<{ name?: string; email?: string; image?: string | null } | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const { data: session, isLoading } = useSession();
+  const signOutMutation = useSignOut();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const session = await authClient.getSession();
-        if (session?.data?.user) {
-          setUser(session.data.user);
-        }
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
+  const user = session?.user || null;
 
   const handleLogout = async () => {
     try {
-      await authClient.signOut();
-      window.location.reload();
-    } catch (err) {
-      console.error("Failed to logout:", err);
+      await signOutMutation.mutateAsync();
+      router.push("/");
+      router.refresh();
+    } catch {
+      // Error is handled by the mutation hook
     }
   };
 

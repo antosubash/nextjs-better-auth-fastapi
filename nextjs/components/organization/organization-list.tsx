@@ -21,9 +21,10 @@ import {
 import { useErrorMessage } from "@/hooks/organization/use-error-message";
 import { useSearch } from "@/hooks/organization/use-search";
 import { useSuccessMessage } from "@/hooks/organization/use-success-message";
-import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_ERRORS, ORGANIZATION_LABELS, ORGANIZATION_SUCCESS } from "@/lib/constants";
 import { useOrganizationSafe } from "@/lib/contexts/organization-context";
+import { useOrganizations, useSession } from "@/lib/hooks/api/use-auth";
+import { useAdminOrganizations } from "@/lib/hooks/api/use-organizations";
 import { formatDate } from "@/lib/utils/date";
 import { extractOrganizations, normalizeOrganizations } from "@/lib/utils/organization-data";
 import type { NormalizedOrganization } from "@/lib/utils/organization-types";
@@ -51,65 +52,69 @@ export function OrganizationList() {
   const { error, showError, clearError } = useErrorMessage();
 
   const orgContext = useOrganizationSafe();
+  const {
+    data: adminOrgsData,
+    isLoading: isLoadingAdminOrgs,
+    error: adminOrgsError,
+  } = useAdminOrganizations();
+  const { data: userOrgsData, isLoading: isLoadingUserOrgs } = useOrganizations();
+  const { data: sessionData } = useSession();
 
-  const loadOrganizations = useCallback(async () => {
-    setIsLoading(true);
-    clearError();
-    try {
-      if (isAdminContext) {
-        const response = await fetch("/api/admin/organizations");
-        if (!response.ok) {
-          const errorData = await response.json();
-          showError(errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
-          return;
-        }
-        const data = await response.json();
-        const orgs = data.organizations || [];
-        setOrganizations(normalizeOrganizations(orgs));
+  const loadContextOrganizations = useCallback(() => {
+    if (!orgContext) return;
 
-        const sessionResult = await authClient.getSession();
-        if (sessionResult.data?.session?.activeOrganizationId) {
-          setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
-        }
-      } else {
-        if (orgContext) {
-          const normalizedOrgs = normalizeOrganizations(
-            orgContext.organizations.map((org) => ({
-              id: org.id,
-              name: org.name,
-              slug: org.slug,
-              createdAt: Date.now(),
-            }))
-          );
-          setOrganizations(normalizedOrgs);
-          setActiveOrganizationId(orgContext.organization?.id || null);
-        } else {
-          const listResult = await authClient.organization.list();
-          if (listResult.error) {
-            showError(listResult.error.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
-          } else if (listResult.data) {
-            const normalizedOrgs = normalizeOrganizations(extractOrganizations(listResult.data));
-            setOrganizations(normalizedOrgs);
-          }
-
-          const sessionResult = await authClient.getSession();
-          if (sessionResult.data?.session?.activeOrganizationId) {
-            setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
-          }
-        }
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED;
-      showError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isAdminContext, orgContext, clearError, showError]);
+    const normalizedOrgs = normalizeOrganizations(
+      orgContext.organizations.map((org) => ({
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+        createdAt: Date.now(),
+      }))
+    );
+    setOrganizations(normalizedOrgs);
+    setActiveOrganizationId(orgContext.organization?.id || null);
+  }, [orgContext]);
 
   useEffect(() => {
-    loadOrganizations();
-  }, [loadOrganizations]);
+    setIsLoading(true);
+    clearError();
+
+    if (isAdminContext) {
+      if (adminOrgsError) {
+        showError(adminOrgsError.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
+      } else if (adminOrgsData) {
+        const orgs = adminOrgsData.organizations || [];
+        setOrganizations(normalizeOrganizations(orgs));
+      }
+      setIsLoading(isLoadingAdminOrgs);
+    } else if (orgContext) {
+      loadContextOrganizations();
+      setIsLoading(false);
+    } else if (userOrgsData) {
+      const normalizedOrgs = normalizeOrganizations(extractOrganizations(userOrgsData));
+      setOrganizations(normalizedOrgs);
+      setIsLoading(false);
+    } else {
+      setIsLoading(isLoadingUserOrgs);
+    }
+  }, [
+    isAdminContext,
+    orgContext,
+    adminOrgsData,
+    adminOrgsError,
+    isLoadingAdminOrgs,
+    userOrgsData,
+    isLoadingUserOrgs,
+    clearError,
+    showError,
+    loadContextOrganizations,
+  ]);
+
+  useEffect(() => {
+    if (sessionData?.session?.activeOrganizationId) {
+      setActiveOrganizationId(sessionData.session.activeOrganizationId);
+    }
+  }, [sessionData]);
 
   const handleOrganizationCreated = () => {
     setShowCreateForm(false);
@@ -117,7 +122,7 @@ export function OrganizationList() {
     if (orgContext) {
       orgContext.refreshOrganizations();
     }
-    loadOrganizations();
+    // React Query will refetch automatically on invalidation
   };
 
   const handleOrganizationUpdated = () => {
@@ -126,7 +131,7 @@ export function OrganizationList() {
     if (orgContext) {
       orgContext.refreshOrganizations();
     }
-    loadOrganizations();
+    // React Query will refetch automatically on invalidation
   };
 
   const handleOrganizationDeleted = () => {
@@ -134,7 +139,7 @@ export function OrganizationList() {
     if (orgContext) {
       orgContext.refreshOrganizations();
     }
-    loadOrganizations();
+    // React Query will refetch automatically on invalidation
   };
 
   const handleActionSuccess = (message: string) => {
@@ -142,7 +147,7 @@ export function OrganizationList() {
     if (orgContext) {
       orgContext.refreshOrganizations();
     }
-    loadOrganizations();
+    // React Query will refetch automatically on invalidation
   };
 
   const filteredOrganizations = organizations.filter(

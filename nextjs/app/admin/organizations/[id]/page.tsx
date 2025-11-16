@@ -4,7 +4,7 @@ import { ArrowLeft, Building2, Edit, RefreshCw, Trash2, UserPlus, Users } from "
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { InvitationList } from "@/components/organization/invitation-list";
 import { MemberList } from "@/components/organization/member-list";
 import { OrganizationForm } from "@/components/organization/organization-form";
@@ -32,117 +32,70 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ErrorToast } from "@/components/ui/error-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { authClient } from "@/lib/auth-client";
 import {
   ADMIN_NAVIGATION,
   ORGANIZATION_ERRORS,
   ORGANIZATION_LABELS,
   ORGANIZATION_SUCCESS,
 } from "@/lib/constants";
+import { useDeleteOrganization, useSession } from "@/lib/hooks/api/use-auth";
 import { formatDate } from "@/lib/utils/date";
-
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  logo?: string;
-  metadata?: {
-    description?: string;
-  };
-  createdAt: number;
-}
+import { useOrganization } from "@/lib/hooks/api/use-organizations";
 
 export default function OrganizationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const organizationId = params.id as string;
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"members" | "invitations">("members");
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [activeOrganizationId, setActiveOrganizationId] = useState<string | null>(null);
 
-  const loadOrganization = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const [response, sessionResult] = await Promise.all([
-        fetch(`/api/admin/organizations/${organizationId}`),
-        authClient.getSession(),
-      ]);
+  const {
+    data: organizationData,
+    isLoading,
+    error: queryError,
+    refetch,
+    isRefetching,
+  } = useOrganization(organizationId);
+  const { data: sessionData } = useSession();
+  const deleteOrgMutation = useDeleteOrganization();
 
-      if (sessionResult.data?.session?.activeOrganizationId) {
-        setActiveOrganizationId(sessionResult.data.session.activeOrganizationId);
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED);
-        return;
-      }
-
-      const data = await response.json();
-      if (data.organization) {
-        setOrganization(data.organization);
-      } else {
-        setError(ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED);
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED;
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [organizationId]);
+  const organization = organizationData?.organization || null;
+  const displayError = error || queryError?.message || "";
+  const isDeleting = deleteOrgMutation.isPending;
 
   useEffect(() => {
-    if (organizationId) {
-      loadOrganization();
+    if (sessionData?.session?.activeOrganizationId) {
+      setActiveOrganizationId(sessionData.session.activeOrganizationId);
     }
-  }, [organizationId, loadOrganization]);
+  }, [sessionData]);
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    loadOrganization();
+    refetch();
   };
 
   const handleEditSuccess = () => {
     setShowEditDialog(false);
     setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_UPDATED);
     setTimeout(() => setSuccess(""), 3000);
-    loadOrganization();
+    refetch();
   };
 
   const handleDelete = async () => {
     if (!organization) return;
-    setIsDeleting(true);
     try {
-      const result = await authClient.organization.delete({
-        organizationId: organization.id,
-      });
-
-      if (result.error) {
-        setError(result.error.message || ORGANIZATION_ERRORS.DELETE_FAILED);
-        setShowDeleteDialog(false);
-      } else {
-        setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_DELETED);
-        setTimeout(() => {
-          router.push("/admin/organizations");
-        }, 1000);
-      }
+      await deleteOrgMutation.mutateAsync(organization.id);
+      setSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_DELETED);
+      setTimeout(() => {
+        router.push("/admin/organizations");
+      }, 1000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : ORGANIZATION_ERRORS.DELETE_FAILED;
       setError(errorMessage);
       setShowDeleteDialog(false);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -154,11 +107,11 @@ export default function OrganizationDetailPage() {
     );
   }
 
-  if (error || !organization) {
+  if (displayError || !organization) {
     return (
       <div className="text-center py-8">
         <p className="text-lg text-red-600 dark:text-red-400 mb-4">
-          {error || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED}
+          {displayError || ORGANIZATION_ERRORS.LOAD_ORGANIZATION_FAILED}
         </p>
         <Link href="/admin/organizations">
           <Button variant="outline">
@@ -189,7 +142,9 @@ export default function OrganizationDetailPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      {error && <ErrorToast message={error} onDismiss={() => setError("")} duration={5000} />}
+      {displayError && (
+        <ErrorToast message={displayError} onDismiss={() => setError("")} duration={5000} />
+      )}
 
       {success && (
         <div className="fixed top-4 right-4 z-50 max-w-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg shadow-lg p-4">
@@ -257,10 +212,10 @@ export default function OrganizationDetailPage() {
                 variant="outline"
                 size="icon"
                 onClick={handleRefresh}
-                disabled={isRefreshing}
+                disabled={isRefetching}
                 title={ORGANIZATION_LABELS.REFRESH}
               >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`} />
               </Button>
               <Button variant="outline" onClick={() => setShowEditDialog(true)}>
                 <Edit className="w-4 h-4 mr-2" />

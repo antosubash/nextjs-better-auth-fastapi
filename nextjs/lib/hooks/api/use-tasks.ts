@@ -1,12 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getTask, getTasks } from "@/lib/api/tasks";
-import { queryKeys } from "./query-keys";
-import type { TaskCreate, TaskUpdate } from "@/lib/types/task";
-import { createTask, deleteTask, updateTask } from "@/lib/api/tasks";
 import { toast } from "sonner";
+import { createTask, deleteTask, getTask, getTasks, updateTask } from "@/lib/api/tasks";
 import { TASK_ERRORS, TASK_SUCCESS } from "@/lib/constants";
+import type { TaskCreate, TaskUpdate } from "@/lib/types/task";
+import { queryKeys } from "./query-keys";
 
-export function useTasks(page: number = 1, pageSize: number = 10, statusFilter?: string | null) {
+export function useTasks(page = 1, pageSize = 10, statusFilter?: string | null) {
   return useQuery({
     queryKey: queryKeys.tasks.list(page, pageSize, statusFilter),
     queryFn: () => getTasks(page, pageSize, statusFilter),

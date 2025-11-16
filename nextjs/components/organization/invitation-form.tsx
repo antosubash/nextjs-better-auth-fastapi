@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
 import {
   AUTH_ERRORS,
   COMMON_LABELS,
@@ -25,6 +24,7 @@ import {
   MEMBER_ERRORS,
   ORGANIZATION_ROLES,
 } from "@/lib/constants";
+import { useCreateInvitation } from "@/lib/hooks/api/use-auth";
 import { MemberRoleSelector } from "./member-role-selector";
 
 interface InvitationFormProps {
@@ -46,7 +46,7 @@ const invitationSchema = z.object({
 type InvitationFormValues = z.infer<typeof invitationSchema>;
 
 export function InvitationForm({ organizationId, onSuccess, onCancel }: InvitationFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const createInvitationMutation = useCreateInvitation();
   const [error, setError] = useState("");
 
   const form = useForm<InvitationFormValues>({
@@ -59,27 +59,18 @@ export function InvitationForm({ organizationId, onSuccess, onCancel }: Invitati
 
   const handleSubmit = async (values: InvitationFormValues) => {
     setError("");
-    setIsLoading(true);
 
     try {
-      // @ts-expect-error - better-auth organization client API method
-      const result = await authClient.organization.createInvitation({
+      await createInvitationMutation.mutateAsync({
         organizationId,
         email: values.email,
         role: values.role,
       });
-
-      if (result.error) {
-        setError(result.error.message || INVITATION_ERRORS.SEND_FAILED);
-      } else {
-        form.reset();
-        onSuccess();
-      }
+      form.reset();
+      onSuccess();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : INVITATION_ERRORS.SEND_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -106,7 +97,7 @@ export function InvitationForm({ organizationId, onSuccess, onCancel }: Invitati
                     type="email"
                     placeholder={INVITATION_PLACEHOLDERS.EMAIL}
                     {...field}
-                    disabled={isLoading}
+                    disabled={createInvitationMutation.isPending}
                   />
                 </FormControl>
                 <FormMessage />
@@ -123,7 +114,7 @@ export function InvitationForm({ organizationId, onSuccess, onCancel }: Invitati
                   <MemberRoleSelector
                     value={field.value}
                     onChange={field.onChange}
-                    disabled={isLoading}
+                    disabled={createInvitationMutation.isPending}
                   />
                 </FormControl>
                 <FormMessage />
@@ -131,10 +122,17 @@ export function InvitationForm({ organizationId, onSuccess, onCancel }: Invitati
             )}
           />
           <div className="flex gap-3">
-            <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? INVITATION_LABELS.SENDING : INVITATION_LABELS.SEND_INVITATION}
+            <Button type="submit" disabled={createInvitationMutation.isPending} className="flex-1">
+              {createInvitationMutation.isPending
+                ? INVITATION_LABELS.SENDING
+                : INVITATION_LABELS.SEND_INVITATION}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={createInvitationMutation.isPending}
+            >
               {COMMON_LABELS.CANCEL}
             </Button>
           </div>

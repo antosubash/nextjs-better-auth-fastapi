@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_CONTEXT, ORGANIZATION_ERRORS } from "@/lib/constants";
+import { useOrganizations, useSession, useSetActiveOrganization } from "@/lib/hooks/api/use-auth";
 import { createLogger } from "@/lib/utils/logger";
 
 const logger = createLogger("contexts/organization");
@@ -34,87 +34,63 @@ interface OrganizationProviderProps {
 
 export function OrganizationProvider({ children }: OrganizationProviderProps) {
   const router = useRouter();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const { data: session } = useSession();
+  const {
+    data: organizationsData,
+    isLoading: isLoadingOrgs,
+    error: orgsError,
+  } = useOrganizations();
+  const setActiveOrgMutation = useSetActiveOrganization();
+
   const [activeOrganization, setActiveOrganization] = useState<Organization | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+
+  const organizations = organizationsData || [];
+  const isLoading = isLoadingOrgs;
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  const ensureActiveOrganization = useCallback(
-    async (orgs: Organization[], sessionActiveOrgId: string | null) => {
-      if (orgs.length === 0) {
-        setActiveOrganization(null);
-        return;
-      }
-
-      let activeOrg: Organization | null = null;
-
-      if (sessionActiveOrgId) {
-        activeOrg = orgs.find((o) => o.id === sessionActiveOrgId) || null;
-      }
-
-      if (!activeOrg && orgs.length > 0) {
-        activeOrg = orgs[0];
-        try {
-          const result = await authClient.organization.setActive({
-            organizationId: activeOrg.id,
-          });
-
-          if (result.error) {
-            logger.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, result.error);
-            setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-          }
-        } catch (err) {
-          logger.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, err);
-          setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-        }
-      }
-
-      setActiveOrganization(activeOrg);
-    },
-    []
-  );
-
-  const loadOrganizations = useCallback(async () => {
-    try {
-      const [listResult, sessionResult] = await Promise.all([
-        authClient.organization.list(),
-        authClient.getSession(),
-      ]);
-
-      if (listResult.error) {
-        setError(listResult.error.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
-        setOrganizations([]);
-        setActiveOrganization(null);
-        return;
-      }
-
-      const orgs = Array.isArray(listResult.data) ? listResult.data : [];
-      setOrganizations(orgs);
-
-      const sessionActiveOrgId = sessionResult.data?.session?.activeOrganizationId || null;
-
-      await ensureActiveOrganization(orgs, sessionActiveOrgId);
-    } catch (err) {
-      logger.error(ORGANIZATION_CONTEXT.LOAD_FAILED, err);
-      setError(ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
-      setOrganizations([]);
+  // Set active organization from session
+  useEffect(() => {
+    if (organizations.length === 0) {
       setActiveOrganization(null);
-    } finally {
-      setIsLoading(false);
-      setIsInitialized(true);
+      return;
     }
-  }, [ensureActiveOrganization]);
+
+    const sessionActiveOrgId = session?.session?.activeOrganizationId || null;
+    let activeOrg: Organization | null = null;
+
+    if (sessionActiveOrgId) {
+      activeOrg = organizations.find((o) => o.id === sessionActiveOrgId) || null;
+    }
+
+    if (!activeOrg && organizations.length > 0) {
+      activeOrg = organizations[0];
+      // Auto-select first organization if none is active
+      setActiveOrgMutation.mutate(activeOrg.id, {
+        onError: (err) => {
+          logger.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, err);
+          setError(err.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+        },
+      });
+    }
+
+    setActiveOrganization(activeOrg);
+  }, [organizations, session, setActiveOrgMutation]);
+
+  // Handle organizations error
+  useEffect(() => {
+    if (orgsError) {
+      setError(orgsError.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
+    }
+  }, [orgsError]);
 
   const refreshOrganizations = useCallback(async () => {
-    setIsLoading(true);
-    await loadOrganizations();
-  }, [loadOrganizations]);
+    // React Query will automatically refetch when invalidated
+  }, []);
 
   const switchOrganization = useCallback(
     async (organizationId: string) => {
@@ -126,58 +102,23 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       setError(null);
 
       try {
-        const result = await authClient.organization.setActive({
-          organizationId,
-        });
-
-        if (result.error) {
-          setError(result.error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-          return;
-        }
+        await setActiveOrgMutation.mutateAsync(organizationId);
 
         const org = organizations.find((o) => o.id === organizationId);
         if (org) {
           setActiveOrganization(org);
-        } else {
-          await refreshOrganizations();
         }
         router.refresh();
         window.location.reload();
       } catch (err) {
         logger.error(ORGANIZATION_CONTEXT.SWITCH_FAILED, err);
-        setError(ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+        setError(err instanceof Error ? err.message : ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
       } finally {
         setIsSwitching(false);
       }
     },
-    [activeOrganization, organizations, router, refreshOrganizations]
+    [activeOrganization, organizations, router, setActiveOrgMutation]
   );
-
-  useEffect(() => {
-    if (isInitialized) {
-      return;
-    }
-
-    const initialize = async () => {
-      try {
-        const session = await authClient.getSession();
-        if (session?.data?.session) {
-          await loadOrganizations();
-        } else {
-          setIsLoading(false);
-          setIsInitialized(true);
-          setOrganizations([]);
-          setActiveOrganization(null);
-        }
-      } catch (err) {
-        logger.error(ORGANIZATION_CONTEXT.LOAD_FAILED, err);
-        setIsLoading(false);
-        setIsInitialized(true);
-      }
-    };
-
-    initialize();
-  }, [isInitialized, loadOrganizations]);
 
   const value: OrganizationContextType = {
     organizations,

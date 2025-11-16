@@ -24,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { JOB_ERRORS, JOB_LABELS, PAGE_CONTAINER } from "@/lib/constants";
+import { useSession } from "@/lib/hooks/api/use-auth";
 import {
   useCreateJob,
   useDeleteJob,
@@ -31,14 +33,11 @@ import {
   usePauseJob,
   useResumeJob,
 } from "@/lib/hooks/api/use-jobs";
-import { authClient } from "@/lib/auth-client";
-import { JOB_ERRORS, JOB_LABELS, PAGE_CONTAINER } from "@/lib/constants";
 import type { Job, JobCreate } from "@/lib/types/job";
 
 export function JobsPageContent() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { data: session, isLoading } = useSession();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -53,26 +52,13 @@ export function JobsPageContent() {
 
   const jobs = jobsData?.items ?? [];
   const total = jobsData?.total ?? 0;
+  const isAuthorized = !!session?.session;
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const session = await authClient.getSession();
-        if (!session?.data?.session) {
-          router.push("/");
-          return;
-        }
-
-        setIsAuthorized(true);
-      } catch (err) {
-        console.error("Failed to check auth:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
+    if (!isLoading && !isAuthorized) {
+      router.push("/");
+    }
+  }, [isLoading, isAuthorized, router]);
 
   const handleCreateClick = () => {
     setIsDialogOpen(true);
@@ -125,7 +111,7 @@ export function JobsPageContent() {
 
   const totalPages = Math.ceil(total / pageSize) || 0;
 
-  if (isLoading && !isAuthorized) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-lg text-gray-600 dark:text-gray-400">{JOB_LABELS.LOADING}</div>

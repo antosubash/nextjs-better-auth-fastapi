@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+cd nextjs
+
+# Run Biome check (format + lint)
+pnpm check
+
+# Run TypeScript type check
+pnpm type-check
+

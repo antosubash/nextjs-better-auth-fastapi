@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
+import { useVerifyApiKey } from "@/lib/hooks/api/use-api-keys";
+import type { VerifyApiKeyResponse } from "@/lib/api/api-keys";
 
 interface ApiKeyVerifyProps {
   onClose: () => void;
@@ -17,62 +19,38 @@ interface ApiKeyVerifyProps {
 export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
   const [key, setKey] = useState("");
   const [permissions, setPermissions] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  interface VerifyResult {
-    valid: boolean;
-    error: { message: string; code: string } | null;
-    key: {
-      name?: string;
-      prefix?: string;
-      enabled?: boolean;
-      permissions?: Record<string, string[]>;
-    } | null;
-  }
+  const [result, setResult] = useState<VerifyApiKeyResponse | null>(null);
 
-  const [result, setResult] = useState<VerifyResult | null>(null);
+  const verifyMutation = useVerifyApiKey();
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setResult(null);
-    setIsLoading(true);
+
+    let parsedPermissions: Record<string, string[]> | undefined;
+
+    if (permissions.trim()) {
+      try {
+        parsedPermissions = JSON.parse(permissions);
+      } catch {
+        setError(API_KEY_ERRORS.INVALID_PERMISSIONS);
+        return;
+      }
+    }
 
     try {
-      let parsedPermissions: Record<string, string[]> | undefined;
-
-      if (permissions.trim()) {
-        try {
-          parsedPermissions = JSON.parse(permissions);
-        } catch {
-          setError(API_KEY_ERRORS.INVALID_PERMISSIONS);
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      const response = await fetch("/api/api-keys/verify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          key,
-          permissions: parsedPermissions,
-        }),
+      const response = await verifyMutation.mutateAsync({
+        key,
+        permissions: parsedPermissions,
       });
-      const verifyResult = await response.json();
-
-      if (!response.ok || verifyResult.error) {
-        setError(verifyResult.error || API_KEY_ERRORS.VERIFY_FAILED);
-      } else if (verifyResult.data) {
-        setResult(verifyResult.data);
+      if (response.data) {
+        setResult(response.data);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : API_KEY_ERRORS.VERIFY_FAILED;
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -125,8 +103,12 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" disabled={isLoading || !key.trim()} className="flex-1">
-              {isLoading ? (
+            <Button
+              type="submit"
+              disabled={verifyMutation.isPending || !key.trim()}
+              className="flex-1"
+            >
+              {verifyMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   {API_KEY_LABELS.VERIFYING}
@@ -135,7 +117,12 @@ export function ApiKeyVerify({ onClose }: ApiKeyVerifyProps) {
                 API_KEY_LABELS.VERIFY_KEY
               )}
             </Button>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={verifyMutation.isPending}
+            >
               {API_KEY_LABELS.CANCEL}
             </Button>
           </div>

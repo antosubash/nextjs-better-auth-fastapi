@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { authClient } from "@/lib/auth-client";
-import { ADMIN_ERRORS, ADMIN_SUCCESS } from "@/lib/constants";
-import { useToast } from "@/lib/hooks/use-toast";
+import { useEffect, useRef, useState } from "react";
+import {
+  useAdminListUserSessions,
+  useAdminRevokeUserSession,
+  useAdminRevokeUserSessions,
+} from "@/lib/hooks/api/use-auth";
 
 export interface Session {
   id: string;
@@ -13,100 +15,71 @@ export interface Session {
 }
 
 export function useUserSessions(userId: string) {
-  const toast = useToast();
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [isRevoking, setIsRevoking] = useState<string | null>(null);
-  const [isRevokingAll, setIsRevokingAll] = useState(false);
   const sessionsLoadedRef = useRef<string | null>(null);
+
+  const {
+    data: sessionsData,
+    isLoading: isLoadingSessions,
+    refetch: refetchSessions,
+  } = useAdminListUserSessions(userId);
+  const revokeSessionMutation = useAdminRevokeUserSession();
+  const revokeAllSessionsMutation = useAdminRevokeUserSessions();
+
+  const isRevokingAll = revokeAllSessionsMutation.isPending;
+
+  // Transform the sessions data to match our interface
+  const sessions: Session[] = ((sessionsData as { sessions?: unknown[] })?.sessions || []).map(
+    (session: unknown) => {
+      const s = session as {
+        createdAt?: Date | number;
+        expiresAt?: Date | number;
+        [key: string]: unknown;
+      };
+      return {
+        ...s,
+        createdAt:
+          s.createdAt instanceof Date ? s.createdAt.getTime() : (s.createdAt as number) || 0,
+        expiresAt:
+          s.expiresAt instanceof Date ? s.expiresAt.getTime() : (s.expiresAt as number) || 0,
+      } as Session;
+    }
+  );
 
   // Reset sessions loaded ref when userId changes
   useEffect(() => {
     if (sessionsLoadedRef.current !== userId) {
       sessionsLoadedRef.current = null;
-      setSessions([]);
     }
-  }, [userId]);
+    if (sessionsData) {
+      sessionsLoadedRef.current = userId;
+    }
+  }, [userId, sessionsData]);
 
-  const loadSessions = useCallback(async () => {
-    if (!userId || isLoadingSessions) return;
-    setIsLoadingSessions(true);
+  const handleRevokeSession = async (sessionToken: string) => {
+    setIsRevoking(sessionToken);
     try {
-      const result = await authClient.admin.listUserSessions({ userId });
-      if (result.error) {
-        toast.error(result.error.message || ADMIN_ERRORS.LOAD_SESSIONS_FAILED);
-      } else {
-        const sessionsData = ((result.data as { sessions?: unknown[] })?.sessions || []).map(
-          (session: unknown) => {
-            const s = session as {
-              createdAt?: Date | number;
-              expiresAt?: Date | number;
-              [key: string]: unknown;
-            };
-            return {
-              ...s,
-              createdAt:
-                s.createdAt instanceof Date ? s.createdAt.getTime() : (s.createdAt as number) || 0,
-              expiresAt:
-                s.expiresAt instanceof Date ? s.expiresAt.getTime() : (s.expiresAt as number) || 0,
-            } as Session;
-          }
-        );
-        setSessions(sessionsData);
-        sessionsLoadedRef.current = userId;
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.LOAD_SESSIONS_FAILED;
-      toast.error(errorMessage);
+      await revokeSessionMutation.mutateAsync({
+        userId,
+        sessionToken,
+      });
+      refetchSessions();
+    } catch (_err) {
+      // Error is handled by the mutation hook
     } finally {
-      setIsLoadingSessions(false);
+      setIsRevoking(null);
     }
-  }, [userId, isLoadingSessions, toast]);
+  };
 
-  const handleRevokeSession = useCallback(
-    async (sessionToken: string) => {
-      setIsRevoking(sessionToken);
-      try {
-        const result = await authClient.admin.revokeUserSession({
-          sessionToken,
-        });
-
-        if (result.error) {
-          toast.error(result.error.message || ADMIN_ERRORS.REVOKE_SESSION_FAILED);
-        } else {
-          toast.success(ADMIN_SUCCESS.SESSION_REVOKED);
-          await loadSessions();
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : ADMIN_ERRORS.REVOKE_SESSION_FAILED;
-        toast.error(errorMessage);
-      } finally {
-        setIsRevoking(null);
-      }
-    },
-    [loadSessions, toast]
-  );
-
-  const handleRevokeAllSessions = useCallback(async () => {
+  const handleRevokeAllSessions = async () => {
     if (!userId) return;
-    setIsRevokingAll(true);
     try {
-      const result = await authClient.admin.revokeUserSessions({ userId });
-
-      if (result.error) {
-        toast.error(result.error.message || ADMIN_ERRORS.REVOKE_SESSIONS_FAILED);
-      } else {
-        toast.success(ADMIN_SUCCESS.SESSIONS_REVOKED);
-        await loadSessions();
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : ADMIN_ERRORS.REVOKE_SESSIONS_FAILED;
-      toast.error(errorMessage);
-    } finally {
-      setIsRevokingAll(false);
+      await revokeAllSessionsMutation.mutateAsync(userId);
+      refetchSessions();
+    } catch (_err) {
+      // Error is handled by the mutation hook
     }
-  }, [userId, loadSessions, toast]);
+  };
 
   return {
     sessions,
@@ -114,7 +87,7 @@ export function useUserSessions(userId: string) {
     isRevoking,
     isRevokingAll,
     sessionsLoadedRef,
-    loadSessions,
+    loadSessions: refetchSessions,
     handleRevokeSession,
     handleRevokeAllSessions,
   };
