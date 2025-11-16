@@ -26,5 +26,24 @@ export async function callFastApi<T>(endpoint: string, options: RequestInit = {}
     throw new Error(`API request failed: ${response.statusText}`);
   }
 
-  return response.json();
+  // Handle 204 No Content responses (no body to parse)
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  // Read response text first to check if there's any content
+  const text = await response.text();
+
+  // If response is empty, return undefined
+  if (!text.trim()) {
+    return undefined as T;
+  }
+
+  // Try to parse JSON
+  try {
+    return JSON.parse(text) as T;
+  } catch (error) {
+    // Re-throw the parsing error (we already handled empty responses above)
+    throw error;
+  }
 }
