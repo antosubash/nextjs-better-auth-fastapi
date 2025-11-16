@@ -1,3 +1,40 @@
+import { type BrandingConfig, branding } from "@/lib/branding/config";
+
+/**
+ * Get branding configuration
+ * This function returns the branding config, which can be used throughout the app
+ */
+function getBranding(): BrandingConfig {
+  return branding();
+}
+
+export const BRANDING = {
+  get appName() {
+    return getBranding().appName;
+  },
+  get appDescription() {
+    return getBranding().appDescription;
+  },
+  get logo() {
+    return getBranding().logo;
+  },
+  get colors() {
+    return getBranding().colors;
+  },
+  get fonts() {
+    return getBranding().fonts;
+  },
+  get meta() {
+    return getBranding().meta;
+  },
+  get favicon() {
+    return getBranding().favicon;
+  },
+  get social() {
+    return getBranding().social;
+  },
+} as const;
+
 export const AUTH_LABELS = {
   EMAIL: "Email",
   PASSWORD: "Password",
@@ -147,10 +184,13 @@ export const API_KEY_TEST = {
 } as const;
 
 export const LANDING_PAGE = {
-  HERO_TITLE: "Welcome to Better Auth",
+  get HERO_TITLE() {
+    return `Welcome to ${BRANDING.appName}`;
+  },
   HERO_SUBTITLE: "Secure, fast, and easy authentication for your applications",
-  HERO_DESCRIPTION:
-    "Get started in minutes with our powerful authentication system built on Next.js and FastAPI.",
+  get HERO_DESCRIPTION() {
+    return BRANDING.appDescription;
+  },
   GET_STARTED: "Get Started",
   CREATE_ACCOUNT: "Create Account",
   SIGN_IN_DESCRIPTION: "Sign in to your account to continue",
@@ -188,7 +228,7 @@ export const USER_ROLES = {
 } as const;
 
 export const ADMIN_LABELS = {
-  TITLE: "User Management",
+  TITLE: "Users",
   CREATE_USER: "Create User",
   EDIT_USER: "Edit User",
   DELETE_USER: "Delete User",
@@ -375,7 +415,7 @@ export const ADMIN_DASHBOARD = {
   RECENT_SESSIONS: "Recent Sessions",
   NO_USERS: "No users found",
   NO_SESSIONS: "No sessions found",
-  USER_MANAGEMENT: "User Management",
+  USER_MANAGEMENT: "Users",
   VIEW_ALL_USERS: "View All Users",
   NEW_USER: "New user registered",
   NEW_SESSION: "New session created",
@@ -383,7 +423,7 @@ export const ADMIN_DASHBOARD = {
 
 export const ADMIN_NAVIGATION = {
   DASHBOARD: "Dashboard",
-  USER_MANAGEMENT: "User Management",
+  USER_MANAGEMENT: "Users",
   ORGANIZATIONS: "Organizations",
   PERMISSIONS: "Permissions",
   ROLES: "Roles",
@@ -412,7 +452,9 @@ export const USER_LAYOUT = {
   LOADING: "Loading...",
   ACCESS_DENIED: "Access Denied",
   LOGIN_REQUIRED: "Please log in to continue",
-  APP_NAME: "Better Auth",
+  get APP_NAME() {
+    return BRANDING.appName;
+  },
   USER_PANEL: "User Panel",
 } as const;
 

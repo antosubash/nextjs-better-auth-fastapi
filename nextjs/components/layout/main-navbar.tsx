@@ -4,6 +4,7 @@ import { LogIn, LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { Logo } from "@/components/branding/logo";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -193,9 +194,7 @@ export function MainNavbar() {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo/Brand */}
-          <Link href="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
-            Better Auth
-          </Link>
+          <Logo size="md" />
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">{renderDesktopNav()}</div>

@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -23,89 +22,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { JOB_ERRORS, JOB_LABELS, JOB_PLACEHOLDERS } from "@/lib/constants";
-import type { JobCreate, JobTriggerType } from "@/lib/types/job";
-
-const jobSchema = z
-  .object({
-    job_id: z.string().min(1, JOB_ERRORS.JOB_ID_REQUIRED),
-    function: z.string().min(1, JOB_ERRORS.FUNCTION_REQUIRED),
-    trigger_type: z.enum(["cron", "interval", "once"]),
-    cron_expression: z.string().optional().nullable(),
-    weeks: z.number().min(0),
-    days: z.number().min(0),
-    hours: z.number().min(0),
-    minutes: z.number().min(0),
-    seconds: z.number().min(0),
-    run_date: z.string().optional().nullable(),
-    start_date: z.string().optional().nullable(),
-    end_date: z.string().optional().nullable(),
-    args: z.string().optional(),
-    kwargs: z.string().optional(),
-    replace_existing: z.boolean(),
-  })
-  .refine(
-    (data) => {
-      if (data.trigger_type === "cron") {
-        return !!data.cron_expression;
-      }
-      return true;
-    },
-    {
-      message: JOB_ERRORS.CRON_EXPRESSION_REQUIRED,
-      path: ["cron_expression"],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.trigger_type === "interval") {
-        return (
-          data.weeks > 0 || data.days > 0 || data.hours > 0 || data.minutes > 0 || data.seconds > 0
-        );
-      }
-      return true;
-    },
-    {
-      message: JOB_ERRORS.INTERVAL_REQUIRED,
-      path: ["seconds"],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.args && data.args.trim() !== "") {
-        try {
-          const parsed = JSON.parse(data.args);
-          return Array.isArray(parsed);
-        } catch {
-          return false;
-        }
-      }
-      return true;
-    },
-    {
-      message: JOB_ERRORS.INVALID_ARGS,
-      path: ["args"],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.kwargs && data.kwargs.trim() !== "") {
-        try {
-          const parsed = JSON.parse(data.kwargs);
-          return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed);
-        } catch {
-          return false;
-        }
-      }
-      return true;
-    },
-    {
-      message: JOB_ERRORS.INVALID_KWARGS,
-      path: ["kwargs"],
-    }
-  );
-
-type JobFormValues = z.infer<typeof jobSchema>;
+import { JOB_LABELS, JOB_PLACEHOLDERS } from "@/lib/constants";
+import type { JobCreate } from "@/lib/types/job";
+import { type JobFormValues, jobSchema } from "./job-form-schema";
+import {
+  buildJobData,
+  formatDateTimeForInput,
+  getDefaultValuesFromInitial,
+  parseArgs,
+  parseKwargs,
+} from "./job-form-utils";
+import { JobTriggerFields } from "./job-trigger-fields";
 
 interface JobFormProps {
   onSubmit: (data: JobCreate) => Promise<void>;
@@ -115,59 +42,9 @@ interface JobFormProps {
 }
 
 export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValues }: JobFormProps) {
-  const getEmptyDefaultValues = useCallback((): JobFormValues => {
-    return {
-      job_id: "",
-      function: "",
-      trigger_type: "cron",
-      cron_expression: "",
-      weeks: 0,
-      days: 0,
-      hours: 0,
-      minutes: 0,
-      seconds: 0,
-      run_date: null,
-      start_date: null,
-      end_date: null,
-      args: "",
-      kwargs: "",
-      replace_existing: true,
-    };
-  }, []);
-
-  const serializeArgs = useCallback((args: unknown): string => {
-    return args ? JSON.stringify(args) : "";
-  }, []);
-
-  const getDefaultValuesFromInitial = useCallback((): JobFormValues => {
-    if (!initialValues) {
-      return getEmptyDefaultValues();
-    }
-
-    const baseValues: JobFormValues = {
-      job_id: initialValues.job_id || "",
-      function: initialValues.function || "",
-      trigger_type: initialValues.trigger_type || "cron",
-      cron_expression: initialValues.cron_expression || "",
-      weeks: initialValues.weeks || 0,
-      days: initialValues.days || 0,
-      hours: initialValues.hours || 0,
-      minutes: initialValues.minutes || 0,
-      seconds: initialValues.seconds || 0,
-      run_date: initialValues.run_date || null,
-      start_date: initialValues.start_date || null,
-      end_date: initialValues.end_date || null,
-      args: serializeArgs(initialValues.args),
-      kwargs: serializeArgs(initialValues.kwargs),
-      replace_existing: initialValues.replace_existing ?? true,
-    };
-
-    return baseValues;
-  }, [initialValues, getEmptyDefaultValues, serializeArgs]);
-
   const getDefaultValues = useCallback((): JobFormValues => {
-    return getDefaultValuesFromInitial();
-  }, [getDefaultValuesFromInitial]);
+    return getDefaultValuesFromInitial(initialValues);
+  }, [initialValues]);
 
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobSchema),
@@ -182,86 +59,11 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
 
   const triggerType = form.watch("trigger_type");
 
-  const parseArgs = (argsString: string | undefined): unknown[] => {
-    if (!argsString) return [];
-    try {
-      return JSON.parse(argsString);
-    } catch {
-      throw new Error(JOB_ERRORS.INVALID_ARGS);
-    }
-  };
-
-  const parseKwargs = (kwargsString: string | undefined): Record<string, unknown> => {
-    if (!kwargsString) return {};
-    try {
-      return JSON.parse(kwargsString);
-    } catch {
-      throw new Error(JOB_ERRORS.INVALID_KWARGS);
-    }
-  };
-
-  const buildCronTriggerData = (values: JobFormValues): Partial<JobCreate> => {
-    if (values.trigger_type !== "cron") return {};
-    return {
-      cron_expression: values.cron_expression || null,
-    };
-  };
-
-  const buildIntervalTriggerData = (values: JobFormValues): Partial<JobCreate> => {
-    if (values.trigger_type !== "interval") return {};
-    return {
-      weeks: values.weeks,
-      days: values.days,
-      hours: values.hours,
-      minutes: values.minutes,
-      seconds: values.seconds,
-    };
-  };
-
-  const buildOnceTriggerData = (values: JobFormValues): Partial<JobCreate> => {
-    if (values.trigger_type !== "once") return {};
-    return {
-      run_date: values.run_date || null,
-    };
-  };
-
-  const buildJobData = (
-    values: JobFormValues,
-    args: unknown[],
-    kwargs: Record<string, unknown>
-  ): JobCreate => {
-    return {
-      job_id: values.job_id,
-      function: values.function,
-      trigger_type: values.trigger_type as JobTriggerType,
-      ...buildCronTriggerData(values),
-      ...buildIntervalTriggerData(values),
-      ...buildOnceTriggerData(values),
-      start_date: values.start_date || null,
-      end_date: values.end_date || null,
-      args: args.length > 0 ? args : undefined,
-      kwargs: Object.keys(kwargs).length > 0 ? kwargs : undefined,
-      replace_existing: values.replace_existing,
-    };
-  };
-
   const handleSubmit = async (values: JobFormValues) => {
     const args = parseArgs(values.args);
     const kwargs = parseKwargs(values.kwargs);
     const jobData = buildJobData(values, args, kwargs);
     await onSubmit(jobData);
-  };
-
-  const formatDateTimeForInput = (dateString: string | null | undefined): string => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return "";
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   return (
@@ -319,156 +121,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
           )}
         />
 
-        {triggerType === "cron" && (
-          <FormField
-            control={form.control}
-            name="cron_expression"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{JOB_LABELS.CRON_EXPRESSION}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={JOB_PLACEHOLDERS.CRON_EXPRESSION}
-                    {...field}
-                    value={field.value || ""}
-                  />
-                </FormControl>
-                <FormDescription>e.g., 0 0 * * * (daily at midnight)</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-        {triggerType === "interval" && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <FormField
-              control={form.control}
-              name="weeks"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{JOB_LABELS.WEEKS}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder={JOB_PLACEHOLDERS.WEEKS}
-                      {...field}
-                      value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="days"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{JOB_LABELS.DAYS}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder={JOB_PLACEHOLDERS.DAYS}
-                      {...field}
-                      value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="hours"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{JOB_LABELS.HOURS}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder={JOB_PLACEHOLDERS.HOURS}
-                      {...field}
-                      value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="minutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{JOB_LABELS.MINUTES}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder={JOB_PLACEHOLDERS.MINUTES}
-                      {...field}
-                      value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="seconds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{JOB_LABELS.SECONDS}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder={JOB_PLACEHOLDERS.SECONDS}
-                      {...field}
-                      value={field.value || 0}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        )}
-
-        {triggerType === "once" && (
-          <FormField
-            control={form.control}
-            name="run_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{JOB_LABELS.RUN_DATE}</FormLabel>
-                <FormControl>
-                  <Input
-                    type="datetime-local"
-                    {...field}
-                    value={field.value ? formatDateTimeForInput(field.value) : ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      field.onChange(value ? new Date(value).toISOString() : null);
-                    }}
-                  />
-                </FormControl>
-                <FormDescription>{JOB_LABELS.LEAVE_EMPTY_FOR_IMMEDIATE}</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <JobTriggerFields form={form} triggerType={triggerType} />
 
         <FormField
           control={form.control}

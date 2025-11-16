@@ -1,17 +1,7 @@
 "use client";
 
-import {
-  CheckCircle2,
-  ChevronsLeft,
-  ChevronsRight,
-  Download,
-  Plus,
-  Search,
-  Users,
-  XCircle,
-} from "lucide-react";
+import { Download, Plus, Search, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -30,18 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -51,310 +31,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  ADMIN_LABELS,
-  ADMIN_NAVIGATION,
-  ADMIN_PAGINATION,
-  ADMIN_SUCCESS,
-  ROLE_DISPLAY_NAMES,
-  USER_ROLES,
-} from "@/lib/constants";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ADMIN_LABELS, ADMIN_NAVIGATION, ADMIN_SUCCESS } from "@/lib/constants";
 import { useAdminListUsers } from "@/lib/hooks/api/use-auth";
 import { useAssignableUserRoles } from "@/lib/hooks/api/use-permissions";
 import { useToast } from "@/lib/hooks/use-toast";
 import { exportUsers } from "@/lib/utils/user-export";
-import { UserActions } from "./user-actions";
 import { UserBulkActions } from "./user-bulk-actions";
 import { UserDetails } from "./user-details";
 import { UserFilters } from "./user-filters";
 import { UserForm } from "./user-form";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role?: string;
-  banned?: boolean;
-  banReason?: string;
-  banExpires?: number;
-  createdAt: number;
-  emailVerified?: boolean;
-}
-
-type FilterStatus = "all" | "active" | "banned";
-
-function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function buildPagesForStart(totalPages: number): (number | "ellipsis")[] {
-  const pages: (number | "ellipsis")[] = [];
-  for (let i = 1; i <= 5; i++) {
-    pages.push(i);
-  }
-  pages.push("ellipsis");
-  pages.push(totalPages);
-  return pages;
-}
-
-function buildPagesForEnd(totalPages: number): (number | "ellipsis")[] {
-  const pages: (number | "ellipsis")[] = [1, "ellipsis"];
-  for (let i = totalPages - 4; i <= totalPages; i++) {
-    pages.push(i);
-  }
-  return pages;
-}
-
-function buildPagesForMiddle(currentPage: number, totalPages: number): (number | "ellipsis")[] {
-  const pages: (number | "ellipsis")[] = [1, "ellipsis"];
-  for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-    pages.push(i);
-  }
-  pages.push("ellipsis");
-  pages.push(totalPages);
-  return pages;
-}
-
-function getPageNumbers(currentPage: number, totalPages: number): (number | "ellipsis")[] {
-  const maxVisible = 7;
-
-  if (totalPages <= maxVisible) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-
-  if (currentPage <= 3) {
-    return buildPagesForStart(totalPages);
-  }
-
-  if (currentPage >= totalPages - 2) {
-    return buildPagesForEnd(totalPages);
-  }
-
-  return buildPagesForMiddle(currentPage, totalPages);
-}
-
-interface UserRowProps {
-  user: User;
-  selectedUserIds: Set<string>;
-  onSelectUser: (userId: string, checked: boolean) => void;
-  onUserClick: (user: User) => void;
-}
-
-function getUserRoleDisplay(role?: string) {
-  return (
-    (role && ROLE_DISPLAY_NAMES[role as keyof typeof ROLE_DISPLAY_NAMES]) || role || USER_ROLES.USER
-  );
-}
-
-function UserRow({ user, selectedUserIds, onSelectUser, onUserClick }: UserRowProps) {
-  return (
-    <TableRow key={user.id} className="cursor-pointer" onClick={() => onUserClick(user)}>
-      <TableCell onClick={(e) => e.stopPropagation()}>
-        <Checkbox
-          checked={selectedUserIds.has(user.id)}
-          onCheckedChange={(checked) => onSelectUser(user.id, checked as boolean)}
-        />
-      </TableCell>
-      <TableCell>
-        <HoverCard>
-          <HoverCardTrigger asChild>
-            <span className="font-medium cursor-pointer hover:underline">{user.name}</span>
-          </HoverCardTrigger>
-          <HoverCardContent className="w-80">
-            <div className="space-y-2">
-              <div>
-                <h4 className="text-sm font-semibold">{user.name}</h4>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                <p>
-                  <span className="font-medium">Role:</span> {getUserRoleDisplay(user.role)}
-                </p>
-                <p>
-                  <span className="font-medium">Status:</span>{" "}
-                  {user.banned ? ADMIN_LABELS.BANNED : ADMIN_LABELS.ACTIVE}
-                </p>
-                <p>
-                  <span className="font-medium">Email Verified:</span>{" "}
-                  {user.emailVerified
-                    ? ADMIN_LABELS.EMAIL_VERIFIED
-                    : ADMIN_LABELS.EMAIL_NOT_VERIFIED}
-                </p>
-              </div>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
-      </TableCell>
-      <TableCell>{user.email}</TableCell>
-      <TableCell>
-        <Badge variant="secondary">{getUserRoleDisplay(user.role)}</Badge>
-      </TableCell>
-      <TableCell>
-        {user.banned ? (
-          <Badge variant="destructive">{ADMIN_LABELS.BANNED}</Badge>
-        ) : (
-          <Badge variant="default">{ADMIN_LABELS.ACTIVE}</Badge>
-        )}
-      </TableCell>
-      <TableCell>{formatDate(user.createdAt)}</TableCell>
-      <TableCell>
-        {user.emailVerified ? (
-          <Badge variant="default" className="gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            {ADMIN_LABELS.EMAIL_VERIFIED}
-          </Badge>
-        ) : (
-          <Badge variant="secondary" className="gap-1">
-            <XCircle className="w-3 h-3" />
-            {ADMIN_LABELS.EMAIL_NOT_VERIFIED}
-          </Badge>
-        )}
-      </TableCell>
-      <TableCell onClick={(e) => e.stopPropagation()}>
-        <UserActions user={user} />
-      </TableCell>
-    </TableRow>
-  );
-}
-
-interface UserPaginationProps {
-  currentPage: number;
-  totalPages: number;
-  totalUsers: number;
-  pageStart: number;
-  pageEnd: number;
-  itemsPerPage: number;
-  onPageChange: (page: number) => void;
-  onItemsPerPageChange: (itemsPerPage: number) => void;
-}
-
-function UserPagination({
-  currentPage,
-  totalPages,
-  totalUsers,
-  pageStart,
-  pageEnd,
-  itemsPerPage,
-  onPageChange,
-  onItemsPerPageChange,
-}: UserPaginationProps) {
-  return (
-    <div className="px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">
-          {ADMIN_PAGINATION.SHOWING} {pageStart + 1} {ADMIN_PAGINATION.TO}{" "}
-          {Math.min(pageEnd, totalUsers)} {ADMIN_PAGINATION.OF} {totalUsers}{" "}
-          {ADMIN_PAGINATION.USERS}
-        </span>
-        <Select
-          value={itemsPerPage.toString()}
-          onValueChange={(value) => {
-            onItemsPerPageChange(Number(value));
-          }}
-        >
-          <SelectTrigger className="w-20 h-8">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="10">10</SelectItem>
-            <SelectItem value="25">25</SelectItem>
-            <SelectItem value="50">50</SelectItem>
-            <SelectItem value="100">100</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationLink
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(1);
-                }}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-              >
-                <ChevronsLeft className="w-4 h-4" />
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(Math.max(1, currentPage - 1));
-                }}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-            {getPageNumbers(currentPage, totalPages).map((page, idx, arr) => {
-              const key =
-                typeof page === "number"
-                  ? `page-${page}`
-                  : `ellipsis-${arr[idx - 1]}-${arr[idx + 1]}`;
-              return (
-                <PaginationItem key={key}>
-                  {page === "ellipsis" ? (
-                    <PaginationEllipsis />
-                  ) : (
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onPageChange(page);
-                      }}
-                      isActive={currentPage === page}
-                    >
-                      {page}
-                    </PaginationLink>
-                  )}
-                </PaginationItem>
-              );
-            })}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(Math.min(totalPages, currentPage + 1));
-                }}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(totalPages);
-                }}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-              >
-                <ChevronsRight className="w-4 h-4" />
-              </PaginationLink>
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
-    </div>
-  );
-}
+import type { FilterStatus, User } from "./user-list-utils";
+import { UserPagination } from "./user-pagination";
+import { UserRow } from "./user-row";
 
 export function UserList() {
   const [users, setUsers] = useState<User[]>([]);
