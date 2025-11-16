@@ -7,9 +7,9 @@ Create Date: 2025-11-13 20:45:12.231782
 """
 
 # Import DB_SCHEMA from config
-import sys
 from collections.abc import Sequence
 from pathlib import Path
+import sys
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql

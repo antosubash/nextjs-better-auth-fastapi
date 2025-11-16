@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from starlette.types import ASGIApp
 
 from core.config import (
@@ -15,7 +16,7 @@ from core.config import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Awaitable, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Middleware to add security headers to all responses."""
 
-    def __init__(self, app: ASGIApp):
+    def __init__(self, app: ASGIApp) -> None:
         """
         Initialize security headers middleware.
 
@@ -32,7 +33,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         """
         super().__init__(app)
 
-    async def dispatch(self, request: Request, call_next: "Callable") -> "Callable":
+    async def dispatch(
+        self, request: Request, call_next: "Callable[[Request], Awaitable[Response]]"
+    ) -> Response:
         """
         Add security headers to response.
 

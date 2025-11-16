@@ -39,8 +39,8 @@ import {
   ORGANIZATION_SUCCESS,
 } from "@/lib/constants";
 import { useDeleteOrganization, useSession } from "@/lib/hooks/api/use-auth";
-import { formatDate } from "@/lib/utils/date";
 import { useOrganization } from "@/lib/hooks/api/use-organizations";
+import { formatDate } from "@/lib/utils/date";
 
 export default function OrganizationDetailPage() {
   const params = useParams();

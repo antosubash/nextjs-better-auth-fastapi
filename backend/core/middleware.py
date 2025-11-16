@@ -1,12 +1,17 @@
 """Middleware for JWT and API key authentication and request tracing."""
 
 import logging
+from typing import TYPE_CHECKING
 import uuid
 
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from starlette.types import ASGIApp
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 from core.auth import verify_api_key, verify_token_string
 from core.config import PUBLIC_ROUTES
@@ -18,7 +23,9 @@ logger = logging.getLogger(__name__)
 class RequestIDMiddleware(BaseHTTPMiddleware):
     """Middleware to add request ID to all requests."""
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(
+        self, request: Request, call_next: "Callable[[Request], Awaitable[Response]]"
+    ) -> Response:
         """Add request ID to request state and logs."""
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
@@ -26,7 +33,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         # Add request ID to logger context
         old_factory = logging.getLogRecordFactory()
 
-        def record_factory(*args, **kwargs):
+        def record_factory(*args: object, **kwargs: object) -> logging.LogRecord:
             record = old_factory(*args, **kwargs)
             record.request_id = request_id
             return record
@@ -46,7 +53,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 class JWTAuthMiddleware(BaseHTTPMiddleware):
     """Middleware to validate JWT tokens and API keys for protected routes."""
 
-    def __init__(self, app: ASGIApp, excluded_paths: set[str] | None = None):
+    def __init__(self, app: ASGIApp, excluded_paths: set[str] | None = None) -> None:
         """
         Initialize JWT and API key auth middleware.
 
@@ -57,7 +64,9 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.excluded_paths = excluded_paths or PUBLIC_ROUTES
 
-    async def dispatch(self, request: Request, call_next):  # noqa: PLR0911, PLR0912, PLR0915
+    async def dispatch(
+        self, request: Request, call_next: "Callable[[Request], Awaitable[Response]]"
+    ) -> Response:
         """
         Validate JWT token or API key for protected routes.
 
@@ -218,7 +227,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Simple in-memory rate limiting middleware."""
 
-    def __init__(self, app: ASGIApp, requests_per_minute: int = 60, enabled: bool = True):
+    def __init__(self, app: ASGIApp, requests_per_minute: int = 60, enabled: bool = True) -> None:
         """
         Initialize rate limit middleware.
 
@@ -232,7 +241,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.enabled = enabled
         self._request_counts: dict[str, list[float]] = {}
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(
+        self, request: Request, call_next: "Callable[[Request], Awaitable[Response]]"
+    ) -> Response:
         """Apply rate limiting to requests."""
         if not self.enabled:
             return await call_next(request)

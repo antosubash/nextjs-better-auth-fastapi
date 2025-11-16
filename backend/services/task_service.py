@@ -1,7 +1,7 @@
 """Task service for CRUD operations."""
 
+from datetime import UTC, datetime
 import logging
-from datetime import datetime
 from uuid import UUID
 
 from fastapi import status
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class TaskService:
     """Service for task CRUD operations."""
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         """
         Initialize task service.
 
@@ -177,7 +177,7 @@ class TaskService:
             if update_data:
                 for field, value in update_data.items():
                     setattr(task, field, value)
-                task.updated_at = datetime.utcnow()
+                task.updated_at = datetime.now(tz=UTC)
 
                 await self.session.commit()
                 await self.session.refresh(task)

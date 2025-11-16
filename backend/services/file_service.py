@@ -1,7 +1,7 @@
 """File operations service."""
 
+from datetime import UTC, datetime
 import logging
-from datetime import datetime
 from pathlib import Path
 
 import aiofiles
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class FileService:
     """Service for file operations."""
 
-    def __init__(self, file_path: str | None = None):
+    def __init__(self, file_path: str | None = None) -> None:
         """
         Initialize file service.
 
@@ -39,7 +39,7 @@ class FileService:
             FileOperationError: If write operation fails
         """
         try:
-            now = datetime.now()
+            now = datetime.now(tz=UTC)
             formatted_date = now.strftime("%B %d, %Y at %I:%M %p")
             line = f"{formatted_date}: {content}\n"
 

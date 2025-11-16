@@ -25,6 +25,7 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "ruff>=0.8.0",
+    "pre-commit>=3.0.0",
 ]
 
 [tool.ruff]
@@ -49,6 +50,18 @@ select = [
     "PL",  # Pylint
     "TRY", # tryceratops
     "RUF", # Ruff-specific rules
+    "ANN", # flake8-annotations (type hints)
+    "ASYNC", # flake8-async (async/await patterns)
+    "DTZ", # flake8-datetimez (datetime timezone issues)
+    "EM",  # flake8-errmsg (error message formatting)
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "N",   # pep8-naming
+    "PIE", # flake8-pie
+    "PT",  # flake8-pytest-style
+    "Q",   # flake8-quotes
+    "RET", # flake8-return
+    "TID", # flake8-tidy-imports
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
@@ -56,6 +69,14 @@ ignore = [
     "PLR0913", # too many arguments
     "PLR2004", # magic value used in comparison
     "TRY301", # abstract raise to inner function (not needed for simple conditional raises)
+    "PLR0912", # too many branches
+    "PLR0915", # too many statements
+    "PLR0911", # too many return statements (acceptable in middleware and complex control flow)
+    "PT011", # pytest.raises without match
+    "Q000", # single quotes found (we use double quotes)
+    "Q001", # single quote multiline found
+    "Q002", # single quote docstring found
+    "Q003", # change outer quotes to avoid escaping inner quotes
 ]
 
 [tool.ruff.format]
@@ -66,10 +87,19 @@ line-ending = "auto"
 
 [tool.ruff.lint.isort]
 known-first-party = ["backend"]
+force-sort-within-sections = true
+split-on-trailing-comma = true
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # unused imports in __init__.py
-"tests/**/*.py" = ["ARG", "PLR2004"]  # allow unused arguments and magic values in tests
+"tests/**/*.py" = ["ARG", "PLR2004", "ANN", "S101"]  # allow unused arguments, magic values, missing annotations, and assert in tests
+"scripts/**/*.py" = ["ANN", "PLR2004"]  # allow missing annotations and magic values in scripts
+"alembic/**/*.py" = ["ANN", "PLR2004"]  # allow missing annotations and magic values in migrations
+# Job-related files need Any types for APScheduler compatibility
+"core/job_operations.py" = ["ANN401"]  # Any types needed for APScheduler job objects
+"services/job_service.py" = ["ANN401"]  # Any types needed for APScheduler job objects
+"services/job_history_service.py" = ["ANN401"]  # Any types needed for APScheduler job objects
+"utils/job_*.py" = ["ANN401"]  # Any types needed for dynamic job execution and APScheduler compatibility
 
 [dependency-groups]
 dev = [

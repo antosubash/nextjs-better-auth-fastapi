@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  getPermissions,
-  getRoles,
   getAssignableUserRoles,
+  getPermissions,
   getRole,
+  getRoles,
   getUserPermissions,
 } from "@/lib/api/permissions";
 import { queryKeys } from "./query-keys";

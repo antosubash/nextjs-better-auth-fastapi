@@ -1,12 +1,12 @@
 """JWT token verification using JWKS from Better Auth."""
 
+from datetime import UTC, datetime, timedelta
 import logging
-from datetime import datetime, timedelta
 from typing import Any
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 import httpx
 import jwt
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from jwt.exceptions import DecodeError, InvalidTokenError
 
 from core.config import (
@@ -32,7 +32,7 @@ def _is_cache_valid() -> bool:
     """Check if JWKS cache is still valid."""
     if _jwks_cache is None or _cache_expires_at is None:
         return False
-    return datetime.utcnow() < _cache_expires_at
+    return datetime.now(tz=UTC) < _cache_expires_at
 
 
 async def get_jwks(
@@ -72,7 +72,7 @@ async def get_jwks(
         # Update cache
         _jwks_cache = jwks_data
         _cached_kids = {key.get("kid") for key in jwks_data.get("keys", []) if key.get("kid")}
-        _cache_expires_at = datetime.utcnow() + timedelta(seconds=JWKS_CACHE_TTL_SECONDS)
+        _cache_expires_at = datetime.now(tz=UTC) + timedelta(seconds=JWKS_CACHE_TTL_SECONDS)
 
         logger.info(f"JWKS cache updated. Expires at {_cache_expires_at}")
     except httpx.HTTPError as e:
@@ -107,8 +107,7 @@ def get_public_key_from_jwks(jwks: dict, kid: str) -> Ed25519PublicKey:
         if key.get("kid") == kid and key.get("kty") == "OKP" and key.get("crv") == "Ed25519":
             # Decode the public key from base64url
             x = base64url_decode(key["x"])
-            public_key = Ed25519PublicKey.from_public_bytes(x)
-            return public_key
+            return Ed25519PublicKey.from_public_bytes(x)
 
     error_msg = ErrorMessages.JWKS_KEY_NOT_FOUND.format(kid=kid)
     raise ValueError(error_msg)
@@ -204,7 +203,7 @@ async def verify_token_string(token: str, http_client: httpx.AsyncClient | None 
         return payload
 
 
-async def verify_api_key(  # noqa: PLR0912, PLR0915
+async def verify_api_key(
     api_key: str,
     required_permissions: dict[str, list[str]] | None = None,
     http_client: httpx.AsyncClient | None = None,

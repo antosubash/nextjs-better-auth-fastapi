@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUserStats, getAdminStats } from "@/lib/api/stats";
+import { getAdminStats, getUserStats } from "@/lib/api/stats";
 import { queryKeys } from "./query-keys";
 
 export function useUserStats() {

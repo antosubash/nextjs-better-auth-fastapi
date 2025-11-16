@@ -1,8 +1,8 @@
 """Job function registry for managing available job functions."""
 
+from collections.abc import Callable
 import importlib
 import logging
-from collections.abc import Callable
 from typing import Any
 
 from fastapi import status

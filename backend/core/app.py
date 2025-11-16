@@ -85,7 +85,7 @@ def create_app() -> FastAPI:
 
     # Store HTTP client in app state
     @app.on_event("startup")
-    async def startup_event():
+    async def startup_event() -> None:
         """Initialize shared HTTP client, database, job scheduler, and storage on startup."""
         http_client = await get_http_client()
         app.state.http_client = http_client
@@ -99,7 +99,7 @@ def create_app() -> FastAPI:
         logger.info("Application startup complete")
 
     @app.on_event("shutdown")
-    async def shutdown_event():
+    async def shutdown_event() -> None:
         """Close shared HTTP client, database connections, and job scheduler on shutdown."""
         await shutdown_scheduler()
         await close_http_client()
@@ -108,7 +108,7 @@ def create_app() -> FastAPI:
 
     # Global exception handlers
     @app.exception_handler(AppException)
-    async def app_exception_handler(request: Request, exc: AppException):
+    async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
         """Handle application-specific exceptions."""
         request_id = getattr(request.state, "request_id", None)
         logger.error(f"Application exception: {exc.detail}", exc_info=True)
@@ -117,7 +117,7 @@ def create_app() -> FastAPI:
         )
 
     @app.exception_handler(Exception)
-    async def general_exception_handler(request: Request, exc: Exception):
+    async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """Handle unexpected exceptions."""
         request_id = getattr(request.state, "request_id", None)
         logger.error(f"Unexpected error: {exc!s}", exc_info=True)

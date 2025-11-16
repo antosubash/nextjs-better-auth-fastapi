@@ -1,7 +1,7 @@
 """Job history database model."""
 
-import enum
 from datetime import UTC, datetime
+import enum
 from typing import Any
 from uuid import UUID, uuid4
 

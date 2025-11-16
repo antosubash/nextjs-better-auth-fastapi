@@ -1,8 +1,8 @@
 """Common utilities for job execution and management."""
 
+from contextlib import redirect_stderr, redirect_stdout
 import io
 import logging
-from contextlib import redirect_stderr, redirect_stdout
 from typing import Any
 
 from core.constants import JobTriggerTypes

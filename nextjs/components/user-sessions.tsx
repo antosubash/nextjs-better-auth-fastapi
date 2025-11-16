@@ -26,10 +26,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { Session } from "@/lib/api/sessions";
 import { PROFILE } from "@/lib/constants";
 import { useSession } from "@/lib/hooks/api/use-auth";
-import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/lib/hooks/api/use-sessions";
-import type { Session } from "@/lib/api/sessions";
+import { useRevokeAllSessions, useRevokeSession, useSessions } from "@/lib/hooks/api/use-sessions";
 
 function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleString("en-US", {

@@ -93,6 +93,8 @@ This is a full-stack authentication system combining:
 
 ### Backend Patterns
 
+**See [backend/CODING_STANDARDS.md](backend/CODING_STANDARDS.md) for comprehensive backend coding standards.**
+
 1. **Configuration**:
    ```python
    # ✅ Good

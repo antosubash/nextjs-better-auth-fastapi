@@ -1,0 +1,39 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+repos:
+  # Ruff for Python linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      # Run ruff linter
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+      # Run ruff formatter
+      - id: ruff-format
+        files: ^backend/
+
+  # Custom hooks for backend validation
+  - repo: local
+    hooks:
+      # Validate coding standards
+      - id: validate-standards
+        name: Validate coding standards
+        entry: bash -c 'cd backend && python scripts/validate_standards.py'
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
+      # Check constants usage (warning only)
+      - id: check-constants
+        name: Check for hardcoded strings
+        entry: bash -c 'cd backend && python scripts/check_constants.py || true'
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+        always_run: true
+        verbose: true
+

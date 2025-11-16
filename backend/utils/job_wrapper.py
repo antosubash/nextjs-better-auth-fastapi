@@ -1,10 +1,10 @@
 """Job wrapper utility to capture logs and errors."""
 
 import asyncio
-import importlib
-import logging
 from collections.abc import Callable
 from functools import partial
+import importlib
+import logging
 from typing import Any
 
 from sqlalchemy import text
@@ -105,7 +105,7 @@ def create_job_wrapper(
     return wrapped_func
 
 
-async def execute_job_with_logging(  # noqa: PLR0912, PLR0915
+async def execute_job_with_logging(
     job_id: str,
     func_ref: str,
     *args: Any,
