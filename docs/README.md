@@ -32,13 +32,14 @@ This is a full-stack authentication system combining:
 - **Frontend**: Next.js 16 with Better Auth for authentication
 - **Backend**: FastAPI with JWT token verification using JWKS (JSON Web Key Set)
 - **Authentication**: JWT tokens signed with Ed25519, verified using public keys from Better Auth JWKS endpoint
-- **Dual Authentication**: Supports both JWT tokens and API keys
+- **Multiple Authentication Methods**: Supports JWT tokens, API keys, and Passkeys (WebAuthn)
 
 ## Key Features
 
 - ✅ User registration and login
 - ✅ JWT-based authentication with Ed25519 signatures
 - ✅ API key authentication support
+- ✅ Passkey (WebAuthn) authentication support
 - ✅ Secure token verification using JWKS (cached with configurable TTL)
 - ✅ JWT/API key validation middleware for automatic authentication
 - ✅ Protected API endpoints (all routes protected by default)
@@ -52,6 +53,10 @@ This is a full-stack authentication system combining:
 - ✅ Database migrations (Drizzle for frontend, Alembic for backend)
 - ✅ Type-safe frontend and backend
 - ✅ Modern UI with Tailwind CSS
+- ✅ Profile picture upload and management
+- ✅ Session management (view and revoke sessions)
+- ✅ Organization and team management
+- ✅ Role-based access control (RBAC)
 
 ## Tech Stack
 

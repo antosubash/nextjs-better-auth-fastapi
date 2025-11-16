@@ -8,13 +8,14 @@ This is a full-stack authentication system combining:
 - **Frontend**: Next.js 16 with Better Auth for authentication
 - **Backend**: FastAPI with JWT token verification using JWKS (JSON Web Key Set)
 - **Authentication**: JWT tokens signed with Ed25519, verified using public keys from Better Auth JWKS endpoint
+- **Multiple Authentication Methods**: Supports JWT tokens, API keys, and Passkeys (WebAuthn)
 
 ## Architecture
 
 ### Frontend (Next.js)
 - **Location**: `nextjs/` directory
 - **Framework**: Next.js 16 with App Router
-- **Auth Library**: Better Auth with JWT plugin
+- **Auth Library**: Better Auth with JWT, API Key, Passkey, Organization, and Admin plugins
 - **Database**: PostgreSQL via Drizzle ORM (shared with backend)
 - **Styling**: Tailwind CSS
 - **Language**: TypeScript
@@ -119,21 +120,25 @@ This is a full-stack authentication system combining:
    - Health checks, docs, and OpenAPI endpoints are public by default
 
 4. **Authentication Methods**:
-   - Supports both JWT tokens (`Authorization: Bearer <token>`) and API keys (`X-API-Key` header)
-   - Both methods can be used simultaneously
+   - Supports JWT tokens (`Authorization: Bearer <token>`), API keys (`X-API-Key` header), and Passkeys (WebAuthn)
+   - JWT tokens and API keys can be used simultaneously
    - At least one valid authentication method required for protected routes
+   - Passkeys are managed via Better Auth and used for user login/registration on the frontend
 
 ## Key Files
 
 ### Frontend
 - `nextjs/lib/auth.ts` - Better Auth configuration
+- `nextjs/lib/auth-client.ts` - Better Auth client for client-side usage
 - `nextjs/lib/constants.ts` - All UI strings and constants
 - `nextjs/lib/utils/logger.ts` - Logging utility for client and server
 - `nextjs/lib/utils/sanitization.ts` - Input sanitization utilities
+- `nextjs/lib/hooks/api/` - React Query hooks for API calls (auth, organizations, passkeys, etc.)
 - `nextjs/auth-schema.ts` - Database schema definitions
 - `nextjs/lib/database.ts` - Database connection
 - `nextjs/app/api/auth/` - Better Auth API routes
 - `nextjs/app/api/proxy/` - Proxy routes to backend
+- `nextjs/components/profile/` - Profile management components (passkeys, sessions, etc.)
 
 ### Backend
 - `backend/main.py` - FastAPI application entry point
@@ -223,7 +228,9 @@ See `env.example` in the project root for a complete list of all environment var
 
 ## Authentication Flow
 
-1. User registers/logs in via Next.js frontend
+1. User registers/logs in via Next.js frontend using:
+   - Email/password authentication
+   - Passkey (WebAuthn) authentication
 2. Better Auth issues JWT token (Ed25519 signed)
 3. Token stored in cookies
 4. Frontend sends requests with either:
@@ -241,6 +248,15 @@ See `env.example` in the project root for a complete list of all environment var
      - Stores API key data in `request.state.api_key_data`
 6. Unified user ID extracted and stored in `request.state.user_id`
 7. Request proceeds if at least one authentication method is valid
+
+### Passkey Authentication
+
+Passkeys (WebAuthn) provide passwordless authentication:
+- Users can register passkeys (biometric, security keys, etc.)
+- Passkeys are managed via Better Auth passkey plugin
+- Frontend uses `authClient.signIn.passkey()` and `authClient.signUp.passkey()` methods
+- Passkey data stored in `passkey` table (credential ID, public key, counter, device type, etc.)
+- Passkey management UI available in profile settings
 
 ## Common Tasks
 
@@ -383,8 +399,9 @@ const user = await db.select().from(users).where(eq(users.id, userId));
 
 ### Frontend
 - Next.js 16
-- Better Auth
+- Better Auth (with JWT, API Key, Passkey, Organization, Admin plugins)
 - Drizzle ORM
+- React Query (TanStack Query) for data fetching
 - Tailwind CSS
 - TypeScript
 
@@ -433,10 +450,15 @@ nextjs-better-auth-fastapi/
 │   │   │   └── proxy/      # Proxy routes to backend
 │   │   └── page.tsx        # Pages
 │   ├── components/         # React components
+│   │   └── profile/        # Profile management components
 │   ├── lib/                # Utilities and configuration
 │   │   ├── auth.ts         # Better Auth configuration
+│   │   ├── auth-client.ts  # Better Auth client
 │   │   ├── constants.ts    # All constants (IMPORTANT)
-│   │   └── database.ts     # Database connection
+│   │   ├── database.ts     # Database connection
+│   │   ├── hooks/          # React hooks
+│   │   │   └── api/        # API hooks (React Query)
+│   │   └── utils/          # Utility functions
 │   ├── drizzle/            # Database migrations
 │   ├── auth-schema.ts      # Database schema definitions
 │   └── package.json        # Node.js dependencies
