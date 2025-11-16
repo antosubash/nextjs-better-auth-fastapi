@@ -54,3 +54,11 @@ export {
   useSignOut,
   useSignUp,
 } from "./use-auth-session";
+// Re-export passkey hooks
+export {
+  useAddPasskey,
+  useDeletePasskey,
+  usePasskeys,
+  useSignInWithPasskey,
+  useUpdatePasskey,
+} from "./use-passkeys";

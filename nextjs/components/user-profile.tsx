@@ -11,6 +11,7 @@ import { AUTH_LABELS, PROFILE } from "@/lib/constants";
 import { useSession, useSignOut } from "@/lib/hooks/api/use-auth";
 import { ChangePasswordForm } from "./profile/change-password-form";
 import { EmailVerificationSection } from "./profile/email-verification-section";
+import { PasskeyManagement } from "./profile/passkey-management";
 import { ProfileEditForm } from "./profile/profile-edit-form";
 import { UserSessions } from "./user-sessions";
 
@@ -107,6 +108,7 @@ export function UserProfile() {
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">
+          <PasskeyManagement />
           <Card>
             <CardHeader>
               <CardTitle>Change Password</CardTitle>
