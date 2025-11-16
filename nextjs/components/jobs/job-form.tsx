@@ -463,7 +463,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                     }}
                   />
                 </FormControl>
-                <FormDescription>Leave empty for immediate execution</FormDescription>
+                <FormDescription>{JOB_LABELS.LEAVE_EMPTY_FOR_IMMEDIATE}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -487,7 +487,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                   }}
                 />
               </FormControl>
-              <FormDescription>Optional: When to start the job</FormDescription>
+              <FormDescription>{JOB_LABELS.OPTIONAL_START_DATE}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -510,7 +510,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
                   }}
                 />
               </FormControl>
-              <FormDescription>Optional: When to end the job</FormDescription>
+              <FormDescription>{JOB_LABELS.OPTIONAL_END_DATE}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -525,7 +525,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
               <FormControl>
                 <Input placeholder={JOB_PLACEHOLDERS.ARGS} {...field} value={field.value || ""} />
               </FormControl>
-              <FormDescription>JSON array format</FormDescription>
+              <FormDescription>{JOB_LABELS.JSON_ARRAY_FORMAT}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -540,7 +540,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
               <FormControl>
                 <Input placeholder={JOB_PLACEHOLDERS.KWARGS} {...field} value={field.value || ""} />
               </FormControl>
-              <FormDescription>JSON object format</FormDescription>
+              <FormDescription>{JOB_LABELS.JSON_OBJECT_FORMAT}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -553,7 +553,7 @@ export function JobForm({ onSubmit, onCancel, isSubmitting = false, initialValue
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FormLabel className="text-base">{JOB_LABELS.REPLACE_EXISTING}</FormLabel>
-                <FormDescription>Replace existing job with the same ID</FormDescription>
+                <FormDescription>{JOB_LABELS.REPLACE_EXISTING_DESCRIPTION}</FormDescription>
               </div>
               <FormControl>
                 <Switch checked={field.value} onCheckedChange={field.onChange} />

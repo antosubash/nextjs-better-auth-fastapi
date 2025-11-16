@@ -256,6 +256,7 @@ export const ADMIN_LABELS = {
   EXPORT_JSON: "JSON",
   SAVING: "Saving...",
   BACK_TO_USERS: "Back to Users",
+  MANAGE_USER_ACCOUNT_DESCRIPTION: "Manage user account and settings",
 } as const;
 
 export const ADMIN_PLACEHOLDERS = {
@@ -413,6 +414,10 @@ export const USER_LAYOUT = {
   LOGIN_REQUIRED: "Please log in to continue",
   APP_NAME: "Better Auth",
   USER_PANEL: "User Panel",
+} as const;
+
+export const SIDEBAR = {
+  MOBILE_SIDEBAR_DESCRIPTION: "Displays the mobile sidebar.",
 } as const;
 
 export const LOGIN_PAGE = {
@@ -1183,6 +1188,15 @@ export const JOB_LABELS = {
   BACK_TO_JOBS: "Back to Jobs",
   RECORD: "record",
   RECORDS: "records",
+  JOB_DETAILS_DESCRIPTION: "Job details, status, and execution history",
+  ADDITIONAL_INFORMATION: "Additional Information",
+  CREATE_JOB_DESCRIPTION: "Create a new background job",
+  LEAVE_EMPTY_FOR_IMMEDIATE: "Leave empty for immediate execution",
+  OPTIONAL_START_DATE: "Optional: When to start the job",
+  OPTIONAL_END_DATE: "Optional: When to end the job",
+  JSON_ARRAY_FORMAT: "JSON array format",
+  JSON_OBJECT_FORMAT: "JSON object format",
+  REPLACE_EXISTING_DESCRIPTION: "Replace existing job with the same ID",
 } as const;
 
 export const JOB_PLACEHOLDERS = {

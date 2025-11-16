@@ -32,7 +32,7 @@ const changePasswordSchema = z
       .string()
       .min(AUTH_ERRORS.PASSWORD_MIN_LENGTH, AUTH_ERRORS.PASSWORD_MIN_LENGTH_ERROR),
     confirmPassword: z.string().min(1, CHANGE_PASSWORD_ERRORS.CONFIRM_PASSWORD_REQUIRED),
-    revokeOtherSessions: z.boolean().default(false),
+    revokeOtherSessions: z.boolean(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: CHANGE_PASSWORD_ERRORS.PASSWORDS_DO_NOT_MATCH,

@@ -116,7 +116,7 @@ export function JobDialog({ open, onOpenChange, onSubmit, isSubmitting = false }
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{JOB_LABELS.CREATE_JOB}</DialogTitle>
-          <DialogDescription>Create a new background job</DialogDescription>
+          <DialogDescription>{JOB_LABELS.CREATE_JOB_DESCRIPTION}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

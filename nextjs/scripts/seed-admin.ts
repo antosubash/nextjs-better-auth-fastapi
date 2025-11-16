@@ -109,7 +109,7 @@ config({ path: resolve(process.cwd(), "../.env") });
         const existingUsersResult = await betterAuthService.admin.listUsers({
           searchValue: userData.email,
           searchField: "email",
-          searchOperator: "eq",
+          searchOperator: "contains",
           limit: 1,
         });
 

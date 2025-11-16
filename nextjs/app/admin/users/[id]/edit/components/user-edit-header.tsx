@@ -32,7 +32,9 @@ export function UserEditHeader({
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{ADMIN_LABELS.EDIT_USER}</h1>
-            <p className="text-sm text-muted-foreground">Manage user account and settings</p>
+            <p className="text-sm text-muted-foreground">
+              {ADMIN_LABELS.MANAGE_USER_ACCOUNT_DESCRIPTION}
+            </p>
           </div>
         </div>
       </div>

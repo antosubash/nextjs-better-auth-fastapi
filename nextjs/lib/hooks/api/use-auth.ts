@@ -30,9 +30,7 @@ export function useSession(options?: { disableCookieCache?: boolean }) {
     queryKey: [...queryKeys.auth.session(), options?.disableCookieCache],
     queryFn: async () => {
       const result = await authClient.getSession(
-        options?.disableCookieCache
-          ? { query: { disableCookieCache: true } }
-          : undefined
+        options?.disableCookieCache ? { query: { disableCookieCache: true } } : undefined
       );
       return result.data;
     },

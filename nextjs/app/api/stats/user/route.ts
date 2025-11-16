@@ -56,35 +56,33 @@ export async function GET(_request: NextRequest) {
       sessionsCount = activeSessions.length;
 
       // Get recent sessions (last 5)
-      recentSessions = sessions
-        .slice(0, 5)
-        .map((s: unknown) => {
-          const session = s as {
-            id?: string;
-            token?: string;
-            createdAt?: Date | number;
-            expiresAt?: Date | number;
-            ipAddress?: string | null;
-            userAgent?: string | null;
-          };
+      recentSessions = sessions.slice(0, 5).map((s: unknown) => {
+        const session = s as {
+          id?: string;
+          token?: string;
+          createdAt?: Date | number;
+          expiresAt?: Date | number;
+          ipAddress?: string | null;
+          userAgent?: string | null;
+        };
 
-          const createdAt =
-            session.createdAt instanceof Date
-              ? session.createdAt.getTime()
-              : (session.createdAt as number) || null;
-          const expiresAt =
-            session.expiresAt instanceof Date
-              ? session.expiresAt.getTime()
-              : (session.expiresAt as number) || 0;
+        const createdAt =
+          session.createdAt instanceof Date
+            ? session.createdAt.getTime()
+            : (session.createdAt as number) || null;
+        const expiresAt =
+          session.expiresAt instanceof Date
+            ? session.expiresAt.getTime()
+            : (session.expiresAt as number) || 0;
 
-          return {
-            id: session.id || session.token || "",
-            createdAt,
-            expiresAt,
-            ipAddress: session.ipAddress || null,
-            userAgent: session.userAgent || null,
-          };
-        });
+        return {
+          id: session.id || session.token || "",
+          createdAt,
+          expiresAt,
+          ipAddress: session.ipAddress || null,
+          userAgent: session.userAgent || null,
+        };
+      });
     } catch (err) {
       console.error("Error fetching sessions:", err);
       // Continue with 0 sessions if query fails

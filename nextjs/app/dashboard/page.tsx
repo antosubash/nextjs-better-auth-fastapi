@@ -176,7 +176,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base font-medium">{DASHBOARD.EMAIL_VERIFIED}</CardTitle>
-                <CardDescription className="text-xs mt-1">{DASHBOARD.ACCOUNT_SECURITY}</CardDescription>
+                <CardDescription className="text-xs mt-1">
+                  {DASHBOARD.ACCOUNT_SECURITY}
+                </CardDescription>
               </div>
               <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/30">
                 {stats.emailVerified ? (

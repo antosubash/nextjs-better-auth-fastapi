@@ -28,7 +28,7 @@ export function JobDetailsDialog({ job, open, onOpenChange }: JobDetailsDialogPr
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{job.id}</DialogTitle>
-          <DialogDescription>Job details, status, and execution history</DialogDescription>
+          <DialogDescription>{JOB_LABELS.JOB_DETAILS_DESCRIPTION}</DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="details" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -71,7 +71,7 @@ export function JobDetailsDialog({ job, open, onOpenChange }: JobDetailsDialogPr
             )}
 
             <div className="pt-4 border-t">
-              <h3 className="font-semibold mb-2">Additional Information</h3>
+              <h3 className="font-semibold mb-2">{JOB_LABELS.ADDITIONAL_INFORMATION}</h3>
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="font-medium">ID:</span>{" "}
