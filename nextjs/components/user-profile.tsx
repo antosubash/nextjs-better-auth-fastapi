@@ -119,8 +119,6 @@ export function UserProfile() {
               />
             </CardContent>
           </Card>
-
-          <UserSessions />
         </TabsContent>
 
         <TabsContent value="sessions" className="space-y-6">

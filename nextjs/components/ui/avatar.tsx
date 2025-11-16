@@ -19,8 +19,13 @@ function AvatarImage({ className, ...props }: React.ComponentProps<typeof Avatar
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
-      className={cn("aspect-square size-full", className)}
+      className={cn("aspect-square size-full object-cover", className)}
       {...props}
+      onError={(e) => {
+        // Hide the image on error so fallback shows
+        const target = e.target as HTMLImageElement;
+        target.style.display = "none";
+      }}
     />
   );
 }

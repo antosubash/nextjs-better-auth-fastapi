@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ORGANIZATION_CONTEXT, ORGANIZATION_ERRORS } from "@/lib/constants";
 import { useOrganizations, useSession, useSetActiveOrganization } from "@/lib/hooks/api/use-auth";
 import { createLogger } from "@/lib/utils/logger";
@@ -45,41 +45,98 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   const [activeOrganization, setActiveOrganization] = useState<Organization | null>(null);
   const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoSelectAttemptedRef = useRef<string | null>(null);
+  const prevSessionActiveOrgIdRef = useRef<string | null>(null);
+  const prevOrgIdsRef = useRef<string>("");
 
-  const organizations = organizationsData || [];
+  // Memoize organizations to prevent unnecessary re-renders
+  const organizations = useMemo(() => organizationsData || [], [organizationsData]);
   const isLoading = isLoadingOrgs;
+
+  // Create a stable string representation of organization IDs for comparison
+  const orgIdsString = useMemo(
+    () => organizations.map((o) => o.id).sort().join(","),
+    [organizations]
+  );
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  // Set active organization from session
-  useEffect(() => {
-    if (organizations.length === 0) {
-      setActiveOrganization(null);
-      return;
-    }
+  // Helper function to find active org from session
+  const findActiveOrgFromSession = useCallback(
+    (orgs: Organization[], sessionActiveOrgId: string | null): Organization | null => {
+      if (!sessionActiveOrgId) {
+        return null;
+      }
+      return orgs.find((o) => o.id === sessionActiveOrgId) || null;
+    },
+    []
+  );
 
-    const sessionActiveOrgId = session?.session?.activeOrganizationId || null;
-    let activeOrg: Organization | null = null;
+  // Helper function to handle auto-selection of first organization
+  const handleAutoSelectFirstOrg = useCallback(
+    (orgs: Organization[]) => {
+      if (orgs.length === 0) {
+        return;
+      }
 
-    if (sessionActiveOrgId) {
-      activeOrg = organizations.find((o) => o.id === sessionActiveOrgId) || null;
-    }
+      const firstOrg = orgs[0];
+      const firstOrgId = firstOrg.id;
 
-    if (!activeOrg && organizations.length > 0) {
-      activeOrg = organizations[0];
-      // Auto-select first organization if none is active
-      setActiveOrgMutation.mutate(activeOrg.id, {
+      // Prevent infinite loop: only attempt if we haven't tried this org yet
+      const canAttempt = autoSelectAttemptedRef.current !== firstOrgId && !setActiveOrgMutation.isPending;
+      if (!canAttempt) {
+        return;
+      }
+
+      autoSelectAttemptedRef.current = firstOrgId;
+      setActiveOrgMutation.mutate(firstOrgId, {
         onError: (err) => {
           logger.error(ORGANIZATION_CONTEXT.AUTO_SELECT_FAILED, err);
           setError(err.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+          // Reset ref on error so we can retry if needed
+          autoSelectAttemptedRef.current = null;
         },
       });
+    },
+    [setActiveOrgMutation]
+  );
+
+  // Set active organization from session
+  useEffect(() => {
+    const sessionActiveOrgId = session?.session?.activeOrganizationId || null;
+    const hasOrgsChanged = prevOrgIdsRef.current !== orgIdsString;
+    const hasSessionActiveOrgChanged = prevSessionActiveOrgIdRef.current !== sessionActiveOrgId;
+
+    // Only run if organizations or session active org ID actually changed
+    if (!hasOrgsChanged && !hasSessionActiveOrgChanged) {
+      return;
     }
 
-    setActiveOrganization(activeOrg);
-  }, [organizations, session, setActiveOrgMutation]);
+    // Update refs
+    prevOrgIdsRef.current = orgIdsString;
+    prevSessionActiveOrgIdRef.current = sessionActiveOrgId;
+
+    if (organizations.length === 0) {
+      setActiveOrganization(null);
+      autoSelectAttemptedRef.current = null;
+      return;
+    }
+
+    const activeOrgFromSession = findActiveOrgFromSession(organizations, sessionActiveOrgId);
+
+    // Reset the ref when we have a valid active org from session
+    if (activeOrgFromSession) {
+      autoSelectAttemptedRef.current = null;
+      setActiveOrganization(activeOrgFromSession);
+      return;
+    }
+
+    // Auto-select first organization if none is active
+    handleAutoSelectFirstOrg(organizations);
+    setActiveOrganization(organizations[0] || null);
+  }, [orgIdsString, session?.session?.activeOrganizationId, findActiveOrgFromSession, handleAutoSelectFirstOrg, organizations]);
 
   // Handle organizations error
   useEffect(() => {
