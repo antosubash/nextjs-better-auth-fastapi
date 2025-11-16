@@ -7,6 +7,7 @@ import {
   Key,
   LayoutDashboard,
   Stethoscope,
+  User,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -14,7 +15,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ADMIN_NAVIGATION } from "@/lib/constants";
+import { ADMIN_NAVIGATION, AUTH_LABELS } from "@/lib/constants";
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -60,6 +61,11 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       label: ADMIN_NAVIGATION.DOCTOR,
       icon: Stethoscope,
     },
+    {
+      href: "/profile",
+      label: AUTH_LABELS.PROFILE,
+      icon: User,
+    },
   ];
 
   const handleLinkClick = () => {
@@ -86,6 +92,9 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     }
     if (href === "/admin/users") {
       return pathname === "/admin/users";
+    }
+    if (href === "/profile") {
+      return pathname === "/profile";
     }
     return pathname === href;
   };

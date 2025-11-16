@@ -84,6 +84,9 @@ export function MainNavbar() {
         <Button asChild variant={pathname === "/dashboard" ? "default" : "ghost"}>
           <Link href="/dashboard">{DASHBOARD.TITLE}</Link>
         </Button>
+        <Button asChild variant={pathname === "/profile" ? "default" : "ghost"}>
+          <Link href="/profile">{AUTH_LABELS.PROFILE}</Link>
+        </Button>
         {user && (
           <div className="flex items-center gap-3">
             <OrganizationSwitcher />
@@ -91,14 +94,23 @@ export function MainNavbar() {
             <HoverCard>
               <HoverCardTrigger asChild>{renderUserProfile()}</HoverCardTrigger>
               <HoverCardContent className="w-80">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-12 h-12">
-                    {user.image ? <AvatarImage src={user.image} alt={user.name || "User"} /> : null}
-                    <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-semibold">{user.name || "User"}</h4>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12">
+                      {user.image ? (
+                        <AvatarImage src={user.image} alt={user.name || "User"} />
+                      ) : null}
+                      <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
+                    </Avatar>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold">{user.name || "User"}</h4>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <Button asChild variant="ghost" className="w-full justify-start">
+                      <Link href="/profile">{AUTH_LABELS.PROFILE}</Link>
+                    </Button>
                   </div>
                 </div>
               </HoverCardContent>
@@ -156,6 +168,14 @@ export function MainNavbar() {
             <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
         </div>
+        <Button
+          asChild
+          variant={pathname === "/profile" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <Link href="/profile">{AUTH_LABELS.PROFILE}</Link>
+        </Button>
         <Button
           onClick={() => {
             handleLogout();

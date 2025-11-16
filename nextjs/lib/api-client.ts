@@ -39,11 +39,6 @@ export async function callFastApi<T>(endpoint: string, options: RequestInit = {}
     return undefined as T;
   }
 
-  // Try to parse JSON
-  try {
-    return JSON.parse(text) as T;
-  } catch (error) {
-    // Re-throw the parsing error (we already handled empty responses above)
-    throw error;
-  }
+  // Parse JSON
+  return JSON.parse(text) as T;
 }

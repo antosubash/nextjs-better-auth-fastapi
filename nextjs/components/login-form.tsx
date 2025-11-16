@@ -111,6 +111,12 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           )}
         </Button>
 
+        <div className="text-center">
+          <Button type="button" variant="link" asChild className="p-0 h-auto text-sm">
+            <a href="/forgot-password">{AUTH_LABELS.FORGOT_PASSWORD}</a>
+          </Button>
+        </div>
+
         <p className="text-sm text-center text-muted-foreground">
           {AUTH_LABELS.DONT_HAVE_ACCOUNT}{" "}
           <Button type="button" variant="link" onClick={onSwitchToSignup} className="p-0 h-auto">

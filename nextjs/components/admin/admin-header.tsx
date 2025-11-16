@@ -1,7 +1,8 @@
 "use client";
 
-import { Loader2, LogOut, Menu } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Loader2, LogOut, Menu, User } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 import { Button } from "@/components/ui/button";
 import { ADMIN_NAVIGATION, AUTH_LABELS } from "@/lib/constants";
@@ -13,6 +14,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const signOutMutation = useSignOut();
 
   const handleLogout = async () => {
@@ -40,6 +42,12 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
         <div className="flex-1 lg:ml-0" />
         <div className="flex items-center gap-3">
           <OrganizationSwitcher />
+          <Button asChild variant={pathname === "/profile" ? "default" : "ghost"} size="sm">
+            <Link href="/profile">
+              <User className="w-4 h-4 mr-2" />
+              <span className="hidden lg:inline">{AUTH_LABELS.PROFILE}</span>
+            </Link>
+          </Button>
           <Button
             onClick={handleLogout}
             disabled={signOutMutation.isPending}

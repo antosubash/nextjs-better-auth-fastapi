@@ -9,6 +9,8 @@ export const AUTH_LABELS = {
   DONT_HAVE_ACCOUNT: "Don't have an account?",
   WELCOME: "Welcome",
   LOGGED_IN_AS: "Logged in as",
+  FORGOT_PASSWORD: "Forgot password?",
+  PROFILE: "Profile",
 } as const;
 
 export const PROFILE = {
@@ -32,6 +34,11 @@ export const PROFILE = {
   NO_SESSIONS: "No sessions found",
   CURRENT_SESSION: "Current Session",
   EXPIRED: "Expired",
+  SECURITY: "Security",
+  EDIT_PROFILE: "Edit Profile",
+  SAVE_CHANGES: "Save Changes",
+  CANCEL: "Cancel",
+  SAVING: "Saving...",
 } as const;
 
 export const PROFILE_PICTURE = {
@@ -58,6 +65,9 @@ export const AUTH_PLACEHOLDERS = {
   EMAIL: "Enter your email",
   PASSWORD: "Enter your password",
   NAME: "Enter your name",
+  CURRENT_PASSWORD: "Enter your current password",
+  NEW_PASSWORD: "Enter your new password",
+  CONFIRM_NEW_PASSWORD: "Confirm your new password",
 } as const;
 
 export const AUTH_ERRORS = {
@@ -71,6 +81,8 @@ export const AUTH_ERRORS = {
   PASSWORD_MIN_LENGTH_ERROR: "Password must be at least 8 characters",
   PASSWORDS_DO_NOT_MATCH: "Passwords do not match",
   CONFIRM_PASSWORD_REQUIRED: "Please confirm password",
+  CURRENT_PASSWORD_REQUIRED: "Current password is required",
+  CURRENT_PASSWORD_INVALID: "Current password is incorrect",
 } as const;
 
 export const STORAGE_KEYS = {
@@ -1200,4 +1212,140 @@ export const PAGE_LOADING = {
   ADMIN_ORGANIZATION_INVITATION: "Loading invitation...",
   ADMIN_API_KEYS: "Loading API keys...",
   DASHBOARD_TASKS: "Loading tasks...",
+  PROFILE: "Loading profile...",
+  FORGOT_PASSWORD: "Loading...",
+  RESET_PASSWORD: "Loading...",
+} as const;
+
+export const FORGOT_PASSWORD = {
+  TITLE: "Forgot Password",
+  DESCRIPTION: "Enter your email address and we'll send you a link to reset your password.",
+  EMAIL_LABEL: "Email address",
+  SUBMIT_BUTTON: "Send Reset Link",
+  SENDING: "Sending...",
+  BACK_TO_LOGIN: "Back to login",
+  SUCCESS_TITLE: "Check your email",
+  SUCCESS_MESSAGE: "If an account exists with that email, we've sent you a password reset link.",
+} as const;
+
+export const FORGOT_PASSWORD_PLACEHOLDERS = {
+  EMAIL: "Enter your email address",
+} as const;
+
+export const FORGOT_PASSWORD_ERRORS = {
+  EMAIL_REQUIRED: "Email is required",
+  INVALID_EMAIL: "Please enter a valid email address",
+  REQUEST_FAILED: "Failed to send password reset email. Please try again.",
+} as const;
+
+export const FORGOT_PASSWORD_SUCCESS = {
+  EMAIL_SENT: "Password reset email sent successfully",
+} as const;
+
+export const RESET_PASSWORD = {
+  TITLE: "Reset Password",
+  DESCRIPTION: "Enter your new password below.",
+  NEW_PASSWORD_LABEL: "New password",
+  CONFIRM_PASSWORD_LABEL: "Confirm new password",
+  SUBMIT_BUTTON: "Reset Password",
+  RESETTING: "Resetting...",
+  SUCCESS_TITLE: "Password reset successful",
+  SUCCESS_MESSAGE:
+    "Your password has been reset successfully. You can now log in with your new password.",
+  BACK_TO_LOGIN: "Back to login",
+} as const;
+
+export const RESET_PASSWORD_PLACEHOLDERS = {
+  NEW_PASSWORD: "Enter your new password",
+  CONFIRM_PASSWORD: "Confirm your new password",
+} as const;
+
+export const RESET_PASSWORD_ERRORS = {
+  TOKEN_REQUIRED: "Reset token is required",
+  TOKEN_INVALID: "Invalid or expired reset token",
+  NEW_PASSWORD_REQUIRED: "New password is required",
+  CONFIRM_PASSWORD_REQUIRED: "Please confirm your new password",
+  PASSWORDS_DO_NOT_MATCH: "Passwords do not match",
+  RESET_FAILED: "Failed to reset password. Please try again.",
+} as const;
+
+export const RESET_PASSWORD_SUCCESS = {
+  PASSWORD_RESET: "Password reset successfully",
+} as const;
+
+export const CHANGE_PASSWORD = {
+  TITLE: "Change Password",
+  DESCRIPTION: "Update your password to keep your account secure.",
+  CURRENT_PASSWORD_LABEL: "Current password",
+  NEW_PASSWORD_LABEL: "New password",
+  CONFIRM_PASSWORD_LABEL: "Confirm new password",
+  REVOKE_OTHER_SESSIONS: "Revoke all other sessions",
+  REVOKE_OTHER_SESSIONS_DESCRIPTION: "Sign out of all other devices after changing your password",
+  SUBMIT_BUTTON: "Change Password",
+  CHANGING: "Changing...",
+} as const;
+
+export const CHANGE_PASSWORD_PLACEHOLDERS = {
+  CURRENT_PASSWORD: "Enter your current password",
+  NEW_PASSWORD: "Enter your new password",
+  CONFIRM_PASSWORD: "Confirm your new password",
+} as const;
+
+export const CHANGE_PASSWORD_ERRORS = {
+  CURRENT_PASSWORD_REQUIRED: "Current password is required",
+  NEW_PASSWORD_REQUIRED: "New password is required",
+  CONFIRM_PASSWORD_REQUIRED: "Please confirm your new password",
+  PASSWORDS_DO_NOT_MATCH: "Passwords do not match",
+  CURRENT_PASSWORD_INVALID: "Current password is incorrect",
+  CHANGE_FAILED: "Failed to change password. Please try again.",
+} as const;
+
+export const CHANGE_PASSWORD_SUCCESS = {
+  PASSWORD_CHANGED: "Password changed successfully",
+} as const;
+
+export const PROFILE_UPDATE = {
+  TITLE: "Update Profile",
+  NAME_LABEL: "Full name",
+  EMAIL_LABEL: "Email address",
+  UPDATE_BUTTON: "Update Profile",
+  UPDATING: "Updating...",
+} as const;
+
+export const PROFILE_UPDATE_PLACEHOLDERS = {
+  NAME: "Enter your full name",
+  EMAIL: "Enter your email address",
+} as const;
+
+export const PROFILE_UPDATE_ERRORS = {
+  NAME_REQUIRED: "Name is required",
+  EMAIL_REQUIRED: "Email is required",
+  INVALID_EMAIL: "Please enter a valid email address",
+  UPDATE_FAILED: "Failed to update profile. Please try again.",
+  EMAIL_ALREADY_IN_USE: "This email is already in use",
+} as const;
+
+export const PROFILE_UPDATE_SUCCESS = {
+  PROFILE_UPDATED: "Profile updated successfully",
+} as const;
+
+export const EMAIL_VERIFICATION = {
+  TITLE: "Email Verification",
+  VERIFIED: "Email verified",
+  NOT_VERIFIED: "Email not verified",
+  VERIFIED_DESCRIPTION: "Your email address has been verified.",
+  NOT_VERIFIED_DESCRIPTION: "Please verify your email address to access all features.",
+  RESEND_BUTTON: "Resend verification email",
+  RESENDING: "Sending...",
+  CHECK_EMAIL: "Check your email",
+  VERIFICATION_SENT: "Verification email sent. Please check your inbox.",
+} as const;
+
+export const EMAIL_VERIFICATION_ERRORS = {
+  RESEND_FAILED: "Failed to send verification email. Please try again.",
+  EMAIL_REQUIRED: "Email is required",
+} as const;
+
+export const EMAIL_VERIFICATION_SUCCESS = {
+  EMAIL_SENT: "Verification email sent successfully",
 } as const;

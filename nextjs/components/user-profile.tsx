@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, LogOut, Mail, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AUTH_LABELS, PROFILE } from "@/lib/constants";
 import { useSession, useSignOut } from "@/lib/hooks/api/use-auth";
-import { ApiData } from "./api-data";
+import { ChangePasswordForm } from "./profile/change-password-form";
+import { EmailVerificationSection } from "./profile/email-verification-section";
+import { ProfileEditForm } from "./profile/profile-edit-form";
 import { UserSessions } from "./user-sessions";
 
 export function UserProfile() {
@@ -73,48 +75,28 @@ export function UserProfile() {
       <Tabs defaultValue="account" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="account">{PROFILE.ACCOUNT_INFO}</TabsTrigger>
-          <TabsTrigger value="api">API Data</TabsTrigger>
+          <TabsTrigger value="security">{PROFILE.SECURITY}</TabsTrigger>
           <TabsTrigger value="sessions">{PROFILE.SESSIONS}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="account" className="space-y-6">
+          <EmailVerificationSection email={user.email} isVerified={user.emailVerified || false} />
+
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <CardTitle>{PROFILE.ACCOUNT_INFO}</CardTitle>
-                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <CardTitle>{PROFILE.EDIT_PROFILE}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {/* Email Field */}
-                <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border">
-                  <div className="p-2 rounded-lg bg-muted">
-                    <Mail className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-muted-foreground mb-1 block">
-                      {PROFILE.EMAIL_LABEL}
-                    </span>
-                    <p className="text-base font-medium">{user.email}</p>
-                  </div>
-                </div>
-
-                {/* Name Field */}
-                {user.name && (
-                  <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <User className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-muted-foreground mb-1 block">
-                        {PROFILE.NAME_LABEL}
-                      </span>
-                      <p className="text-base font-medium">{user.name}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ProfileEditForm
+                initialName={user.name || ""}
+                initialEmail={user.email}
+                initialImage={user.image}
+                onSuccess={() => {
+                  // Session will be invalidated by the mutation hook
+                }}
+              />
             </CardContent>
           </Card>
 
@@ -124,8 +106,21 @@ export function UserProfile() {
           </Button>
         </TabsContent>
 
-        <TabsContent value="api" className="space-y-6">
-          <ApiData />
+        <TabsContent value="security" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Change Password</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChangePasswordForm
+                onSuccess={() => {
+                  // Success is handled by the mutation hook
+                }}
+              />
+            </CardContent>
+          </Card>
+
+          <UserSessions />
         </TabsContent>
 
         <TabsContent value="sessions" className="space-y-6">
