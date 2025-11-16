@@ -2,8 +2,8 @@
 
 from typing import Annotated
 
-import httpx
 from fastapi import Depends
+import httpx
 
 from core.config import HTTP_CLIENT_TIMEOUT
 

@@ -1,8 +1,8 @@
 """Example job implementations."""
 
 import asyncio
-import logging
 from datetime import datetime
+import logging
 
 logger = logging.getLogger(__name__)
 

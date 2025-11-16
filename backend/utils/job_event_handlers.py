@@ -13,9 +13,9 @@ from core.constants import JobTriggerTypes
 from core.database import AsyncSessionLocal
 from core.job_operations import get_job, list_all_jobs_from_store, remove_job
 from models.job_history import JobHistory, JobHistoryStatus
-from services.job_history_service import JobHistoryService
+from services.job_history_service import JobHistoryParams, JobHistoryService
 from utils.job_log_storage import clear_job_logs, get_logs_with_retry
-from utils.job_utils import MinimalJob, detect_trigger_type
+from utils.job_utils import MinimalJob, MinimalJobParams, detect_trigger_type
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ async def _get_job_or_minimal(job_id: str) -> Any:
                 )
                 result = await temp_session.execute(stmt)
                 history_record = result.scalar_one_or_none()
-                job = MinimalJob(job_id, history_record=history_record)
+                job = MinimalJob(job_id, params=MinimalJobParams(history_record=history_record))
                 if history_record:
                     logger.debug(
                         f"Using job info from history for {job_id} (job removed from scheduler)"
@@ -83,7 +83,7 @@ async def _get_job_or_minimal(job_id: str) -> Any:
                 logger.warning(
                     f"Could not retrieve job history for {job_id}: {e!s}, using minimal job object"
                 )
-                job = MinimalJob(job_id, history_record=None)
+                job = MinimalJob(job_id, params=MinimalJobParams(history_record=None))
 
     return job
 
@@ -186,8 +186,7 @@ async def _job_executed_listener_async(event: JobExecutionEvent) -> None:
                     session=session,
                     job=job,
                     status=JobHistoryStatus.COMPLETED,
-                    logs=logs,
-                    trigger_type=trigger_type,
+                    params=JobHistoryParams(logs=logs, trigger_type=trigger_type),
                 )
                 await session.commit()
 
@@ -258,9 +257,9 @@ async def _job_error_listener_async(event: JobExecutionEvent) -> None:
                     session=session,
                     job=job,
                     status=JobHistoryStatus.FAILED,
-                    error_message=error_message,
-                    logs=logs,
-                    trigger_type=trigger_type,
+                    params=JobHistoryParams(
+                        error_message=error_message, logs=logs, trigger_type=trigger_type
+                    ),
                 )
                 await session.commit()
 

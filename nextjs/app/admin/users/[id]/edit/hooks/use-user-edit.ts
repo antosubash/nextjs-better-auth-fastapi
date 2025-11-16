@@ -9,8 +9,8 @@ import {
   useAdminSetUserPassword,
   useAdminUnbanUser,
 } from "@/lib/hooks/api/use-auth";
-import { useToast } from "@/lib/hooks/use-toast";
 import { useAssignableUserRoles } from "@/lib/hooks/api/use-permissions";
+import { useToast } from "@/lib/hooks/use-toast";
 import { canBanRole, getValidAssignableRole } from "@/lib/utils/role-validation";
 
 interface User {

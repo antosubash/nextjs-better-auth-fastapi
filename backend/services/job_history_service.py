@@ -1,5 +1,6 @@
 """Service for managing job history records."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -13,6 +14,16 @@ from utils.job_utils import detect_trigger_type
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class JobHistoryParams:
+    """Job history parameters container."""
+
+    user_id: str | None = None
+    error_message: str | None = None
+    logs: str | None = None
+    trigger_type: str | None = None
+
+
 class JobHistoryService:
     """Service for job history management operations."""
 
@@ -21,10 +32,7 @@ class JobHistoryService:
         session: AsyncSession,
         job: Any,
         status: JobHistoryStatus,
-        user_id: str | None = None,
-        error_message: str | None = None,
-        logs: str | None = None,
-        trigger_type: str | None = None,
+        params: JobHistoryParams | None = None,
     ) -> None:
         """
         Save job history record.
@@ -33,11 +41,11 @@ class JobHistoryService:
             session: Database session
             job: APScheduler job object or MinimalJob
             status: Job history status
-            user_id: User ID who performed the action
-            error_message: Error message if job failed
-            logs: Job execution logs
-            trigger_type: Trigger type (cron, interval, once)
+            params: Job history parameters container
         """
+        if params is None:
+            params = JobHistoryParams()
+
         try:
             # Validate status is provided
             if status is None:
@@ -54,6 +62,7 @@ class JobHistoryService:
             function_name = func_ref_str.split(":")[-1] if ":" in func_ref_str else func_ref_str
 
             # Determine trigger type from trigger string if not provided
+            trigger_type = params.trigger_type
             if not trigger_type:
                 trigger_type = detect_trigger_type(job.trigger)
 
@@ -66,10 +75,10 @@ class JobHistoryService:
                 kwargs_dict = job.kwargs
 
             # Normalize logs: convert empty string to None for consistency
-            normalized_logs = logs if logs else None
+            normalized_logs = params.logs if params.logs else None
 
             # Validate error_message is set for FAILED status
-            if status == JobHistoryStatus.FAILED and not error_message:
+            if status == JobHistoryStatus.FAILED and not params.error_message:
                 logger.warning(f"Job {job.id} marked as FAILED but no error_message provided")
 
             history = JobHistory(
@@ -82,9 +91,9 @@ class JobHistoryService:
                 args=args_dict,
                 kwargs=kwargs_dict,
                 next_run_time=job.next_run_time,
-                error_message=error_message,
+                error_message=params.error_message,
                 logs=normalized_logs,
-                user_id=user_id,
+                user_id=params.user_id,
             )
             session.add(history)
             logger.debug(

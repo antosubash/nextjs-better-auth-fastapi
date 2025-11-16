@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from core.constants import ValidationErrorMessages
 from utils.sanitization import sanitize_string
@@ -62,7 +62,7 @@ class JobCreate(BaseModel):
 
     @field_validator("cron_expression")
     @classmethod
-    def validate_cron(cls, v: str | None, info: Any) -> str | None:
+    def validate_cron(cls, v: str | None, info: ValidationInfo) -> str | None:
         """Validate cron expression is provided when trigger_type is cron."""
         if info.data.get("trigger_type") == "cron" and not v:
             raise ValueError(ValidationErrorMessages.CRON_EXPRESSION_REQUIRED_FOR_CRON)

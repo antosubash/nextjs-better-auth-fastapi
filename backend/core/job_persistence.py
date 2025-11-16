@@ -45,10 +45,9 @@ def verify_job_persistence(
                     f"(next_run_time: {persisted_job.next_run_time}, attempt: {attempt + 1})"
                 )
                 return
-            else:
-                logger.debug(
-                    f"Job {job_id} not found in job store (attempt {attempt + 1}/{max_retries})"
-                )
+            logger.debug(
+                f"Job {job_id} not found in job store (attempt {attempt + 1}/{max_retries})"
+            )
         except Exception as e:
             logger.warning(
                 f"Error verifying job {job_id} persistence (attempt {attempt + 1}): {e!s}",

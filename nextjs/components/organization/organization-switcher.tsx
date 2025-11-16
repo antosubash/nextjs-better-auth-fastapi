@@ -13,8 +13,8 @@ import {
 import { ErrorToast } from "@/components/ui/error-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ORGANIZATION_ERRORS, ORGANIZATION_SWITCHER } from "@/lib/constants";
-import { useOrganizations, useSession, useSetActiveOrganization } from "@/lib/hooks/api/use-auth";
 import { useOrganizationSafe } from "@/lib/contexts/organization-context";
+import { useOrganizations, useSession, useSetActiveOrganization } from "@/lib/hooks/api/use-auth";
 
 interface Organization {
   id: string;

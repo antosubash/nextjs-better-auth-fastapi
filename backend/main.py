@@ -1,7 +1,7 @@
 """Application entry point."""
 
-import sys
 from pathlib import Path
+import sys
 
 # Add backend directory to Python path to ensure imports work
 backend_dir = Path(__file__).parent

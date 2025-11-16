@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { uploadProfilePicture, deleteProfilePicture } from "@/lib/api/storage";
+import { deleteProfilePicture, uploadProfilePicture } from "@/lib/api/storage";
 import { PROFILE_PICTURE } from "@/lib/constants";
 import { queryKeys } from "./query-keys";
 

@@ -8,6 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.constants import ErrorMessages, JobTriggerTypes
 from core.exceptions import AppException
+from core.job_operations import (
+    IntervalParams,
+    JobFunctionArgs,
+)
 from core.jobs import (
     add_interval_job,
     add_one_time_job,
@@ -21,7 +25,7 @@ from core.jobs import (
 )
 from models.job_history import JobHistoryStatus
 from schemas.job import JobCreate, JobHistoryResponse, JobResponse
-from services.job_history_service import JobHistoryService
+from services.job_history_service import JobHistoryParams, JobHistoryService
 
 logger = logging.getLogger(__name__)
 
@@ -68,23 +72,23 @@ class JobService:
                     func_ref=func_ref,
                     job_id=job_data.job_id,
                     trigger=job_data.cron_expression,
-                    args=args_tuple,
-                    kwargs=kwargs_dict,
+                    function_args=JobFunctionArgs(args=args_tuple, kwargs=kwargs_dict),
                     replace_existing=job_data.replace_existing,
                 )
             elif job_data.trigger_type == JobTriggerTypes.INTERVAL:
                 add_interval_job(
                     func_ref=func_ref,
                     job_id=job_data.job_id,
-                    weeks=job_data.weeks,
-                    days=job_data.days,
-                    hours=job_data.hours,
-                    minutes=job_data.minutes,
-                    seconds=job_data.seconds,
-                    start_date=job_data.start_date,
-                    end_date=job_data.end_date,
-                    args=args_tuple,
-                    kwargs=kwargs_dict,
+                    interval_params=IntervalParams(
+                        weeks=job_data.weeks,
+                        days=job_data.days,
+                        hours=job_data.hours,
+                        minutes=job_data.minutes,
+                        seconds=job_data.seconds,
+                        start_date=job_data.start_date,
+                        end_date=job_data.end_date,
+                    ),
+                    function_args=JobFunctionArgs(args=args_tuple, kwargs=kwargs_dict),
                     replace_existing=job_data.replace_existing,
                 )
             elif job_data.trigger_type == JobTriggerTypes.ONCE:
@@ -92,8 +96,7 @@ class JobService:
                     func_ref=func_ref,
                     job_id=job_data.job_id,
                     run_date=job_data.run_date,
-                    args=args_tuple,
-                    kwargs=kwargs_dict,
+                    function_args=JobFunctionArgs(args=args_tuple, kwargs=kwargs_dict),
                     replace_existing=job_data.replace_existing,
                 )
             else:
@@ -117,8 +120,7 @@ class JobService:
                 session=session,
                 job=job,
                 status=JobHistoryStatus.CREATED,
-                user_id=user_id,
-                trigger_type=job_data.trigger_type,
+                params=JobHistoryParams(user_id=user_id, trigger_type=job_data.trigger_type),
             )
             await session.commit()
 
@@ -252,7 +254,7 @@ class JobService:
                 session=session,
                 job=job,
                 status=JobHistoryStatus.REMOVED,
-                user_id=user_id,
+                params=JobHistoryParams(user_id=user_id),
             )
             await session.commit()
 
@@ -295,7 +297,7 @@ class JobService:
                 session=session,
                 job=job,
                 status=JobHistoryStatus.PAUSED,
-                user_id=user_id,
+                params=JobHistoryParams(user_id=user_id),
             )
             await session.commit()
 
@@ -337,7 +339,7 @@ class JobService:
                 session=session,
                 job=job,
                 status=JobHistoryStatus.RESUMED,
-                user_id=user_id,
+                params=JobHistoryParams(user_id=user_id),
             )
             await session.commit()
 

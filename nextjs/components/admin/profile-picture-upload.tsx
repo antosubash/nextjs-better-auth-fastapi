@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PROFILE_PICTURE } from "@/lib/constants";
-import { useUploadProfilePicture, useDeleteProfilePicture } from "@/lib/hooks/api/use-storage";
+import { useDeleteProfilePicture, useUploadProfilePicture } from "@/lib/hooks/api/use-storage";
 import { cn } from "@/lib/utils";
 
 interface ProfilePictureUploadProps {

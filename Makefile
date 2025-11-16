@@ -1,4 +1,4 @@
-.PHONY: help install backend frontend dev clean lint lint-backend lint-frontend format format-backend format-frontend check check-backend check-frontend type-check build build-backend build-frontend docker-build docker-build-backend docker-build-frontend migrate migrate-backend migrate-frontend seed
+.PHONY: help install backend frontend dev clean lint lint-backend lint-frontend format format-backend format-frontend check check-backend check-frontend type-check validate-backend pre-commit-install pre-commit-run build build-backend build-frontend docker-build docker-build-backend docker-build-frontend migrate migrate-backend migrate-frontend seed
 
 # Default target
 help:
@@ -23,6 +23,9 @@ help:
 	@echo "  make check-backend   - Check backend code (lint + format check)"
 	@echo "  make check-frontend  - Check frontend code with Biome"
 	@echo "  make type-check      - Type check frontend TypeScript code"
+	@echo "  make validate-backend - Run backend validation scripts (standards, constants)"
+	@echo "  make pre-commit-install - Install pre-commit hooks"
+	@echo "  make pre-commit-run  - Run pre-commit hooks manually"
 	@echo ""
 	@echo "Build:"
 	@echo "  make build           - Build both backend and frontend"
@@ -136,6 +139,35 @@ check: check-backend check-frontend
 type-check:
 	@echo "Type checking frontend code..."
 	cd nextjs && pnpm type-check
+
+# Validate backend code (standards and constants)
+validate-backend:
+	@echo "Validating backend code standards..."
+	cd backend && uv run python scripts/validate_standards.py
+	@echo "Checking for hardcoded constants..."
+	cd backend && uv run python scripts/check_constants.py || true
+	@echo "Backend validation complete!"
+
+# Install pre-commit hooks
+pre-commit-install:
+	@echo "Installing pre-commit hooks..."
+	cd backend && uv sync
+	@if command -v pre-commit > /dev/null 2>&1; then \
+		pre-commit install; \
+	else \
+		cd backend && uv run pre-commit install; \
+	fi
+	@echo "Pre-commit hooks installed!"
+
+# Run pre-commit hooks manually
+pre-commit-run:
+	@echo "Running pre-commit hooks..."
+	@if command -v pre-commit > /dev/null 2>&1; then \
+		pre-commit run --all-files; \
+	else \
+		cd backend && uv run pre-commit run --all-files; \
+	fi
+	@echo "Pre-commit hooks complete!"
 
 # Build backend
 build-backend:

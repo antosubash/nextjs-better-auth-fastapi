@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getSessions, revokeSession, revokeAllSessions } from "@/lib/api/sessions";
+import { getSessions, revokeAllSessions, revokeSession } from "@/lib/api/sessions";
 import { SESSION_ERRORS, SESSION_SUCCESS } from "@/lib/constants";
 import { queryKeys } from "./query-keys";
 

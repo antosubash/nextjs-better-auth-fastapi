@@ -8,9 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import type { VerifyApiKeyResponse } from "@/lib/api/api-keys";
 import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 import { useVerifyApiKey } from "@/lib/hooks/api/use-api-keys";
-import type { VerifyApiKeyResponse } from "@/lib/api/api-keys";
 
 interface ApiKeyVerifyProps {
   onClose: () => void;

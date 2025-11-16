@@ -1,7 +1,7 @@
 """Task database model."""
 
-import enum
 from datetime import datetime
+import enum
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column

@@ -6,9 +6,9 @@ Create Date: 2025-11-13 23:45:00.000000
 
 """
 
-import sys
 from collections.abc import Sequence
 from pathlib import Path
+import sys
 
 import sqlalchemy as sa
 

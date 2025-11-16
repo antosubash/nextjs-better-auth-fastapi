@@ -1,5 +1,6 @@
 """Logging configuration for the application."""
 
+from datetime import UTC
 import logging
 import sys
 
@@ -19,15 +20,15 @@ def setup_logging(json_format: bool | None = None) -> None:
     level = getattr(logging, LOG_LEVEL, logging.INFO)
 
     if json_format:
-        import json  # noqa: PLC0415
         from datetime import datetime  # noqa: PLC0415
+        import json  # noqa: PLC0415
 
         class JSONFormatter(logging.Formatter):
             """JSON formatter for structured logging."""
 
             def format(self, record: logging.LogRecord) -> str:
                 log_data = {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(tz=UTC).isoformat(),
                     "level": record.levelname,
                     "logger": record.name,
                     "message": record.getMessage(),

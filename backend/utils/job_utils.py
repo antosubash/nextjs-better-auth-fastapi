@@ -1,8 +1,9 @@
 """Common utilities for job execution and management."""
 
+from contextlib import redirect_stderr, redirect_stdout
+from dataclasses import dataclass
 import io
 import logging
-from contextlib import redirect_stderr, redirect_stdout
 from typing import Any
 
 from core.constants import JobTriggerTypes
@@ -62,6 +63,18 @@ class LogCapture:
         return "\n\n".join(logs) if logs else ""
 
 
+@dataclass
+class MinimalJobParams:
+    """Minimal job parameters container."""
+
+    func_ref: str | None = None
+    args: tuple[Any, ...] | None = None
+    kwargs: dict[str, Any] | None = None
+    trigger: str | None = None
+    next_run_time: Any | None = None
+    history_record: Any | None = None
+
+
 class MinimalJob:
     """
     Minimal job object for cases where the actual job is not available.
@@ -73,40 +86,35 @@ class MinimalJob:
     def __init__(
         self,
         job_id: str,
-        func_ref: str | None = None,
-        args: tuple[Any, ...] | None = None,
-        kwargs: dict[str, Any] | None = None,
-        trigger: str | None = None,
-        next_run_time: Any | None = None,
-        history_record: Any | None = None,
+        params: MinimalJobParams | None = None,
     ) -> None:
         """
         Initialize minimal job object.
 
         Args:
             job_id: Job ID
-            func_ref: Function reference (optional, can be extracted from history_record)
-            args: Job arguments (optional, can be extracted from history_record)
-            kwargs: Job keyword arguments (optional, can be extracted from history_record)
-            trigger: Trigger description (optional, can be extracted from history_record)
-            next_run_time: Next run time (optional)
-            history_record: Job history record to extract info from (optional)
+            params: Minimal job parameters container
         """
-        self.id = job_id
-        self.next_run_time = next_run_time
+        if params is None:
+            params = MinimalJobParams()
 
-        if history_record:
+        self.id = job_id
+        self.next_run_time = params.next_run_time
+
+        if params.history_record:
             # Extract from history record if available
-            self.func_ref = history_record.func_ref
-            self.args = history_record.args.get("args", ()) if history_record.args else ()
-            self.kwargs = history_record.kwargs or {}
-            self.trigger = history_record.trigger
+            self.func_ref = params.history_record.func_ref
+            self.args = (
+                params.history_record.args.get("args", ()) if params.history_record.args else ()
+            )
+            self.kwargs = params.history_record.kwargs or {}
+            self.trigger = params.history_record.trigger
         else:
             # Use provided values or defaults
-            self.func_ref = func_ref or f"unknown:{job_id}"
-            self.args = args or ()
-            self.kwargs = kwargs or {}
-            self.trigger = trigger or "date[one-time]"
+            self.func_ref = params.func_ref or f"unknown:{job_id}"
+            self.args = params.args or ()
+            self.kwargs = params.kwargs or {}
+            self.trigger = params.trigger or "date[one-time]"
 
 
 def detect_trigger_type(trigger: Any) -> str:

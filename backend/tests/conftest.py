@@ -3,14 +3,14 @@
 import asyncio
 import contextlib
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from core.app import create_app
 from dependencies import close_http_client
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def app():
     """Create FastAPI app instance for testing."""
     app = create_app()
@@ -20,7 +20,7 @@ def app():
         asyncio.run(close_http_client())
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def client(app):
     """Create test client."""
     return TestClient(app)

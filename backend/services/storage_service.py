@@ -1,10 +1,10 @@
 """Storage service for MinIO operations."""
 
 import asyncio
+from datetime import UTC, datetime
+from io import BytesIO
 import json
 import logging
-from datetime import datetime
-from io import BytesIO
 from pathlib import Path
 
 from minio import Minio
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class StorageService:
     """Service for MinIO storage operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize MinIO client."""
         self.client = Minio(
             MINIO_ENDPOINT,
@@ -113,7 +113,7 @@ class StorageService:
         Returns:
             File path in MinIO
         """
-        timestamp = int(datetime.now().timestamp() * 1000)
+        timestamp = int(datetime.now(tz=UTC).timestamp() * 1000)
         ext = Path(filename).suffix.lower() or ".jpg"
         return f"profile-pictures/{user_id}/{timestamp}{ext}"
 

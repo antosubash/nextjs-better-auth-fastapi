@@ -136,6 +136,8 @@ backend/
 
 ## Code Conventions
 
+**See [CODING_STANDARDS.md](CODING_STANDARDS.md) for comprehensive coding standards and enforcement.**
+
 ### Constants
 
 **CRITICAL**: Never hardcode strings. Always use constants:
@@ -200,11 +202,28 @@ uv run uvicorn main:app --reload  # Alternative
 uv run ruff check .           # Lint code
 uv run ruff format .          # Format code
 uv run ruff check . && uv run ruff format --check .  # Check both
+uv run python scripts/validate_standards.py  # Validate coding standards
+uv run python scripts/check_constants.py     # Check for hardcoded constants
+
+# Pre-commit hooks
+uv run pre-commit install     # Install pre-commit hooks
+uv run pre-commit run --all-files  # Run pre-commit hooks manually
 
 # Database
 uv run alembic revision --autogenerate -m "description"  # Create migration
 uv run alembic upgrade head   # Run migrations
 uv run alembic downgrade -1   # Rollback migration
+```
+
+Or use Make commands from project root:
+
+```bash
+make lint-backend        # Lint code
+make format-backend      # Format code
+make check-backend       # Check linting and formatting
+make validate-backend    # Validate coding standards
+make pre-commit-install  # Install pre-commit hooks
+make pre-commit-run      # Run pre-commit hooks
 ```
 
 ## Authentication
@@ -224,9 +243,37 @@ See [Authentication Guide](../docs/authentication.md) for details.
 2. **Rate Limiting Middleware** - Enforces rate limits
 3. **JWT/API Key Auth Middleware** - Verifies authentication
 
+## Coding Standards
+
+This project follows strict coding standards to ensure consistency and quality. See [CODING_STANDARDS.md](CODING_STANDARDS.md) for:
+
+- Naming conventions
+- File organization
+- Type hints requirements
+- Docstring standards
+- Constants usage
+- Error handling patterns
+- Async/await patterns
+- FastAPI patterns
+- Database patterns
+- Logging standards
+- Code style guidelines
+
+### Enforcement
+
+Coding standards are enforced through:
+
+1. **Ruff**: Automatic linting and formatting
+2. **Pre-commit hooks**: Automatic checks before commits
+3. **Validation scripts**: Custom checks for standards not covered by ruff
+4. **Code review**: Manual review for adherence to standards
+
+Run `make validate-backend` to check your code against all standards.
+
 ## Related Documentation
 
 - [Project README](../README.md) - Main project overview
+- [Coding Standards](CODING_STANDARDS.md) - Backend coding standards
 - [Getting Started](../docs/getting-started.md) - Setup guide
 - [Development Guide](../docs/development.md) - Development patterns
 - [Authentication Guide](../docs/authentication.md) - Authentication details
