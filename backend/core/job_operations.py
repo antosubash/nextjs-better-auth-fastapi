@@ -1,6 +1,7 @@
 """Job CRUD operations for APScheduler."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
@@ -21,12 +22,32 @@ from core.jobs import get_scheduler
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class JobFunctionArgs:
+    """Job function arguments container."""
+
+    args: tuple[Any, ...] | None = None
+    kwargs: dict[str, Any] | None = None
+
+
+@dataclass
+class IntervalParams:
+    """Interval job parameters container."""
+
+    weeks: int = 0
+    days: int = 0
+    hours: int = 0
+    minutes: int = 0
+    seconds: int = 0
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+
+
 def add_scheduled_job(
     func_ref: str | Callable[..., Any],
     job_id: str,
     trigger: str | CronTrigger | IntervalTrigger,
-    args: tuple[Any, ...] | None = None,
-    kwargs: dict[str, Any] | None = None,
+    function_args: JobFunctionArgs | None = None,
     replace_existing: bool = True,
 ) -> str:
     """
@@ -36,8 +57,7 @@ def add_scheduled_job(
         func_ref: Function reference (string "module:function_name" or callable)
         job_id: Unique job identifier
         trigger: Trigger type (cron string, CronTrigger, or IntervalTrigger)
-        args: Positional arguments for the function
-        kwargs: Keyword arguments for the function
+        function_args: Job function arguments container
         replace_existing: Whether to replace existing job with same ID
 
     Returns:
@@ -47,6 +67,9 @@ def add_scheduled_job(
         RuntimeError: If scheduler is not initialized or job persistence fails
         ValueError: If function reference cannot be determined
     """
+    if function_args is None:
+        function_args = JobFunctionArgs()
+
     sched = get_scheduler()
 
     # Ensure scheduler is running for proper job persistence
@@ -74,7 +97,7 @@ def add_scheduled_job(
     wrapper_ref = "utils.job_wrapper:execute_job_with_logging"
 
     # Prepend job_id and func_ref to args so wrapper can access them
-    wrapper_args = (job_id, func_ref) + (args or ())
+    wrapper_args = (job_id, func_ref) + (function_args.args or ())
 
     try:
         job = sched.add_job(
@@ -82,7 +105,7 @@ def add_scheduled_job(
             trigger=trigger,
             id=job_id,
             args=wrapper_args,
-            kwargs=kwargs or {},
+            kwargs=function_args.kwargs or {},
             replace_existing=replace_existing,
         )
         logger.info(
@@ -100,12 +123,46 @@ def add_scheduled_job(
     return job.id
 
 
+def _normalize_run_date(run_date: datetime | None, job_id: str) -> datetime:
+    """Normalize run_date to UTC and validate."""
+    now_utc = datetime.now(UTC)
+
+    if run_date is None:
+        # For immediate execution, add a small buffer (1 second) to ensure it's not immediately in the past
+        return now_utc + timedelta(seconds=1)
+
+    # Ensure run_date is timezone-aware (convert naive datetime to UTC)
+    if run_date.tzinfo is None:
+        # Assume naive datetime is in UTC
+        run_date = run_date.replace(tzinfo=UTC)
+    elif run_date.tzinfo != UTC:
+        # Convert to UTC if in different timezone
+        run_date = run_date.astimezone(UTC)
+
+    # Check if run_date is in the past
+    if run_date < now_utc:
+        time_diff = (now_utc - run_date).total_seconds()
+        # If run_date is more than grace time in the past, log a warning
+        if time_diff > JOB_MISFIRE_GRACE_TIME_SECONDS:
+            logger.warning(
+                f"One-time job {job_id} scheduled for {run_date} is more than "
+                f"{JOB_MISFIRE_GRACE_TIME_SECONDS}s in the past. "
+                f"It may be removed if scheduler starts late."
+            )
+        else:
+            logger.info(
+                f"One-time job {job_id} scheduled for {run_date} is in the past "
+                f"but within grace period. Will execute when scheduler processes it."
+            )
+
+    return run_date
+
+
 def add_one_time_job(
     func_ref: str | Callable[..., Any],
     job_id: str,
     run_date: datetime | None = None,
-    args: tuple[Any, ...] | None = None,
-    kwargs: dict[str, Any] | None = None,
+    function_args: JobFunctionArgs | None = None,
     replace_existing: bool = True,
 ) -> str:
     """
@@ -115,8 +172,7 @@ def add_one_time_job(
         func_ref: Function reference (string "module:function_name" or callable)
         job_id: Unique job identifier
         run_date: When to run the job (None for immediate execution)
-        args: Positional arguments for the function
-        kwargs: Keyword arguments for the function
+        function_args: Job function arguments container
         replace_existing: Whether to replace existing job with same ID
 
     Returns:
@@ -126,6 +182,9 @@ def add_one_time_job(
         RuntimeError: If scheduler is not initialized or job persistence fails
         ValueError: If function reference cannot be determined
     """
+    if function_args is None:
+        function_args = JobFunctionArgs()
+
     sched = get_scheduler()
 
     # Ensure scheduler is running for proper job persistence
@@ -133,39 +192,8 @@ def add_one_time_job(
         logger.warning("Scheduler is not running. Starting scheduler to ensure job persistence...")
         sched.start()
 
-    # Get current UTC time (timezone-aware)
-    now_utc = datetime.now(UTC)
-
-    # Determine run date - use provided date or current UTC time for immediate execution
-    if run_date is None:
-        # For immediate execution, add a small buffer (1 second) to ensure it's not immediately in the past
-        run_date = now_utc + timedelta(seconds=1)
-    else:
-        # Ensure run_date is timezone-aware (convert naive datetime to UTC)
-        if run_date.tzinfo is None:
-            # Assume naive datetime is in UTC
-            run_date = run_date.replace(tzinfo=UTC)
-        elif run_date.tzinfo != UTC:
-            # Convert to UTC if in different timezone
-            run_date = run_date.astimezone(UTC)
-
-        # Check if run_date is in the past
-        if run_date < now_utc:
-            time_diff = (now_utc - run_date).total_seconds()
-            # If run_date is more than grace time in the past, log a warning
-            if time_diff > JOB_MISFIRE_GRACE_TIME_SECONDS:
-                logger.warning(
-                    f"One-time job {job_id} scheduled for {run_date} is more than "
-                    f"{JOB_MISFIRE_GRACE_TIME_SECONDS}s in the past. "
-                    f"It may be removed if scheduler starts late."
-                )
-            else:
-                logger.info(
-                    f"One-time job {job_id} scheduled for {run_date} is in the past "
-                    f"but within grace period. Will execute when scheduler processes it."
-                )
-
-    trigger = DateTrigger(run_date=run_date)
+    normalized_run_date = _normalize_run_date(run_date, job_id)
+    trigger = DateTrigger(run_date=normalized_run_date)
 
     # Convert callable to string reference if needed
     if callable(func_ref):
@@ -183,7 +211,7 @@ def add_one_time_job(
     wrapper_ref = "utils.job_wrapper:execute_job_with_logging"
 
     # Prepend job_id and func_ref to args so wrapper can access them
-    wrapper_args = (job_id, func_ref) + (args or ())
+    wrapper_args = (job_id, func_ref) + (function_args.args or ())
 
     try:
         job = sched.add_job(
@@ -191,11 +219,11 @@ def add_one_time_job(
             trigger=trigger,
             id=job_id,
             args=wrapper_args,
-            kwargs=kwargs or {},
+            kwargs=function_args.kwargs or {},
             replace_existing=replace_existing,
             misfire_grace_time=JOB_MISFIRE_GRACE_TIME_SECONDS,
         )
-        logger.info(f"One-time job added: {job_id} (run_date: {run_date})")
+        logger.info(f"One-time job added: {job_id} (run_date: {normalized_run_date})")
     except Exception as e:
         error_msg = f"Failed to add one-time job {job_id}: {e!s}"
         logger.error(error_msg, exc_info=True)
@@ -210,15 +238,8 @@ def add_one_time_job(
 def add_interval_job(
     func_ref: str | Callable[..., Any],
     job_id: str,
-    weeks: int = 0,
-    days: int = 0,
-    hours: int = 0,
-    minutes: int = 0,
-    seconds: int = 0,
-    start_date: datetime | None = None,
-    end_date: datetime | None = None,
-    args: tuple[Any, ...] | None = None,
-    kwargs: dict[str, Any] | None = None,
+    interval_params: IntervalParams | None = None,
+    function_args: JobFunctionArgs | None = None,
     replace_existing: bool = True,
 ) -> str:
     """
@@ -227,15 +248,8 @@ def add_interval_job(
     Args:
         func_ref: Function reference (string "module:function_name" or callable)
         job_id: Unique job identifier
-        weeks: Number of weeks between runs
-        days: Number of days between runs
-        hours: Number of hours between runs
-        minutes: Number of minutes between runs
-        seconds: Number of seconds between runs
-        start_date: When to start the job
-        end_date: When to end the job
-        args: Positional arguments for the function
-        kwargs: Keyword arguments for the function
+        interval_params: Interval job parameters container
+        function_args: Job function arguments container
         replace_existing: Whether to replace existing job with same ID
 
     Returns:
@@ -245,6 +259,11 @@ def add_interval_job(
         RuntimeError: If scheduler is not initialized or job persistence fails
         ValueError: If function reference cannot be determined
     """
+    if interval_params is None:
+        interval_params = IntervalParams()
+    if function_args is None:
+        function_args = JobFunctionArgs()
+
     sched = get_scheduler()
 
     # Ensure scheduler is running for proper job persistence
@@ -253,13 +272,13 @@ def add_interval_job(
         sched.start()
 
     trigger = IntervalTrigger(
-        weeks=weeks,
-        days=days,
-        hours=hours,
-        minutes=minutes,
-        seconds=seconds,
-        start_date=start_date,
-        end_date=end_date,
+        weeks=interval_params.weeks,
+        days=interval_params.days,
+        hours=interval_params.hours,
+        minutes=interval_params.minutes,
+        seconds=interval_params.seconds,
+        start_date=interval_params.start_date,
+        end_date=interval_params.end_date,
     )
 
     # Convert callable to string reference if needed
@@ -278,7 +297,7 @@ def add_interval_job(
     wrapper_ref = "utils.job_wrapper:execute_job_with_logging"
 
     # Prepend job_id and func_ref to args so wrapper can access them
-    wrapper_args = (job_id, func_ref) + (args or ())
+    wrapper_args = (job_id, func_ref) + (function_args.args or ())
 
     try:
         job = sched.add_job(
@@ -286,7 +305,7 @@ def add_interval_job(
             trigger=trigger,
             id=job_id,
             args=wrapper_args,
-            kwargs=kwargs or {},
+            kwargs=function_args.kwargs or {},
             replace_existing=replace_existing,
         )
         logger.info(f"Interval job added: {job_id}")

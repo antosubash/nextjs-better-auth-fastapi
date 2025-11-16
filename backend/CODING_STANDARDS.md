@@ -16,7 +16,8 @@ This document defines the coding standards for the FastAPI backend application. 
 10. [Logging](#logging)
 11. [Code Style](#code-style)
 12. [Import Organization](#import-organization)
-13. [Testing](#testing)
+13. [Code Complexity](#code-complexity)
+14. [Testing](#testing)
 
 ## Naming Conventions
 
@@ -1000,6 +1001,349 @@ from services.task_service import TaskService
 from ..core.constants import ErrorMessages
 from .task_service import TaskService
 ```
+
+## Code Complexity
+
+### Principles
+
+**Keep code simple and maintainable.** Complex code is harder to understand, test, and maintain. When code becomes too complex, refactor it into smaller, focused functions.
+
+### Complexity Limits
+
+#### Function Length
+
+- **Maximum function length**: 50 lines (excluding docstrings and type hints)
+- If a function exceeds 50 lines, split it into smaller functions
+- Each function should have a single, clear responsibility
+
+```python
+# ✅ Good - Short, focused function
+async def create_task(task_data: TaskCreate, user_id: str) -> Task:
+    """Create a new task."""
+    task = Task(
+        title=task_data.title,
+        description=task_data.description,
+        user_id=user_id,
+    )
+    self.session.add(task)
+    await self.session.commit()
+    await self.session.refresh(task)
+    return task
+
+# ❌ Bad - Function too long
+async def create_task_with_validation_and_notification(
+    task_data: TaskCreate, user_id: str
+) -> Task:
+    """Create task with validation and notification."""
+    # 100+ lines of validation, creation, notification, etc.
+    pass
+```
+
+#### Cyclomatic Complexity
+
+- **Maximum cyclomatic complexity**: 10 per function
+- Cyclomatic complexity measures the number of independent paths through code
+- Reduce complexity by extracting methods, using early returns, and simplifying conditionals
+
+```python
+# ✅ Good - Low complexity
+async def get_task(task_id: UUID, user_id: str) -> Task | None:
+    """Get task by ID."""
+    if not task_id:
+        return None
+    
+    statement = select(Task).where(
+        Task.id == task_id,
+        Task.user_id == user_id
+    )
+    result = await self.session.execute(statement)
+    return result.scalar_one_or_none()
+
+# ❌ Bad - High complexity (many nested conditions)
+async def process_task(task_id: UUID, user_id: str) -> Task | None:
+    """Process task with complex logic."""
+    if task_id:
+        if user_id:
+            task = await self.get_task(task_id, user_id)
+            if task:
+                if task.status == "pending":
+                    if task.priority == "high":
+                        # ... many more nested conditions
+                        pass
+    return None
+```
+
+#### Nesting Depth
+
+- **Maximum nesting depth**: 3 levels
+- Deep nesting makes code hard to read and understand
+- Use early returns, guard clauses, and extract methods to reduce nesting
+
+```python
+# ✅ Good - Early returns reduce nesting
+async def update_task(
+    task_id: UUID, task_data: TaskUpdate, user_id: str
+) -> Task:
+    """Update task."""
+    task = await self.get_task(task_id, user_id)
+    if not task:
+        raise AppException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ErrorMessages.TASK_NOT_FOUND
+        )
+    
+    if not task_data.model_dump(exclude_unset=True):
+        return task
+    
+    for field, value in task_data.model_dump(exclude_unset=True).items():
+        setattr(task, field, value)
+    
+    await self.session.commit()
+    await self.session.refresh(task)
+    return task
+
+# ❌ Bad - Deep nesting
+async def update_task(
+    task_id: UUID, task_data: TaskUpdate, user_id: str
+) -> Task:
+    """Update task."""
+    task = await self.get_task(task_id, user_id)
+    if task:
+        if task_data.model_dump(exclude_unset=True):
+            for field, value in task_data.model_dump(exclude_unset=True).items():
+                if field in ["title", "description", "status"]:
+                    if value is not None:
+                        setattr(task, field, value)
+            await self.session.commit()
+            await self.session.refresh(task)
+            return task
+    return None
+```
+
+#### Function Parameters
+
+- **Maximum parameters**: 5 per function
+- If a function needs more than 5 parameters, use a data class or Pydantic model
+- Group related parameters into objects
+
+```python
+# ✅ Good - Using Pydantic model
+async def create_task(task_data: TaskCreate, user_id: str) -> Task:
+    """Create a new task."""
+    pass
+
+# ❌ Bad - Too many parameters
+async def create_task(
+    title: str,
+    description: str | None,
+    status: str,
+    priority: str,
+    due_date: datetime | None,
+    tags: list[str],
+    user_id: str,
+) -> Task:
+    """Create a new task."""
+    pass
+```
+
+### Reducing Complexity
+
+#### Extract Methods
+
+Break complex functions into smaller, focused functions:
+
+```python
+# ✅ Good - Extracted methods
+async def process_task_creation(
+    task_data: TaskCreate, user_id: str
+) -> Task:
+    """Process task creation with validation and setup."""
+    _validate_task_data(task_data)
+    task = _create_task_entity(task_data, user_id)
+    await _save_task(task)
+    await _setup_task_notifications(task)
+    return task
+
+def _validate_task_data(task_data: TaskCreate) -> None:
+    """Validate task data."""
+    if not task_data.title:
+        raise ValidationError(ValidationErrorMessages.TITLE_REQUIRED)
+
+def _create_task_entity(task_data: TaskCreate, user_id: str) -> Task:
+    """Create task entity."""
+    return Task(
+        title=task_data.title,
+        description=task_data.description,
+        user_id=user_id,
+    )
+
+async def _save_task(task: Task) -> None:
+    """Save task to database."""
+    self.session.add(task)
+    await self.session.commit()
+    await self.session.refresh(task)
+
+async def _setup_task_notifications(task: Task) -> None:
+    """Setup task notifications."""
+    # Notification logic
+    pass
+
+# ❌ Bad - All logic in one function
+async def process_task_creation(
+    task_data: TaskCreate, user_id: str
+) -> Task:
+    """Process task creation."""
+    # 100+ lines of validation, creation, saving, notifications, etc.
+    pass
+```
+
+#### Use Early Returns
+
+Use early returns to reduce nesting and improve readability:
+
+```python
+# ✅ Good - Early returns
+async def get_task_with_permission(
+    task_id: UUID, user_id: str, permission: str
+) -> Task | None:
+    """Get task if user has permission."""
+    if not task_id:
+        return None
+    
+    task = await self.get_task(task_id, user_id)
+    if not task:
+        return None
+    
+    if not await self._check_permission(user_id, permission):
+        raise AppException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ErrorMessages.PERMISSION_DENIED
+        )
+    
+    return task
+
+# ❌ Bad - Deep nesting
+async def get_task_with_permission(
+    task_id: UUID, user_id: str, permission: str
+) -> Task | None:
+    """Get task if user has permission."""
+    if task_id:
+        task = await self.get_task(task_id, user_id)
+        if task:
+            if await self._check_permission(user_id, permission):
+                return task
+            else:
+                raise AppException(...)
+    return None
+```
+
+#### Simplify Conditionals
+
+Use helper functions and boolean logic to simplify conditionals:
+
+```python
+# ✅ Good - Simplified conditionals
+def _is_valid_task_status(status: str) -> bool:
+    """Check if task status is valid."""
+    return status in ["pending", "in_progress", "completed", "cancelled"]
+
+async def update_task_status(task_id: UUID, status: str) -> Task:
+    """Update task status."""
+    if not _is_valid_task_status(status):
+        raise ValidationError(ValidationErrorMessages.INVALID_STATUS)
+    
+    task = await self.get_task(task_id)
+    task.status = status
+    await self.session.commit()
+    return task
+
+# ❌ Bad - Complex conditional
+async def update_task_status(task_id: UUID, status: str) -> Task:
+    """Update task status."""
+    if (
+        status == "pending"
+        or status == "in_progress"
+        or status == "completed"
+        or status == "cancelled"
+    ):
+        task = await self.get_task(task_id)
+        if task:
+            task.status = status
+            await self.session.commit()
+            return task
+    raise ValidationError(...)
+```
+
+#### Avoid Deep Nesting in Loops
+
+Extract loop logic into separate functions:
+
+```python
+# ✅ Good - Extracted loop logic
+async def process_tasks(tasks: list[Task]) -> list[Task]:
+    """Process multiple tasks."""
+    processed = []
+    for task in tasks:
+        processed_task = await _process_single_task(task)
+        processed.append(processed_task)
+    return processed
+
+async def _process_single_task(task: Task) -> Task:
+    """Process a single task."""
+    if not task.is_valid():
+        raise ValidationError(...)
+    
+    task.status = "processed"
+    await self.session.commit()
+    return task
+
+# ❌ Bad - Complex nested loop logic
+async def process_tasks(tasks: list[Task]) -> list[Task]:
+    """Process multiple tasks."""
+    processed = []
+    for task in tasks:
+        if task:
+            if task.is_valid():
+                if task.status == "pending":
+                    task.status = "processed"
+                    await self.session.commit()
+                    processed.append(task)
+                else:
+                    logger.warning(f"Task {task.id} not pending")
+            else:
+                raise ValidationError(...)
+    return processed
+```
+
+### Complexity Metrics
+
+The following complexity metrics are enforced:
+
+- **File size**: Maximum 500 lines (enforced by validation script)
+- **Function length**: Maximum 50 lines (recommended, not strictly enforced)
+- **Cyclomatic complexity**: Maximum 10 per function (recommended)
+- **Nesting depth**: Maximum 3 levels (recommended)
+- **Function parameters**: Maximum 5 per function (enforced by ruff PLR0913)
+
+### When to Refactor
+
+Refactor code when:
+
+1. **Function exceeds 50 lines** - Split into smaller functions
+2. **Cyclomatic complexity > 10** - Extract methods, use early returns
+3. **Nesting depth > 3** - Use early returns, extract methods
+4. **Function has > 5 parameters** - Use data classes or Pydantic models
+5. **Code is hard to understand** - Simplify logic, add helper functions
+6. **Code is hard to test** - Reduce dependencies, extract logic
+7. **Code has duplicate logic** - Extract common functionality
+
+### Tools
+
+Complexity is checked using:
+
+1. **Ruff**: Enforces some complexity rules (PLR0913, etc.)
+2. **Validation scripts**: Check file size limits
+3. **Code review**: Manual review for complexity issues
 
 ## Testing
 

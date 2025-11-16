@@ -66,11 +66,8 @@ select = [
 ignore = [
     "E501",  # line too long (handled by formatter)
     "B008",  # do not perform function calls in argument defaults
-    "PLR0913", # too many arguments
     "PLR2004", # magic value used in comparison
     "TRY301", # abstract raise to inner function (not needed for simple conditional raises)
-    "PLR0912", # too many branches
-    "PLR0915", # too many statements
     "PLR0911", # too many return statements (acceptable in middleware and complex control flow)
     "PT011", # pytest.raises without match
     "Q000", # single quotes found (we use double quotes)
@@ -78,6 +75,8 @@ ignore = [
     "Q002", # single quote docstring found
     "Q003", # change outer quotes to avoid escaping inner quotes
 ]
+# Note: PLR0912 (too many branches) and PLR0915 (too many statements) are not ignored
+# to encourage code complexity reduction. PLR0913 (too many arguments) is also enforced.
 
 [tool.ruff.format]
 quote-style = "double"

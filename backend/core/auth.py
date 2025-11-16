@@ -203,6 +203,90 @@ async def verify_token_string(token: str, http_client: httpx.AsyncClient | None 
         return payload
 
 
+def _build_api_key_request_body(
+    api_key: str, required_permissions: dict[str, list[str]] | None
+) -> dict[str, Any]:
+    """Build request body for API key verification."""
+    request_body: dict[str, Any] = {"key": api_key}
+    if required_permissions:
+        request_body["permissions"] = required_permissions
+        logger.info(f"Verifying API key with required permissions: {required_permissions}")
+    else:
+        logger.info("Verifying API key without permission checks")
+    return request_body
+
+
+async def _make_api_key_verification_request(
+    request_body: dict[str, Any], http_client: httpx.AsyncClient | None
+) -> httpx.Response:
+    """Make HTTP request to verify API key."""
+    if http_client is None:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            return await client.post(
+                BETTER_AUTH_VERIFY_API_KEY_URL,
+                json=request_body,
+                headers={"Content-Type": "application/json"},
+            )
+    return await http_client.post(
+        BETTER_AUTH_VERIFY_API_KEY_URL,
+        json=request_body,
+        headers={"Content-Type": "application/json"},
+    )
+
+
+def _check_api_key_response_status(response: httpx.Response) -> None:
+    """Check API key verification response status codes."""
+    if response.status_code == 401:
+        logger.warning("API key verification failed: Unauthorized")
+        raise AuthenticationError(ErrorMessages.API_KEY_INVALID)
+    if response.status_code == 403:
+        logger.warning("API key verification failed: Insufficient permissions")
+        raise AuthenticationError(ErrorMessages.API_KEY_INSUFFICIENT_PERMISSIONS)
+    response.raise_for_status()
+
+
+def _parse_api_key_response(response: httpx.Response) -> dict[str, Any]:
+    """Parse API key verification response JSON."""
+    try:
+        return response.json()
+    except Exception as e:
+        logger.exception("Failed to parse API key verification response")
+        error_msg = f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: Invalid response format"
+        raise AuthenticationError(error_msg) from e
+
+
+def _validate_api_key_response(response_data: dict[str, Any]) -> None:
+    """Validate API key verification response data."""
+    if not response_data.get("valid", False):
+        error_info = response_data.get("error")
+        if error_info:
+            error_message = error_info.get("message", ErrorMessages.API_KEY_INVALID)
+            logger.warning(f"API key verification failed: {error_message}")
+            raise AuthenticationError(error_message)
+        logger.warning("API key verification failed: Invalid key")
+        raise AuthenticationError(ErrorMessages.API_KEY_INVALID)
+
+
+def _build_api_key_data(key_data: dict[str, Any]) -> dict[str, Any]:
+    """Build structured API key data from response."""
+    api_key_data: dict[str, Any] = {
+        "user_id": key_data.get("userId") or key_data.get("user_id"),
+        "key_id": key_data.get("id") or key_data.get("keyId"),
+        "permissions": key_data.get("permissions", {}),
+        "metadata": key_data.get("metadata", {}),
+        "name": key_data.get("name"),
+        "prefix": key_data.get("prefix"),
+        "enabled": key_data.get("enabled", True),
+    }
+
+    if not api_key_data["user_id"]:
+        logger.error("API key verification response missing user_id")
+        error_msg = f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: Missing user_id"
+        raise AuthenticationError(error_msg)
+
+    return api_key_data
+
+
 async def verify_api_key(
     api_key: str,
     required_permissions: dict[str, list[str]] | None = None,
@@ -233,80 +317,19 @@ async def verify_api_key(
         raise AuthenticationError(ErrorMessages.API_KEY_MISSING)
 
     try:
-        # Prepare request body
-        request_body: dict[str, Any] = {"key": api_key}
-        if required_permissions:
-            request_body["permissions"] = required_permissions
-            logger.info(f"Verifying API key with required permissions: {required_permissions}")
-        else:
-            logger.info("Verifying API key without permission checks")
+        request_body = _build_api_key_request_body(api_key, required_permissions)
+        response = await _make_api_key_verification_request(request_body, http_client)
+        _check_api_key_response_status(response)
+        response_data = _parse_api_key_response(response)
+        _validate_api_key_response(response_data)
 
-        # Make request to Better Auth verify endpoint
-        if http_client is None:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.post(
-                    BETTER_AUTH_VERIFY_API_KEY_URL,
-                    json=request_body,
-                    headers={"Content-Type": "application/json"},
-                )
-        else:
-            response = await http_client.post(
-                BETTER_AUTH_VERIFY_API_KEY_URL,
-                json=request_body,
-                headers={"Content-Type": "application/json"},
-            )
-
-        # Check response status
-        if response.status_code == 401:
-            logger.warning("API key verification failed: Unauthorized")
-            raise AuthenticationError(ErrorMessages.API_KEY_INVALID)
-        if response.status_code == 403:
-            logger.warning("API key verification failed: Insufficient permissions")
-            raise AuthenticationError(ErrorMessages.API_KEY_INSUFFICIENT_PERMISSIONS)
-
-        response.raise_for_status()
-
-        # Parse response
-        try:
-            response_data = response.json()
-        except Exception as e:
-            logger.exception("Failed to parse API key verification response")
-            error_msg = f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: Invalid response format"
-            raise AuthenticationError(error_msg) from e
-
-        # Check if verification was successful
-        if not response_data.get("valid", False):
-            error_info = response_data.get("error")
-            if error_info:
-                error_message = error_info.get("message", ErrorMessages.API_KEY_INVALID)
-                logger.warning(f"API key verification failed: {error_message}")
-                raise AuthenticationError(error_message)
-            logger.warning("API key verification failed: Invalid key")
-            raise AuthenticationError(ErrorMessages.API_KEY_INVALID)
-
-        # Extract key data from response
         key_data = response_data.get("key", {})
         if not key_data:
             logger.error("API key verification response missing key data")
             error_msg = f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: Missing key data"
             raise AuthenticationError(error_msg)
 
-        # Build structured response
-        api_key_data: dict[str, Any] = {
-            "user_id": key_data.get("userId") or key_data.get("user_id"),
-            "key_id": key_data.get("id") or key_data.get("keyId"),
-            "permissions": key_data.get("permissions", {}),
-            "metadata": key_data.get("metadata", {}),
-            "name": key_data.get("name"),
-            "prefix": key_data.get("prefix"),
-            "enabled": key_data.get("enabled", True),
-        }
-
-        # Ensure user_id is present
-        if not api_key_data["user_id"]:
-            logger.error("API key verification response missing user_id")
-            error_msg = f"{ErrorMessages.API_KEY_VERIFICATION_FAILED}: Missing user_id"
-            raise AuthenticationError(error_msg)
+        api_key_data = _build_api_key_data(key_data)
 
         logger.info(
             f"API key verified successfully. User ID: {api_key_data['user_id']}, "
