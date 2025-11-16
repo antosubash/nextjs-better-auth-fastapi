@@ -12,9 +12,10 @@ const minioHostname = minioEndpoint.split(":")[0];
 const minioPortStr = minioEndpoint.includes(":") ? minioEndpoint.split(":")[1] : undefined;
 const minioPort = minioPortStr ? parseInt(minioPortStr, 10) : minioUseSsl ? 443 : 80;
 const minioProtocol = minioUseSsl ? "https" : "http";
-const minioOrigin = minioPort && minioPort !== (minioUseSsl ? 443 : 80)
-  ? `${minioProtocol}://${minioHostname}:${minioPortStr}`
-  : `${minioProtocol}://${minioHostname}`;
+const minioOrigin =
+  minioPort && minioPort !== (minioUseSsl ? 443 : 80)
+    ? `${minioProtocol}://${minioHostname}:${minioPortStr}`
+    : `${minioProtocol}://${minioHostname}`;
 
 // Security headers configuration
 const securityHeadersEnabled = process.env.NEXT_PUBLIC_SECURITY_HEADERS_ENABLED !== "false";

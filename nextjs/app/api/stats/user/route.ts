@@ -1,30 +1,19 @@
-import { and, desc, eq, gt, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { session, user } from "@/auth-schema";
 import { betterAuthService } from "@/lib/better-auth-service/index";
-import {
-  PERMISSION_ACTIONS,
-  PERMISSION_RESOURCES,
-  STATS_ERRORS,
-  STATS_LABELS,
-} from "@/lib/constants";
-import { db } from "@/lib/database";
-import { requirePermission } from "@/lib/permission-check-server";
+import { STATS_ERRORS, STATS_LABELS } from "@/lib/constants";
+import { requireAuth } from "@/lib/permission-check-server";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
-    const permissionError = await requirePermission(
-      PERMISSION_RESOURCES.USER,
-      PERMISSION_ACTIONS.READ
-    );
+    const authResult = await requireAuth();
 
-    if (permissionError) {
-      return permissionError;
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
 
-    const sessionData = await betterAuthService.session.getSession();
+    const sessionData = authResult.session;
 
     const userId = sessionData?.user?.id;
 
@@ -32,31 +21,16 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: STATS_ERRORS.USER_NOT_FOUND }, { status: 404 });
     }
 
-    const now = new Date();
+    const currentUser = sessionData?.user;
 
-    // Get user info first
-    const userData = await db.select().from(user).where(eq(user.id, userId)).limit(1);
-
-    if (userData.length === 0) {
+    if (!currentUser) {
       return NextResponse.json({ error: STATS_ERRORS.USER_NOT_FOUND }, { status: 404 });
     }
 
-    const currentUser = userData[0];
+    const now = Date.now();
 
-    // Get user's active sessions count
+    // Get user's sessions using Better Auth API
     let sessionsCount = 0;
-    try {
-      const activeSessions = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(session)
-        .where(and(eq(session.userId, userId), gt(session.expiresAt, now)));
-      sessionsCount = Number(activeSessions[0]?.count ?? 0);
-    } catch (err) {
-      console.error("Error fetching active sessions:", err);
-      // Continue with 0 sessions if query fails
-    }
-
-    // Get recent sessions (last 5)
     let recentSessions: Array<{
       id: string;
       createdAt: number | null;
@@ -66,28 +40,54 @@ export async function GET(_request: NextRequest) {
     }> = [];
 
     try {
-      const sessions = await db
-        .select({
-          id: session.id,
-          createdAt: session.createdAt,
-          expiresAt: session.expiresAt,
-          ipAddress: session.ipAddress,
-          userAgent: session.userAgent,
-        })
-        .from(session)
-        .where(eq(session.userId, userId))
-        .orderBy(desc(session.createdAt))
-        .limit(5);
-      recentSessions = sessions.map((s) => ({
-        id: s.id,
-        createdAt: s.createdAt ? s.createdAt.getTime() : null,
-        expiresAt: s.expiresAt.getTime(),
-        ipAddress: s.ipAddress,
-        userAgent: s.userAgent,
-      }));
+      const sessionsResult = await betterAuthService.session.listMySessions();
+      const sessions = (sessionsResult as { sessions?: unknown[] })?.sessions || [];
+
+      // Filter active sessions and get recent ones
+      const activeSessions = sessions.filter((s: unknown) => {
+        const session = s as { expiresAt?: Date | number };
+        const expiresAt =
+          session.expiresAt instanceof Date
+            ? session.expiresAt.getTime()
+            : (session.expiresAt as number) || 0;
+        return expiresAt > now;
+      });
+
+      sessionsCount = activeSessions.length;
+
+      // Get recent sessions (last 5)
+      recentSessions = sessions
+        .slice(0, 5)
+        .map((s: unknown) => {
+          const session = s as {
+            id?: string;
+            token?: string;
+            createdAt?: Date | number;
+            expiresAt?: Date | number;
+            ipAddress?: string | null;
+            userAgent?: string | null;
+          };
+
+          const createdAt =
+            session.createdAt instanceof Date
+              ? session.createdAt.getTime()
+              : (session.createdAt as number) || null;
+          const expiresAt =
+            session.expiresAt instanceof Date
+              ? session.expiresAt.getTime()
+              : (session.expiresAt as number) || 0;
+
+          return {
+            id: session.id || session.token || "",
+            createdAt,
+            expiresAt,
+            ipAddress: session.ipAddress || null,
+            userAgent: session.userAgent || null,
+          };
+        });
     } catch (err) {
-      console.error("Error fetching recent sessions:", err);
-      // Continue with empty array if query fails
+      console.error("Error fetching sessions:", err);
+      // Continue with 0 sessions if query fails
     }
 
     // Format recent activity
@@ -105,8 +105,10 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({
       sessionsCount: Number(sessionsCount),
-      accountCreatedAt: currentUser.createdAt,
-      emailVerified: currentUser.emailVerified,
+      accountCreatedAt: currentUser.createdAt
+        ? new Date(currentUser.createdAt).toISOString()
+        : new Date().toISOString(),
+      emailVerified: currentUser.emailVerified || false,
       recentActivity,
     });
   } catch (error) {

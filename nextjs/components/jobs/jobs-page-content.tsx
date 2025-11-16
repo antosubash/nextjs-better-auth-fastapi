@@ -56,7 +56,7 @@ export function JobsPageContent() {
 
   useEffect(() => {
     if (!isLoading && !isAuthorized) {
-      router.push("/");
+      router.push("/login");
     }
   }, [isLoading, isAuthorized, router]);
 

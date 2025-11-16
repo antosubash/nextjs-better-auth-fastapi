@@ -34,6 +34,10 @@ export const PROFILE = {
   NO_SESSIONS: "No sessions found",
   CURRENT_SESSION: "Current Session",
   EXPIRED: "Expired",
+  ACTIVE: "Active",
+  STATUS: "Status",
+  ACTIONS: "Actions",
+  REVOKING: "Revoking...",
   SECURITY: "Security",
   EDIT_PROFILE: "Edit Profile",
   SAVE_CHANGES: "Save Changes",
@@ -152,6 +156,9 @@ export const LANDING_PAGE = {
   SIGN_IN_DESCRIPTION: "Sign in to your account to continue",
   SIGN_UP_DESCRIPTION: "Join us today and get started",
   FEATURES_TITLE: "Why choose us?",
+  CTA_LOGIN: "Sign In",
+  CTA_SIGNUP: "Get Started",
+  CTA_DESCRIPTION: "Ready to get started?",
   FEATURES: [
     {
       TITLE: "Secure by Default",
@@ -316,6 +323,7 @@ export const DOCTOR = {
 export const DASHBOARD = {
   TITLE: "Dashboard",
   WELCOME: "Welcome to your dashboard",
+  WELCOME_BACK: "Welcome back",
   LOADING: "Loading dashboard...",
   ERROR: "Failed to load dashboard data",
   ACCOUNT_INFO: "Account Information",
@@ -327,6 +335,29 @@ export const DASHBOARD = {
   NO_ACTIVITY: "No recent activity",
   SESSION_CREATED: "Session created",
   VIEW_DETAILS: "View Details",
+  ITEMS: "items",
+  IP_ADDRESS: "IP",
+  TIME_JUST_NOW: "Just now",
+  TIME_AGO_MINUTE: "minute ago",
+  TIME_AGO_MINUTES: "minutes ago",
+  TIME_AGO_HOUR: "hour ago",
+  TIME_AGO_HOURS: "hours ago",
+  TIME_AGO_DAY: "day ago",
+  TIME_AGO_DAYS: "days ago",
+  QUICK_ACTIONS: "Quick Actions",
+  VIEW_PROFILE: "View Profile",
+  MANAGE_TASKS: "Manage Tasks",
+  ACCOUNT_OVERVIEW: "Account Overview",
+  YOUR_ACCOUNT: "Your Account",
+  GET_STARTED: "Get Started",
+  VERIFY_EMAIL: "Verify your email address to secure your account",
+  VIEW_ALL_ACTIVITY: "View All Activity",
+  ACTIVE_SESSION: "Active session",
+  ACTIVE_SESSIONS_PLURAL: "active sessions",
+  MEMBER_SINCE: "Member since",
+  ACCOUNT_SECURITY: "Account security",
+  YOUR_RECENT_ACTIVITY: "Your recent account activity",
+  COMMON_TASKS: "Common tasks",
 } as const;
 
 export const ADMIN_DASHBOARD = {
@@ -366,6 +397,62 @@ export const ADMIN_NAVIGATION = {
 export const ADMIN_LAYOUT = {
   LOADING: "Loading...",
   ACCESS_DENIED: "Access Denied",
+} as const;
+
+export const USER_NAVIGATION = {
+  DASHBOARD: "Dashboard",
+  TASKS: "Tasks",
+  PROFILE: "Profile",
+  MENU_TOGGLE: "Toggle menu",
+  CLOSE_MENU: "Close menu",
+} as const;
+
+export const USER_LAYOUT = {
+  LOADING: "Loading...",
+  ACCESS_DENIED: "Access Denied",
+  LOGIN_REQUIRED: "Please log in to continue",
+  APP_NAME: "Better Auth",
+  USER_PANEL: "User Panel",
+} as const;
+
+export const LOGIN_PAGE = {
+  TITLE: "Sign In",
+  DESCRIPTION: "Sign in to your account to continue",
+  SAMPLE_ACCOUNTS_TITLE: "Sample Accounts",
+  SAMPLE_ACCOUNTS_DESCRIPTION: "Click on an account to quickly fill in the form",
+  USE_SAMPLE_ACCOUNT: "Use this account",
+} as const;
+
+export const SAMPLE_ACCOUNTS = [
+  {
+    email: "admin@example.com",
+    password: "admin123",
+    role: "admin",
+    label: "Admin Account",
+  },
+  {
+    email: "user1@example.com",
+    password: "user1234",
+    role: "user",
+    label: "User Account",
+  },
+  {
+    email: "member@example.com",
+    password: "user1234",
+    role: "member",
+    label: "Member Account",
+  },
+  {
+    email: "owner@example.com",
+    password: "user1234",
+    role: "owner",
+    label: "Owner Account",
+  },
+] as const;
+
+export const SIGNUP_PAGE = {
+  TITLE: "Create Account",
+  DESCRIPTION: "Join us today and get started",
 } as const;
 
 export const ORGANIZATION_ROLES = {
@@ -893,6 +980,7 @@ export const STATS_LABELS = {
 
 export const SESSION_ERRORS = {
   USER_NOT_FOUND: "User not found",
+  USER_NOT_AUTHENTICATED: "User not authenticated",
   LOAD_SESSIONS_FAILED: "Failed to load sessions",
   REVOKE_SESSION_FAILED: "Failed to revoke session",
   SESSION_NOT_FOUND: "Session not found",
@@ -1323,6 +1411,7 @@ export const PROFILE_UPDATE_ERRORS = {
   INVALID_EMAIL: "Please enter a valid email address",
   UPDATE_FAILED: "Failed to update profile. Please try again.",
   EMAIL_ALREADY_IN_USE: "This email is already in use",
+  USER_NOT_AUTHENTICATED: "User not authenticated",
 } as const;
 
 export const PROFILE_UPDATE_SUCCESS = {

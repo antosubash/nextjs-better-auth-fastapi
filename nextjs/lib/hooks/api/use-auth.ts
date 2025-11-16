@@ -25,11 +25,15 @@ import {
 import { queryKeys } from "./query-keys";
 
 // Session hooks
-export function useSession() {
+export function useSession(options?: { disableCookieCache?: boolean }) {
   return useQuery({
-    queryKey: queryKeys.auth.session(),
+    queryKey: [...queryKeys.auth.session(), options?.disableCookieCache],
     queryFn: async () => {
-      const result = await authClient.getSession();
+      const result = await authClient.getSession(
+        options?.disableCookieCache
+          ? { query: { disableCookieCache: true } }
+          : undefined
+      );
       return result.data;
     },
     staleTime: 30 * 1000, // 30 seconds
@@ -1029,27 +1033,16 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: async (data: { name?: string; email?: string; image?: string | null }) => {
-      // Get current user ID from session
-      const sessionResult = await authClient.getSession();
-      if (!sessionResult.data?.user?.id) {
-        throw new Error("User not authenticated");
-      }
-
-      const userId = sessionResult.data.user.id;
-
-      // Use admin.updateUser to update the current user's profile
-      const result = await authClient.admin.updateUser({
-        userId,
-        data: {
-          ...(data.name !== undefined && { name: data.name }),
-          ...(data.email !== undefined && { email: data.email }),
-          ...(data.image !== undefined && { image: data.image }),
-        },
+      const result = await authClient.updateUser({
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.email !== undefined && { email: data.email }),
+        ...(data.image !== undefined && { image: data.image }),
       });
 
       if (result.error) {
         throw new Error(result.error.message || PROFILE_UPDATE_ERRORS.UPDATE_FAILED);
       }
+
       return result.data;
     },
     onSuccess: () => {

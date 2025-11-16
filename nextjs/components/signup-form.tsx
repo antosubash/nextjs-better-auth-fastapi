@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -22,7 +23,7 @@ import { useSession, useSignUp } from "@/lib/hooks/api/use-auth";
 import { getDashboardPath } from "@/lib/utils";
 
 interface SignupFormProps {
-  onSwitchToLogin: () => void;
+  onSwitchToLogin?: () => void;
 }
 
 const signupSchema = z.object({
@@ -135,9 +136,15 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
 
         <p className="text-sm text-center text-muted-foreground">
           {AUTH_LABELS.ALREADY_HAVE_ACCOUNT}{" "}
-          <Button type="button" variant="link" onClick={onSwitchToLogin} className="p-0 h-auto">
-            {AUTH_LABELS.LOGIN}
-          </Button>
+          {onSwitchToLogin ? (
+            <Button type="button" variant="link" onClick={onSwitchToLogin} className="p-0 h-auto">
+              {AUTH_LABELS.LOGIN}
+            </Button>
+          ) : (
+            <Button type="button" variant="link" asChild className="p-0 h-auto">
+              <Link href="/login">{AUTH_LABELS.LOGIN}</Link>
+            </Button>
+          )}
         </p>
       </form>
     </Form>

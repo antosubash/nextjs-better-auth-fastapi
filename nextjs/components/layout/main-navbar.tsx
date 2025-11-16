@@ -35,7 +35,7 @@ export function MainNavbar() {
   };
 
   const handleLogin = () => {
-    router.push("/");
+    router.push("/login");
   };
 
   const getInitials = (name?: string, email?: string) => {
@@ -84,9 +84,6 @@ export function MainNavbar() {
         <Button asChild variant={pathname === "/dashboard" ? "default" : "ghost"}>
           <Link href="/dashboard">{DASHBOARD.TITLE}</Link>
         </Button>
-        <Button asChild variant={pathname === "/profile" ? "default" : "ghost"}>
-          <Link href="/profile">{AUTH_LABELS.PROFILE}</Link>
-        </Button>
         {user && (
           <div className="flex items-center gap-3">
             <OrganizationSwitcher />
@@ -106,11 +103,6 @@ export function MainNavbar() {
                       <h4 className="text-sm font-semibold">{user.name || "User"}</h4>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
-                  </div>
-                  <div className="pt-2 border-t">
-                    <Button asChild variant="ghost" className="w-full justify-start">
-                      <Link href="/profile">{AUTH_LABELS.PROFILE}</Link>
-                    </Button>
                   </div>
                 </div>
               </HoverCardContent>
@@ -168,14 +160,6 @@ export function MainNavbar() {
             <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
         </div>
-        <Button
-          asChild
-          variant={pathname === "/profile" ? "default" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => setMobileMenuOpen(false)}
-        >
-          <Link href="/profile">{AUTH_LABELS.PROFILE}</Link>
-        </Button>
         <Button
           onClick={() => {
             handleLogout();

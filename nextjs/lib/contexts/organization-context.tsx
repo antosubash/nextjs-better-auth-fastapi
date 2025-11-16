@@ -2,7 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ORGANIZATION_CONTEXT, ORGANIZATION_ERRORS } from "@/lib/constants";
 import { useOrganizations, useSession, useSetActiveOrganization } from "@/lib/hooks/api/use-auth";
 import { createLogger } from "@/lib/utils/logger";
@@ -55,7 +63,11 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
 
   // Create a stable string representation of organization IDs for comparison
   const orgIdsString = useMemo(
-    () => organizations.map((o) => o.id).sort().join(","),
+    () =>
+      organizations
+        .map((o) => o.id)
+        .sort()
+        .join(","),
     [organizations]
   );
 
@@ -85,7 +97,8 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       const firstOrgId = firstOrg.id;
 
       // Prevent infinite loop: only attempt if we haven't tried this org yet
-      const canAttempt = autoSelectAttemptedRef.current !== firstOrgId && !setActiveOrgMutation.isPending;
+      const canAttempt =
+        autoSelectAttemptedRef.current !== firstOrgId && !setActiveOrgMutation.isPending;
       if (!canAttempt) {
         return;
       }
@@ -136,7 +149,13 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     // Auto-select first organization if none is active
     handleAutoSelectFirstOrg(organizations);
     setActiveOrganization(organizations[0] || null);
-  }, [orgIdsString, session?.session?.activeOrganizationId, findActiveOrgFromSession, handleAutoSelectFirstOrg, organizations]);
+  }, [
+    orgIdsString,
+    session?.session?.activeOrganizationId,
+    findActiveOrgFromSession,
+    handleAutoSelectFirstOrg,
+    organizations,
+  ]);
 
   // Handle organizations error
   useEffect(() => {

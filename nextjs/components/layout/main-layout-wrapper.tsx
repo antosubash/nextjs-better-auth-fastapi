@@ -11,8 +11,12 @@ interface MainLayoutWrapperProps {
 export function MainLayoutWrapper({ children }: MainLayoutWrapperProps) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith("/admin");
+  const isDashboardRoute = pathname?.startsWith("/dashboard");
+  const isProfileRoute = pathname === "/profile";
 
-  if (isAdminRoute) {
+  // Exclude admin, dashboard, and profile routes from MainLayout
+  // These routes have their own layouts with custom navigation
+  if (isAdminRoute || isDashboardRoute || isProfileRoute) {
     return <>{children}</>;
   }
 
