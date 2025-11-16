@@ -468,6 +468,7 @@ export const LOGIN_PAGE = {
   SAMPLE_ACCOUNTS_TITLE: "Sample Accounts",
   SAMPLE_ACCOUNTS_DESCRIPTION: "Click on an account to quickly fill in the form",
   USE_SAMPLE_ACCOUNT: "Use this account",
+  OR_CONTINUE_WITH: "Or continue with",
 } as const;
 
 export const SAMPLE_ACCOUNTS = [
@@ -1493,4 +1494,58 @@ export const EMAIL_VERIFICATION_ERRORS = {
 
 export const EMAIL_VERIFICATION_SUCCESS = {
   EMAIL_SENT: "Verification email sent successfully",
+} as const;
+
+export const PASSKEY_LABELS = {
+  TITLE: "Passkeys",
+  DESCRIPTION: "Manage your passkeys for passwordless authentication",
+  ADD_PASSKEY: "Add Passkey",
+  SIGN_IN_WITH_PASSKEY: "Sign in with Passkey",
+  LIST_PASSKEYS: "Your Passkeys",
+  NO_PASSKEYS: "No passkeys registered",
+  PASSKEY_NAME: "Passkey Name",
+  DEVICE_TYPE: "Device Type",
+  CREATED_AT: "Created At",
+  ACTIONS: "Actions",
+  DELETE_PASSKEY: "Delete Passkey",
+  UPDATE_PASSKEY: "Update Passkey",
+  CONFIRM_DELETE: "Are you sure you want to delete this passkey?",
+  ADDING: "Adding...",
+  DELETING: "Deleting...",
+  UPDATING: "Updating...",
+  PLATFORM: "Platform",
+  CROSS_PLATFORM: "Cross-Platform",
+  BACKED_UP: "Backed Up",
+  NOT_BACKED_UP: "Not Backed Up",
+  LOADING: "Loading passkeys...",
+  CANCEL: "Cancel",
+} as const;
+
+export const PASSKEY_PLACEHOLDERS = {
+  NAME: "Enter passkey name (e.g., My iPhone, Work Laptop)",
+  AUTHENTICATOR_ATTACHMENT: "Select authenticator type",
+  ANY_DEFAULT: "Any (default)",
+} as const;
+
+export const PASSKEY_ERRORS = {
+  ADD_FAILED: "Failed to add passkey",
+  DELETE_FAILED: "Failed to delete passkey",
+  UPDATE_FAILED: "Failed to update passkey",
+  LIST_FAILED: "Failed to load passkeys",
+  SIGN_IN_FAILED: "Failed to sign in with passkey",
+  NOT_SUPPORTED: "Passkeys are not supported in this browser",
+  USER_CANCELLED: "Passkey registration was cancelled",
+  INVALID_PASSKEY: "Invalid passkey",
+  NAME_REQUIRED: "Passkey name is required",
+} as const;
+
+export const PASSKEY_SUCCESS = {
+  ADDED: "Passkey added successfully",
+  DELETED: "Passkey deleted successfully",
+  UPDATED: "Passkey updated successfully",
+  SIGNED_IN: "Signed in successfully with passkey",
+} as const;
+
+export const PASSKEY_CONFIG = {
+  DEFAULT_AUTOFILL: true,
 } as const;

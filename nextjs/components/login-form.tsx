@@ -23,9 +23,10 @@ import {
   AUTH_LABELS,
   AUTH_PLACEHOLDERS,
   LOGIN_PAGE,
+  PASSKEY_LABELS,
   SAMPLE_ACCOUNTS,
 } from "@/lib/constants";
-import { useSession, useSignIn } from "@/lib/hooks/api/use-auth";
+import { useSession, useSignIn, useSignInWithPasskey } from "@/lib/hooks/api/use-auth";
 import { getDashboardPath } from "@/lib/utils";
 
 interface LoginFormProps {
@@ -42,6 +43,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const router = useRouter();
   const signInMutation = useSignIn();
+  const signInWithPasskeyMutation = useSignInWithPasskey();
   const { data: session } = useSession();
 
   const form = useForm<LoginFormValues>({
@@ -68,6 +70,26 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const handleSampleAccountClick = (email: string, password: string) => {
     form.setValue("email", email);
     form.setValue("password", password);
+  };
+
+  const handleSignInWithPasskey = async () => {
+    try {
+      const result = await signInWithPasskeyMutation.mutateAsync({ autoFill: false });
+      // If result is null, user cancelled - this is expected, don't show error
+      if (result === null) {
+        return;
+      }
+    } catch (error) {
+      // Only log actual errors, not cancellations
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (
+        !errorMessage.toLowerCase().includes("cancel") &&
+        !errorMessage.toLowerCase().includes("abort") &&
+        !errorMessage.toLowerCase().includes("notallowed")
+      ) {
+        // Error is handled by the mutation hook for non-cancellation errors
+      }
+    }
   };
 
   return (
@@ -110,7 +132,12 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             <FormItem>
               <FormLabel>{AUTH_LABELS.EMAIL}</FormLabel>
               <FormControl>
-                <Input type="email" placeholder={AUTH_PLACEHOLDERS.EMAIL} {...field} />
+                <Input
+                  type="email"
+                  placeholder={AUTH_PLACEHOLDERS.EMAIL}
+                  autoComplete="username webauthn"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -124,7 +151,12 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             <FormItem>
               <FormLabel>{AUTH_LABELS.PASSWORD}</FormLabel>
               <FormControl>
-                <Input type="password" placeholder={AUTH_PLACEHOLDERS.PASSWORD} {...field} />
+                <Input
+                  type="password"
+                  placeholder={AUTH_PLACEHOLDERS.PASSWORD}
+                  autoComplete="current-password webauthn"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -139,7 +171,61 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           </Alert>
         )}
 
-        <Button type="submit" disabled={signInMutation.isPending}>
+        {signInWithPasskeyMutation.isError &&
+          signInWithPasskeyMutation.error &&
+          (() => {
+            const errorMessage = signInWithPasskeyMutation.error.message || "";
+            // Don't show error alert for user cancellation
+            if (
+              errorMessage.toLowerCase().includes("cancel") ||
+              errorMessage.toLowerCase().includes("abort") ||
+              errorMessage.toLowerCase().includes("notallowed")
+            ) {
+              return null;
+            }
+            return (
+              <Alert variant="destructive">
+                <AlertDescription>{errorMessage || AUTH_ERRORS.LOGIN_FAILED}</AlertDescription>
+              </Alert>
+            );
+          })()}
+
+        {typeof window !== "undefined" &&
+          typeof PublicKeyCredential !== "undefined" &&
+          PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== undefined && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSignInWithPasskey}
+              disabled={signInWithPasskeyMutation.isPending || signInMutation.isPending}
+              className="w-full"
+            >
+              {signInWithPasskeyMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                PASSKEY_LABELS.SIGN_IN_WITH_PASSKEY
+              )}
+            </Button>
+          )}
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              {LOGIN_PAGE.OR_CONTINUE_WITH}
+            </span>
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          disabled={signInMutation.isPending || signInWithPasskeyMutation.isPending}
+        >
           {signInMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

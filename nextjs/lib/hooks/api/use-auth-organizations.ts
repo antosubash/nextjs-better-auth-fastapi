@@ -3,8 +3,12 @@ import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_ERRORS, ORGANIZATION_SUCCESS } from "@/lib/constants";
 import { queryKeys } from "./query-keys";
+import { useSession } from "./use-auth-session";
 
 export function useOrganizations() {
+  const { data: session } = useSession();
+  const isAuthenticated = !!session?.user?.id;
+
   return useQuery({
     queryKey: queryKeys.auth.organizations(),
     queryFn: async () => {
@@ -14,6 +18,7 @@ export function useOrganizations() {
       }
       return Array.isArray(result.data) ? result.data : [];
     },
+    enabled: isAuthenticated, // Only fetch when user is authenticated
     staleTime: 60 * 1000, // 1 minute
   });
 }

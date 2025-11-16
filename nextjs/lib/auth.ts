@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin, apiKey, bearer, jwt, organization } from "better-auth/plugins";
+import { passkey } from "better-auth/plugins/passkey";
 import * as schema from "../auth-schema";
 import { BETTER_AUTH_CONFIG, USER_ROLES } from "./constants";
 import { db } from "./database";
@@ -60,6 +61,7 @@ export const auth = betterAuth({
       },
     }),
     apiKey(),
+    passkey(),
     nextCookies(),
   ],
 });
