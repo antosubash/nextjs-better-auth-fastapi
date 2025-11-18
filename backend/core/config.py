@@ -56,6 +56,7 @@ DB_POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "30"))
 DB_POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "3600"))
 
 # MinIO/S3 configuration
+# MINIO_ACCESS_KEY and MINIO_SECRET_KEY are used for both MinIO server and S3 API access
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
@@ -71,8 +72,9 @@ PROFILE_PICTURE_ALLOWED_TYPES = os.getenv(
 ).split(",")
 
 # Job scheduler configuration
-# Use sync database URL (without +asyncpg) for APScheduler job store
-JOB_STORE_URL = os.getenv("JOB_STORE_URL", DATABASE_URL_SYNC)
+# JOB_STORE_URL is auto-generated from DATABASE_URL_SYNC
+# APScheduler requires synchronous database connection (postgresql:// not postgresql+asyncpg://)
+JOB_STORE_URL = DATABASE_URL_SYNC
 JOB_STORE_TABLE_NAME = os.getenv("JOB_STORE_TABLE_NAME", "apscheduler_jobs")
 JOB_EXECUTOR_MAX_WORKERS = int(os.getenv("JOB_EXECUTOR_MAX_WORKERS", "10"))
 # Misfire grace time in seconds - how long after a missed run time a job can still be executed

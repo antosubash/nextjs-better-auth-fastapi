@@ -3,6 +3,8 @@ services:
     image: postgres:16-alpine
     container_name: better_auth_postgres
     environment:
+      # These defaults match DATABASE_URL default (postgres:postgres@localhost:5432/better_auth_db)
+      # Can be overridden via environment variables if needed
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-better_auth_db}
@@ -23,8 +25,9 @@ services:
     container_name: better_auth_minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      # Use MINIO_ACCESS_KEY and MINIO_SECRET_KEY (same as S3 API credentials)
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
     ports:
       - "${MINIO_API_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
@@ -42,6 +45,7 @@ services:
     image: sosedoff/pgweb:latest
     container_name: better_auth_pgweb
     environment:
+      # Uses POSTGRES_* defaults matching DATABASE_URL default
       PGWEB_DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-better_auth_db}?sslmode=disable
     ports:
       - "${PGWEB_PORT:-8081}:8081"
