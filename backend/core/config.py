@@ -56,7 +56,7 @@ DB_POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "30"))
 DB_POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "3600"))
 
 # MinIO/S3 configuration
-# MINIO_ACCESS_KEY and MINIO_SECRET_KEY are used for both MinIO server and S3 API access
+# MINIO_ACCESS_KEY and MINIO_SECRET_KEY are for S3 API access (separate from MINIO_ROOT_USER/PASSWORD)
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")

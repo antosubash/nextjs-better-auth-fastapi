@@ -158,15 +158,17 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `MINIO_ENDPOINT` | MinIO endpoint | `localhost:9000` | No |
-| `MINIO_ACCESS_KEY` | MinIO access key (used for both MinIO server and S3 API access) | `minioadmin` | No |
-| `MINIO_SECRET_KEY` | MinIO secret key (used for both MinIO server and S3 API access) | `minioadmin` | No |
+| `MINIO_ROOT_USER` | MinIO server root user (for docker-compose) | `minioadmin` | No |
+| `MINIO_ROOT_PASSWORD` | MinIO server root password (for docker-compose) | `minioadmin` | No |
+| `MINIO_ACCESS_KEY` | MinIO access key (for S3 API access) | `minioadmin` | No |
+| `MINIO_SECRET_KEY` | MinIO secret key (for S3 API access) | `minioadmin` | No |
 | `MINIO_USE_SSL` | Use SSL for MinIO | `false` | No |
 | `MINIO_BUCKET_NAME` | MinIO bucket name | `better-auth-storage` | No |
 | `MINIO_REGION` | MinIO region | `us-east-1` | No |
 | `MINIO_API_PORT` | MinIO API port | `9000` | No |
 | `MINIO_CONSOLE_PORT` | MinIO console port | `9001` | No |
 
-**Note:** `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` are used for both the MinIO server (via docker-compose) and S3 API access (via backend application).
+**Note:** `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD` are the initial admin credentials for the MinIO server (used in docker-compose). `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` are the S3 API credentials used by the backend application. They can be the same or different depending on your setup.
 
 **Example:**
 
@@ -212,12 +214,12 @@ These variables are used by Docker Compose for PostgreSQL, MinIO, and pgWeb:
 | `POSTGRES_DB` | PostgreSQL database name (defaults match `DATABASE_URL`) | `better_auth_db` | No |
 | `POSTGRES_PORT` | PostgreSQL port | `5432` | No |
 | `PGWEB_PORT` | pgWeb port | `8081` | No |
-| `MINIO_ACCESS_KEY` | MinIO access key (used for both server and S3 API) | `minioadmin` | No |
-| `MINIO_SECRET_KEY` | MinIO secret key (used for both server and S3 API) | `minioadmin` | No |
+| `MINIO_ROOT_USER` | MinIO server root user | `minioadmin` | No |
+| `MINIO_ROOT_PASSWORD` | MinIO server root password | `minioadmin` | No |
 | `MINIO_API_PORT` | MinIO API port | `9000` | No |
 | `MINIO_CONSOLE_PORT` | MinIO console port | `9001` | No |
 
-**Note:** Docker Compose uses hardcoded defaults that match the `DATABASE_URL` default. These can be overridden via environment variables if needed. MinIO uses `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` for both the server and S3 API access.
+**Note:** Docker Compose uses hardcoded defaults that match the `DATABASE_URL` default. These can be overridden via environment variables if needed. MinIO root credentials (`MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD`) are separate from S3 API credentials (`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`).
 
 ## Configuration Files
 

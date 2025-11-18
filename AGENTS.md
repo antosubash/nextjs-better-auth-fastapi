@@ -220,8 +220,10 @@ All environment variables for both frontend and backend are configured in a sing
 - `RATE_LIMIT_REQUESTS_PER_MINUTE` - Rate limit per IP (default: 60)
 - `JWKS_CACHE_TTL_SECONDS` - JWKS cache TTL in seconds (default: 3600)
 - `MINIO_ENDPOINT` - MinIO endpoint (default: localhost:9000)
-- `MINIO_ACCESS_KEY` - MinIO access key (used for both MinIO server and S3 API access, default: minioadmin)
-- `MINIO_SECRET_KEY` - MinIO secret key (used for both MinIO server and S3 API access, default: minioadmin)
+- `MINIO_ROOT_USER` - MinIO server root user (for docker-compose, default: minioadmin)
+- `MINIO_ROOT_PASSWORD` - MinIO server root password (for docker-compose, default: minioadmin)
+- `MINIO_ACCESS_KEY` - MinIO access key (for S3 API access, default: minioadmin)
+- `MINIO_SECRET_KEY` - MinIO secret key (for S3 API access, default: minioadmin)
 - `MINIO_BUCKET_NAME` - MinIO bucket name (default: better-auth-storage)
 
 **Note:** `DATABASE_URL` is the primary configuration for database connection. `JOB_STORE_URL` is auto-generated from `DATABASE_URL` (converted to sync format). For docker-compose, `POSTGRES_*` variables use hardcoded defaults matching `DATABASE_URL` and can be overridden if needed.

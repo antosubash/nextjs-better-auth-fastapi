@@ -25,9 +25,9 @@ services:
     container_name: better_auth_minio
     command: server /data --console-address ":9001"
     environment:
-      # Use MINIO_ACCESS_KEY and MINIO_SECRET_KEY (same as S3 API credentials)
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      # MinIO server root credentials (separate from S3 API credentials)
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     ports:
       - "${MINIO_API_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
