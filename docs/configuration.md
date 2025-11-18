@@ -24,12 +24,14 @@ BETTER_AUTH_SECRET=your-secure-secret-key-here
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `DATABASE_URL` | PostgreSQL connection string (async format) | `postgresql+asyncpg://postgres:postgres@localhost:5432/better_auth_db` | Yes |
+| `DATABASE_URL` | PostgreSQL connection string (async format). This is the source of truth for database connection. | `postgresql+asyncpg://postgres:postgres@localhost:5432/better_auth_db` | Yes |
 | `DB_SCHEMA` | Database schema name for backend | `api` | No |
 | `DB_POOL_SIZE` | Connection pool size | `5` | No |
 | `DB_MAX_OVERFLOW` | Maximum pool overflow | `10` | No |
 | `DB_POOL_TIMEOUT` | Pool timeout in seconds | `30` | No |
 | `DB_POOL_RECYCLE` | Connection recycle time in seconds | `3600` | No |
+
+**Note:** `DATABASE_URL` is the primary configuration. For docker-compose, `POSTGRES_*` variables use hardcoded defaults matching the `DATABASE_URL` default and can be overridden if needed.
 
 **Example:**
 
@@ -156,11 +158,17 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `MINIO_ENDPOINT` | MinIO endpoint | `localhost:9000` | No |
-| `MINIO_ACCESS_KEY` | MinIO access key | `minioadmin` | No |
-| `MINIO_SECRET_KEY` | MinIO secret key | `minioadmin` | No |
+| `MINIO_ROOT_USER` | MinIO server root user (for docker-compose) | `minioadmin` | No |
+| `MINIO_ROOT_PASSWORD` | MinIO server root password (for docker-compose) | `minioadmin` | No |
+| `MINIO_ACCESS_KEY` | MinIO access key (for S3 API access) | `minioadmin` | No |
+| `MINIO_SECRET_KEY` | MinIO secret key (for S3 API access) | `minioadmin` | No |
 | `MINIO_USE_SSL` | Use SSL for MinIO | `false` | No |
 | `MINIO_BUCKET_NAME` | MinIO bucket name | `better-auth-storage` | No |
 | `MINIO_REGION` | MinIO region | `us-east-1` | No |
+| `MINIO_API_PORT` | MinIO API port | `9000` | No |
+| `MINIO_CONSOLE_PORT` | MinIO console port | `9001` | No |
+
+**Note:** `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD` are the initial admin credentials for the MinIO server (used in docker-compose). `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` are the S3 API credentials used by the backend application. They can be the same or different depending on your setup.
 
 **Example:**
 
@@ -177,7 +185,6 @@ MINIO_REGION=us-east-1
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `JOB_STORE_URL` | Database URL for job store (sync format) | Uses `DATABASE_URL` (sync) | No |
 | `JOB_STORE_TABLE_NAME` | Job store table name | `apscheduler_jobs` | No |
 | `JOB_EXECUTOR_MAX_WORKERS` | Maximum worker threads | `10` | No |
 | `JOB_MISFIRE_GRACE_TIME_SECONDS` | Misfire grace time in seconds | `3600` | No |
@@ -186,10 +193,11 @@ MINIO_REGION=us-east-1
 | `LOG_RETRY_MAX_ATTEMPTS` | Max retries for log retrieval | `3` | No |
 | `LOG_RETRY_DELAY_SECONDS` | Retry delay for log retrieval | `0.1` | No |
 
+**Note:** `JOB_STORE_URL` is auto-generated from `DATABASE_URL` (converted to sync format). APScheduler requires a synchronous database connection (postgresql:// not postgresql+asyncpg://).
+
 **Example:**
 
 ```bash
-JOB_STORE_URL=postgresql://postgres:postgres@localhost:5432/better_auth_db
 JOB_STORE_TABLE_NAME=apscheduler_jobs
 JOB_EXECUTOR_MAX_WORKERS=10
 JOB_MISFIRE_GRACE_TIME_SECONDS=3600
@@ -201,16 +209,17 @@ These variables are used by Docker Compose for PostgreSQL, MinIO, and pgWeb:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `POSTGRES_USER` | PostgreSQL username | `postgres` | No |
-| `POSTGRES_PASSWORD` | PostgreSQL password | `postgres` | No |
-| `POSTGRES_DB` | PostgreSQL database name | `better_auth_db` | No |
+| `POSTGRES_USER` | PostgreSQL username (defaults match `DATABASE_URL`) | `postgres` | No |
+| `POSTGRES_PASSWORD` | PostgreSQL password (defaults match `DATABASE_URL`) | `postgres` | No |
+| `POSTGRES_DB` | PostgreSQL database name (defaults match `DATABASE_URL`) | `better_auth_db` | No |
 | `POSTGRES_PORT` | PostgreSQL port | `5432` | No |
-| `POSTGRES_HOST` | PostgreSQL host | `localhost` | No |
 | `PGWEB_PORT` | pgWeb port | `8081` | No |
-| `MINIO_ROOT_USER` | MinIO root user | `minioadmin` | No |
-| `MINIO_ROOT_PASSWORD` | MinIO root password | `minioadmin` | No |
+| `MINIO_ROOT_USER` | MinIO server root user | `minioadmin` | No |
+| `MINIO_ROOT_PASSWORD` | MinIO server root password | `minioadmin` | No |
 | `MINIO_API_PORT` | MinIO API port | `9000` | No |
 | `MINIO_CONSOLE_PORT` | MinIO console port | `9001` | No |
+
+**Note:** Docker Compose uses hardcoded defaults that match the `DATABASE_URL` default. These can be overridden via environment variables if needed. MinIO root credentials (`MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD`) are separate from S3 API credentials (`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`).
 
 ## Configuration Files
 

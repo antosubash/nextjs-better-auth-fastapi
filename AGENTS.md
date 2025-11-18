@@ -214,15 +214,19 @@ All environment variables for both frontend and backend are configured in a sing
 - `LOG_LEVEL` - Logging level (default: INFO)
 - `LOG_FORMAT_JSON` - Use JSON logging format (default: false)
 - `CORS_ORIGINS` - Comma-separated list of allowed CORS origins (default: http://localhost:3000)
-- `DATABASE_URL` - PostgreSQL connection string (default: postgresql+asyncpg://postgres:postgres@localhost:5432/better_auth_db)
+- `DATABASE_URL` - PostgreSQL connection string, source of truth for database connection (default: postgresql+asyncpg://postgres:postgres@localhost:5432/better_auth_db)
 - `DB_SCHEMA` - Database schema name (default: api)
 - `RATE_LIMIT_ENABLED` - Enable rate limiting (default: true)
 - `RATE_LIMIT_REQUESTS_PER_MINUTE` - Rate limit per IP (default: 60)
 - `JWKS_CACHE_TTL_SECONDS` - JWKS cache TTL in seconds (default: 3600)
 - `MINIO_ENDPOINT` - MinIO endpoint (default: localhost:9000)
-- `MINIO_ACCESS_KEY` - MinIO access key (default: minioadmin)
-- `MINIO_SECRET_KEY` - MinIO secret key (default: minioadmin)
+- `MINIO_ROOT_USER` - MinIO server root user (for docker-compose, default: minioadmin)
+- `MINIO_ROOT_PASSWORD` - MinIO server root password (for docker-compose, default: minioadmin)
+- `MINIO_ACCESS_KEY` - MinIO access key (for S3 API access, default: minioadmin)
+- `MINIO_SECRET_KEY` - MinIO secret key (for S3 API access, default: minioadmin)
 - `MINIO_BUCKET_NAME` - MinIO bucket name (default: better-auth-storage)
+
+**Note:** `DATABASE_URL` is the primary configuration for database connection. `JOB_STORE_URL` is auto-generated from `DATABASE_URL` (converted to sync format). For docker-compose, `POSTGRES_*` variables use hardcoded defaults matching `DATABASE_URL` and can be overridden if needed.
 
 See `env.example` in the project root for a complete list of all environment variables.
 
