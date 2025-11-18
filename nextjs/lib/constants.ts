@@ -134,8 +134,22 @@ export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
 } as const;
 
+// Get Better Auth base URL
+// For client-side: use window.location.origin (same domain)
+// For server-side: use BETTER_AUTH_URL environment variable
+function getBetterAuthBaseURL(): string {
+  if (typeof window !== "undefined") {
+    // Client-side: use current origin
+    return window.location.origin;
+  }
+  // Server-side: use environment variable
+  return process.env.BETTER_AUTH_URL || "http://localhost:3000";
+}
+
 export const BETTER_AUTH_CONFIG = {
-  BASE_URL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  get BASE_URL() {
+    return getBetterAuthBaseURL();
+  },
 } as const;
 
 export const JWT_CONFIG = {

@@ -47,7 +47,7 @@ Copy environment variables from the project root `.env` file. The frontend autom
 
 Key variables:
 - `BETTER_AUTH_SECRET` - Secret key for Better Auth
-- `BETTER_AUTH_URL` - Base URL (default: http://localhost:3000)
+- `BETTER_AUTH_URL` - Base URL (default: http://localhost:3000). In Docker, automatically used for client-side access
 - `DATABASE_URL` - PostgreSQL connection string
 - `NEXT_PUBLIC_API_URL` - Backend API URL (default: http://localhost:8000)
 
