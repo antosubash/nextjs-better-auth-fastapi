@@ -7,12 +7,12 @@ echo "Running frontend database migrations..."
 # Better Auth migrations are only for the built-in Kysely adapter
 echo "Skipping Better Auth migrations (using Drizzle adapter)"
 
-# Run Drizzle migrations
-# Note: drizzle-kit migrate should be idempotent, but if tables already exist
-# from a previous run, we'll continue anyway
+# Run Drizzle migrations using programmatic approach
+# Note: This uses the migrate() function from drizzle-orm which is more reliable
+# for runtime migrations in Docker containers than the drizzle-kit CLI
 echo "Running Drizzle migrations..."
 set +e  # Temporarily disable exit on error for migration check
-pnpm drizzle-kit migrate
+pnpm tsx scripts/migrate.ts
 MIGRATION_EXIT_CODE=$?
 set -e  # Re-enable exit on error
 
