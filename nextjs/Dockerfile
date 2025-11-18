@@ -55,10 +55,12 @@ COPY . .
 RUN set -e && \
     export DATABASE_URL="${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/better_auth_db}" && \
     export BETTER_AUTH_SECRET="${BETTER_AUTH_SECRET:-ci-build-secret-placeholder}" && \
+    export BETTER_AUTH_URL="${BETTER_AUTH_URL:-http://localhost:3000}" && \
     pnpm build
 
 # Runtime stage: Only include non-sensitive public environment variables
-# All other variables (DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL) must be provided at runtime
+# BETTER_AUTH_URL can be provided at runtime for server-side code if needed
+# All other variables (DATABASE_URL, BETTER_AUTH_SECRET) must be provided at runtime
 FROM base AS runtime
 
 # Only set public environment variables (NEXT_PUBLIC_* are safe to include)
@@ -91,4 +93,5 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Run the application
 # Note: DATABASE_URL and BETTER_AUTH_SECRET must be provided at runtime via -e or docker-compose
+# BETTER_AUTH_URL must be provided as a build arg during docker build (see build-args above)
 CMD ["pnpm", "start"]

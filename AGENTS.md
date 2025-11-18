@@ -205,7 +205,7 @@ All environment variables for both frontend and backend are configured in a sing
 
 **Frontend Variables:**
 - `BETTER_AUTH_SECRET` - Secret key for Better Auth
-- `BETTER_AUTH_URL` - Base URL (default: http://localhost:3000)
+- `BETTER_AUTH_URL` - Base URL (default: http://localhost:3000). In Docker, automatically used for client-side access
 - `NEXT_PUBLIC_API_URL` - Backend API URL (default: http://localhost:8000)
 - `DATABASE_URL` - PostgreSQL connection string (shared with backend)
 
