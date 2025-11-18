@@ -71,12 +71,12 @@ dev:
 # Run backend database migrations
 migrate-backend:
 	@echo "Running backend database migrations..."
-	cd backend && uv run alembic upgrade head
+	cd backend && uv run python scripts/migrate.py
 
 # Run frontend database migrations
 migrate-frontend:
 	@echo "Running frontend database migrations..."
-	cd nextjs && pnpm drizzle-kit migrate
+	cd nextjs && pnpm migrate
 
 # Run both backend and frontend migrations
 migrate: migrate-backend migrate-frontend
