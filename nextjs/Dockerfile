@@ -76,9 +76,18 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/app ./app
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/auth-schema.ts ./auth-schema.ts
+COPY --from=builder /app/drizzle ./drizzle
+COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+
+# Copy and set up entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 3000
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Run the application
 # Note: DATABASE_URL and BETTER_AUTH_SECRET must be provided at runtime via -e or docker-compose
