@@ -20,8 +20,15 @@ RUN uv sync --no-dev
 # Copy backend source code
 COPY . .
 
+# Copy and set up entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose port
 EXPOSE 8000
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Run the application
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
