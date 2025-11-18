@@ -214,6 +214,7 @@ These variables are used by Docker Compose for PostgreSQL, MinIO, and pgWeb:
 | `POSTGRES_DB` | PostgreSQL database name (defaults match `DATABASE_URL`) | `better_auth_db` | No |
 | `POSTGRES_PORT` | PostgreSQL port | `5432` | No |
 | `PGWEB_PORT` | pgWeb port | `8081` | No |
+<<<<<<< HEAD
 | `MINIO_ROOT_USER` | MinIO server root user | `minioadmin` | No |
 | `MINIO_ROOT_PASSWORD` | MinIO server root password | `minioadmin` | No |
 | `MINIO_API_PORT` | MinIO API port | `9000` | No |
