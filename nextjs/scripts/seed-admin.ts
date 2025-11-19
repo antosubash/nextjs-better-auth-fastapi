@@ -11,7 +11,9 @@ config({ path: resolve(process.cwd(), "../.env") });
   // Now we can safely import modules that depend on environment variables
   const { USER_ROLES } = await import("../lib/constants");
   const { auth } = await import("../lib/auth");
-  const { betterAuthService } = await import("../lib/better-auth-service");
+  const { db } = await import("../lib/database");
+  const { user } = await import("../auth-schema");
+  const { eq } = await import("drizzle-orm");
 
   const SEED_USERS = [
     {
@@ -105,26 +107,21 @@ config({ path: resolve(process.cwd(), "../.env") });
 
     for (const userData of SEED_USERS) {
       try {
-        // Check if user exists using Better Auth API
-        const existingUsersResult = await betterAuthService.admin.listUsers({
-          searchValue: userData.email,
-          searchField: "email",
-          searchOperator: "contains",
-          limit: 1,
-        });
-
-        const existingUsers = (existingUsersResult as { users?: unknown[] })?.users || [];
+        // Check if user exists using direct DB query
+        const existingUsers = await db
+          .select()
+          .from(user)
+          .where(eq(user.email, userData.email))
+          .limit(1);
 
         if (existingUsers.length > 0) {
-          const existingUser = existingUsers[0] as { id?: string };
-          if (existingUser.id) {
-            console.log(`⊘ User already exists: ${userData.email}, deleting...`);
+          const existingUser = existingUsers[0];
+          console.log(`⊘ User already exists: ${userData.email}, deleting...`);
 
-            // Delete user using Better Auth API
-            await betterAuthService.admin.removeUser({ userId: existingUser.id });
+          // Delete user using direct DB query
+          await db.delete(user).where(eq(user.id, existingUser.id));
 
-            console.log(`✓ Deleted existing user: ${userData.email}`);
-          }
+          console.log(`✓ Deleted existing user: ${userData.email}`);
         }
 
         // Create user - only pass role if it's admin (allowedRoles only includes admin)
@@ -151,16 +148,26 @@ config({ path: resolve(process.cwd(), "../.env") });
 
         if (newUser?.user?.id) {
           // Update role if it's different from the default role (user) or admin
-          // Use Better Auth API to set role
+          // Use direct DB query to set role
           const defaultRole =
             userData.role === USER_ROLES.ADMIN ? USER_ROLES.ADMIN : USER_ROLES.USER;
           if (userData.role !== defaultRole) {
-            await betterAuthService.admin.setRole({
-              userId: newUser.user.id,
-              role: userData.role,
-            });
+            await db.update(user).set({ role: userData.role }).where(eq(user.id, newUser.user.id));
           }
-          console.log(`✓ Created user: ${userData.email} (${userData.role})`);
+
+          // Verify the user was created with the correct role by querying the DB
+          const createdUser = await db
+            .select()
+            .from(user)
+            .where(eq(user.id, newUser.user.id))
+            .limit(1);
+
+          if (createdUser.length > 0) {
+            console.log(`✓ Created user: ${userData.email} (role: ${createdUser[0].role})`);
+          } else {
+            console.log(`✓ Created user: ${userData.email} (${userData.role})`);
+          }
+
         } else {
           console.error(`✗ Failed to create user ${userData.email}:`, "Unknown error");
         }

@@ -24,6 +24,21 @@ else
     echo "Continuing with application startup..."
 fi
 
+# Run database seeding
+echo "Running database seeding..."
+set +e  # Temporarily disable exit on error for seeding check
+pnpm seed
+SEED_EXIT_CODE=$?
+set -e  # Re-enable exit on error
+
+if [ $SEED_EXIT_CODE -eq 0 ]; then
+    echo "Database seeding completed successfully"
+else
+    echo "Warning: Database seeding exited with code $SEED_EXIT_CODE"
+    echo "This may be normal if data was already seeded"
+    echo "Continuing with application startup..."
+fi
+
 echo "Starting Next.js application..."
 exec "$@"
 
