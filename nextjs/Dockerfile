@@ -80,6 +80,7 @@ COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/auth-schema.ts ./auth-schema.ts
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/scripts ./scripts  
 
 # Copy and set up entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
