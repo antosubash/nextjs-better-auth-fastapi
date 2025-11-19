@@ -83,6 +83,7 @@ class ErrorMessages:
     # Storage errors
     STORAGE_UPLOAD_ERROR = "Failed to upload file"
     STORAGE_DELETE_ERROR = "Failed to delete file"
+    STORAGE_GET_ERROR = "Failed to retrieve file"
     STORAGE_FILE_TOO_LARGE = "File size exceeds maximum allowed size"
     STORAGE_INVALID_FILE_TYPE = "Invalid file type. Only image files are allowed"
     STORAGE_FILE_REQUIRED = "File is required"

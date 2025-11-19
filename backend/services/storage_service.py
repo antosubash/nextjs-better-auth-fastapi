@@ -3,7 +3,6 @@
 import asyncio
 from datetime import UTC, datetime
 from io import BytesIO
-import json
 import logging
 from pathlib import Path
 
@@ -11,6 +10,8 @@ from minio import Minio
 from minio.error import S3Error
 
 from core.config import (
+    BACKEND_API_URL,
+    FRONTEND_URL,
     MINIO_ACCESS_KEY,
     MINIO_BUCKET_NAME,
     MINIO_ENDPOINT,
@@ -41,6 +42,8 @@ class StorageService:
         )
         self.bucket_name = MINIO_BUCKET_NAME
         self.public_url = MINIO_PUBLIC_URL
+        self.backend_api_url = BACKEND_API_URL
+        self.frontend_url = FRONTEND_URL
 
     async def ensure_bucket_exists(self) -> None:
         """
@@ -54,22 +57,6 @@ class StorageService:
             if not found:
                 await asyncio.to_thread(
                     self.client.make_bucket, self.bucket_name, location=MINIO_REGION
-                )
-                # Set bucket policy for public read access to profile pictures
-                policy = {
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Principal": {"AWS": ["*"]},
-                            "Action": ["s3:GetObject"],
-                            "Resource": [f"arn:aws:s3:::{self.bucket_name}/profile-pictures/*"],
-                        }
-                    ],
-                }
-
-                await asyncio.to_thread(
-                    self.client.set_bucket_policy, self.bucket_name, json.dumps(policy)
                 )
                 logger.info(f"Created bucket: {self.bucket_name}")
             else:
@@ -117,17 +104,21 @@ class StorageService:
         ext = Path(filename).suffix.lower() or ".jpg"
         return f"profile-pictures/{user_id}/{timestamp}{ext}"
 
-    def _get_public_url(self, file_path: str) -> str:
+    def _get_backend_url(self, file_path: str) -> str:
         """
-        Generate public URL for a file.
+        Generate frontend proxy URL for a file.
+
+        The URL goes through the Next.js proxy which handles authentication
+        via cookies, allowing images to be displayed in <img> tags.
 
         Args:
             file_path: File path in MinIO
 
         Returns:
-            Public URL
+            Frontend proxy URL
         """
-        return f"{self.public_url}/{file_path}"
+        # Use frontend proxy URL so images can be accessed with cookie-based auth
+        return f"{self.frontend_url}/api/proxy/storage/profile-picture/{file_path}"
 
     async def upload_profile_picture(
         self, user_id: str, file_content: bytes, filename: str, content_type: str
@@ -171,29 +162,66 @@ class StorageService:
             logger.error(f"Unexpected error uploading profile picture: {e!s}", exc_info=True)
             raise FileOperationError(ErrorMessages.STORAGE_UPLOAD_ERROR) from e
         else:
-            public_url = self._get_public_url(file_path)
+            backend_url = self._get_backend_url(file_path)
             logger.info(f"Uploaded profile picture for user {user_id}: {file_path}")
-            return public_url
+            return backend_url
+
+    async def get_profile_picture(self, file_path: str) -> tuple[bytes, str]:
+        """
+        Get profile picture from MinIO.
+
+        Args:
+            file_path: File path in MinIO
+
+        Returns:
+            Tuple of (file content, content type)
+
+        Raises:
+            FileOperationError: If retrieval fails
+        """
+        try:
+            response = await asyncio.to_thread(self.client.get_object, self.bucket_name, file_path)
+            try:
+                content = response.read()
+                content_type = response.headers.get("Content-Type", "image/jpeg")
+                return content, content_type
+            finally:
+                response.close()
+                response.release_conn()
+        except S3Error as e:
+            logger.error(f"Failed to get profile picture: {e!s}", exc_info=True)
+            raise FileOperationError(ErrorMessages.STORAGE_GET_ERROR) from e
+        except Exception as e:
+            logger.error(f"Unexpected error getting profile picture: {e!s}", exc_info=True)
+            raise FileOperationError(ErrorMessages.STORAGE_GET_ERROR) from e
 
     async def delete_profile_picture(self, image_url: str) -> None:
         """
         Delete profile picture from MinIO.
 
         Args:
-            image_url: Public URL of the image to delete
+            image_url: Frontend proxy URL or backend API URL of the image to delete
 
         Raises:
             FileOperationError: If deletion fails
         """
         try:
             # Extract file path from URL
-            if not image_url.startswith(self.public_url):
-                logger.warning(f"Image URL does not match public URL: {image_url}")
-                return
+            # URL format can be either frontend proxy URL or direct backend URL
+            file_path = None
 
-            file_path = image_url.replace(f"{self.public_url}/", "")
-            if not file_path.startswith("profile-pictures/"):
-                logger.warning(f"Invalid file path for deletion: {file_path}")
+            # Try frontend proxy URL first
+            frontend_prefix = f"{self.frontend_url}/api/proxy/storage/profile-picture/"
+            if image_url.startswith(frontend_prefix):
+                file_path = image_url.replace(frontend_prefix, "")
+            else:
+                # Try backend URL
+                backend_prefix = f"{self.backend_api_url}/storage/profile-picture/"
+                if image_url.startswith(backend_prefix):
+                    file_path = image_url.replace(backend_prefix, "")
+
+            if not file_path or not file_path.startswith("profile-pictures/"):
+                logger.warning(f"Invalid image URL format for deletion: {image_url}")
                 return
 
             # Delete from MinIO

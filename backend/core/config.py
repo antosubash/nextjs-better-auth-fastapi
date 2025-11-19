@@ -55,6 +55,16 @@ DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "10"))
 DB_POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "30"))
 DB_POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "3600"))
 
+# Backend API URL configuration
+# Used for generating URLs to backend endpoints (e.g., profile picture URLs)
+# Note: Uses NEXT_PUBLIC_API_URL to match frontend configuration
+BACKEND_API_URL = os.getenv("NEXT_PUBLIC_API_URL", "http://localhost:8000")
+
+# Frontend URL configuration
+# Used for generating frontend proxy URLs (e.g., profile picture URLs that go through Next.js proxy)
+# Uses BETTER_AUTH_URL which is the frontend URL
+FRONTEND_URL = BETTER_AUTH_URL
+
 # MinIO/S3 configuration
 # MINIO_ACCESS_KEY and MINIO_SECRET_KEY are for S3 API access (separate from MINIO_ROOT_USER/PASSWORD)
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
