@@ -15,7 +15,8 @@
     "check:fix": "biome check --write .",
     "type-check": "tsc --noEmit",
     "migrate": "tsx scripts/migrate.ts",
-    "seed": "tsx scripts/seed-admin.ts"
+    "seed": "tsx scripts/seed-admin.ts",
+    "reset-db": "tsx scripts/reset-db.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
