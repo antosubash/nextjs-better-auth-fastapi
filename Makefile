@@ -101,7 +101,7 @@ lint-backend:
 # Lint frontend code
 lint-frontend:
 	@echo "Linting frontend code..."
-	cd nextjs && pnpm lint:biome
+	cd nextjs && pnpm lint
 
 # Lint both backend and frontend
 lint: lint-backend lint-frontend

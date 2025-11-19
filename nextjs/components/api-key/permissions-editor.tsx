@@ -1,12 +1,13 @@
 "use client";
 
 import { Code, Plus, Search, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { API_KEY_LABELS } from "@/lib/constants";
 import { statement } from "@/lib/permissions";
+import { useApiKeyStore } from "@/lib/stores/api-key-store";
 import { AddActionDialog, AddResourceDialog } from "./permissions-dialogs";
 import { PermissionsJsonEditor } from "./permissions-json-editor";
 import { PermissionsResourceCard } from "./permissions-resource-card";
@@ -19,43 +20,62 @@ interface PermissionsEditorProps {
 const COMMON_RESOURCES = Object.keys(statement) as Array<keyof typeof statement>;
 
 export function PermissionsEditor({ value, onChange }: PermissionsEditorProps) {
-  const [showJsonEditor, setShowJsonEditor] = useState(false);
-  const [jsonValue, setJsonValue] = useState("");
-  const [jsonError, setJsonError] = useState("");
-  const [expandedResources, setExpandedResources] = useState<Set<string>>(
-    new Set(Object.keys(value))
-  );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showAddResourceDialog, setShowAddResourceDialog] = useState(false);
-  const [showAddActionDialog, setShowAddActionDialog] = useState(false);
-  const [currentResourceForAction, setCurrentResourceForAction] = useState<string>("");
+  const {
+    permissionsEditor,
+    setShowJsonEditor,
+    setJsonValue,
+    setJsonError,
+    toggleExpandedResource,
+    setSearchQuery,
+    setShowAddResourceDialog,
+    setShowAddActionDialog,
+    setCurrentResourceForAction,
+  } = useApiKeyStore();
 
+  const {
+    showJsonEditor,
+    jsonValue,
+    jsonError,
+    expandedResources,
+    searchQuery,
+    showAddResourceDialog,
+    showAddActionDialog,
+    currentResourceForAction,
+  } = permissionsEditor;
+
+  // Sync value to jsonValue when it changes - necessary useEffect for prop sync
   useEffect(() => {
     setJsonValue(JSON.stringify(value, null, 2));
-  }, [value]);
+  }, [value, setJsonValue]);
+
+  // Initialize expanded resources from value keys when value changes
+  useEffect(() => {
+    const valueKeys = Object.keys(value);
+    valueKeys.forEach((key) => {
+      if (!expandedResources.has(key)) {
+        toggleExpandedResource(key);
+      }
+    });
+  }, [value, expandedResources, toggleExpandedResource]);
 
   const toggleResource = (resource: string) => {
-    const newExpanded = new Set(expandedResources);
-    if (newExpanded.has(resource)) {
-      newExpanded.delete(resource);
-    } else {
-      newExpanded.add(resource);
-    }
-    setExpandedResources(newExpanded);
+    toggleExpandedResource(resource);
   };
 
   const handleAddResource = (resource: string) => {
     onChange({ ...value, [resource]: [] });
-    setExpandedResources(new Set([...expandedResources, resource]));
+    if (!expandedResources.has(resource)) {
+      toggleExpandedResource(resource);
+    }
   };
 
   const removeResource = (resource: string) => {
     const newValue = { ...value };
     delete newValue[resource];
     onChange(newValue);
-    const newExpanded = new Set(expandedResources);
-    newExpanded.delete(resource);
-    setExpandedResources(newExpanded);
+    if (expandedResources.has(resource)) {
+      toggleExpandedResource(resource);
+    }
   };
 
   const toggleAction = (resource: string, action: string) => {

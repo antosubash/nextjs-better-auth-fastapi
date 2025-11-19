@@ -36,9 +36,17 @@ export function useSetActiveOrganization() {
       }
       return result.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.session() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.organizations() });
+    onSuccess: async () => {
+      // Invalidate and refetch queries to ensure UI updates immediately
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.auth.session() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.auth.organizations() }),
+      ]);
+      // Refetch to ensure data is fresh
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: queryKeys.auth.session() }),
+        queryClient.refetchQueries({ queryKey: queryKeys.auth.organizations() }),
+      ]);
     },
     onError: (error: Error) => {
       toast.error(error.message || ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
@@ -67,6 +75,7 @@ export function useCreateOrganization() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.organizations() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.organizations.lists() });
       toast.success(ORGANIZATION_SUCCESS.ORGANIZATION_CREATED);
     },
     onError: (error: Error) => {
@@ -104,6 +113,7 @@ export function useUpdateOrganization() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.organizations() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.organizations.lists() });
       queryClient.invalidateQueries({
         queryKey: queryKeys.auth.organization(variables.organizationId),
       });
@@ -130,6 +140,7 @@ export function useDeleteOrganization() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.organizations() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.organizations.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.session() });
       toast.success(ORGANIZATION_SUCCESS.ORGANIZATION_DELETED);
     },

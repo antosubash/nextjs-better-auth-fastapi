@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,85 +19,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  API_KEY_CONFIG,
-  API_KEY_ERRORS,
-  API_KEY_LABELS,
-  API_KEY_PLACEHOLDERS,
-} from "@/lib/constants";
+import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 import { useCreateApiKey, useUpdateApiKey } from "@/lib/hooks/api/use-api-keys";
+import { useApiKeyStore } from "@/lib/stores/api-key-store";
 import { PermissionsEditor } from "./permissions-editor";
-
-interface ApiKey {
-  id: string;
-  name?: string | null;
-  prefix?: string | null;
-  expiresAt?: Date | number | null;
-  metadata?: Record<string, unknown> | null;
-  permissions?: Record<string, string[]> | null;
-  enabled?: boolean;
-  remaining?: number | null;
-  refillAmount?: number | null;
-  refillInterval?: number | null;
-  rateLimitEnabled?: boolean;
-  rateLimitTimeWindow?: number | null;
-  rateLimitMax?: number | null;
-}
-
-interface ApiKeyFormProps {
-  apiKey?: ApiKey | null;
-  onSuccess: (createdKey?: string) => void;
-  onCancel: () => void;
-}
-
-const apiKeySchema = z
-  .object({
-    name: z.string().optional(),
-    prefix: z.string().optional(),
-    expiresIn: z.string().optional(),
-    metadata: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.expiresIn && data.expiresIn.trim() !== "") {
-        const days = parseInt(data.expiresIn, 10);
-        return !Number.isNaN(days) && days >= 0;
-      }
-      return true;
-    },
-    {
-      message: API_KEY_ERRORS.INVALID_EXPIRATION,
-      path: ["expiresIn"],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.metadata && data.metadata.trim() !== "") {
-        try {
-          JSON.parse(data.metadata);
-          return true;
-        } catch {
-          return false;
-        }
-      }
-      return true;
-    },
-    {
-      message: API_KEY_ERRORS.INVALID_METADATA,
-      path: ["metadata"],
-    }
-  );
-
-type ApiKeyFormValues = z.infer<typeof apiKeySchema>;
+import type { ApiKeyFormProps } from "./api-key-form-types";
+import { apiKeySchema, type ApiKeyFormValues } from "./api-key-form-schema";
+import {
+  buildFormStateFromApiKey,
+  buildFormValuesFromApiKey,
+  parseFormMetadata,
+} from "./api-key-form-helpers";
+import { buildCreateData, buildUpdateData } from "./api-key-form-data";
 
 export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
-  const [permissions, setPermissions] = useState<Record<string, string[]>>({});
-  const [remaining, setRemaining] = useState("");
-  const [refillAmount, setRefillAmount] = useState("");
-  const [refillInterval, setRefillInterval] = useState("");
-  const [rateLimitEnabled, setRateLimitEnabled] = useState(false);
-  const [rateLimitTimeWindow, setRateLimitTimeWindow] = useState("");
-  const [rateLimitMax, setRateLimitMax] = useState("");
+  const { form: formState, setFormPermissions, initializeForm, resetForm } = useApiKeyStore();
+
+  const {
+    permissions,
+    remaining,
+    refillAmount,
+    refillInterval,
+    rateLimitEnabled,
+    rateLimitTimeWindow,
+    rateLimitMax,
+  } = formState;
+
   const [error, setError] = useState("");
 
   const isEditing = !!apiKey;
@@ -118,108 +64,17 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
 
   useEffect(() => {
     if (apiKey) {
-      const expiresInValue = apiKey.expiresAt
-        ? (() => {
-            const expiresDate = new Date(apiKey.expiresAt);
-            const now = new Date();
-            const daysUntilExpiry = Math.ceil(
-              (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-            );
-            return daysUntilExpiry > 0 ? daysUntilExpiry.toString() : "";
-          })()
-        : "";
-      form.reset({
-        name: apiKey.name || "",
-        prefix: apiKey.prefix || "",
-        expiresIn: expiresInValue,
-        metadata: apiKey.metadata ? JSON.stringify(apiKey.metadata, null, 2) : "",
-      });
-      // Use setTimeout to avoid setState in effect warning
-      setTimeout(() => {
-        setPermissions(apiKey.permissions || {});
-        setRemaining(apiKey.remaining?.toString() || "");
-        setRefillAmount(apiKey.refillAmount?.toString() || "");
-        setRefillInterval(apiKey.refillInterval?.toString() || "");
-        setRateLimitEnabled(apiKey.rateLimitEnabled || false);
-        setRateLimitTimeWindow(apiKey.rateLimitTimeWindow?.toString() || "");
-        setRateLimitMax(apiKey.rateLimitMax?.toString() || "");
-      }, 0);
+      const formValues = buildFormValuesFromApiKey(apiKey);
+      form.reset(formValues);
+      const formState = buildFormStateFromApiKey(apiKey);
+      initializeForm(formState);
+    } else {
+      resetForm();
     }
-  }, [apiKey, form]);
-
-  const parseFormMetadata = (metadata: string): Record<string, unknown> | undefined => {
-    if (metadata && metadata.trim() !== "") {
-      return JSON.parse(metadata);
-    }
-    return undefined;
-  };
+  }, [apiKey, form, initializeForm, resetForm]);
 
   const parseFormPermissions = (): Record<string, string[]> | undefined => {
     return Object.keys(permissions).length > 0 ? permissions : undefined;
-  };
-
-  const parseExpiresIn = (expiresIn: string): number | undefined => {
-    if (expiresIn && expiresIn.trim() !== "") {
-      const days = parseInt(expiresIn, 10);
-      return days * 24 * 60 * 60;
-    }
-    return undefined;
-  };
-
-  const buildUpdateData = (
-    values: ApiKeyFormValues,
-    parsedMetadata: Record<string, unknown> | undefined,
-    parsedPermissions: Record<string, string[]> | undefined
-  ) => {
-    const updateData: {
-      name?: string;
-      expiresIn?: number;
-      prefix?: string;
-      metadata?: Record<string, unknown>;
-      permissions?: Record<string, string[]>;
-    } = {
-      name: values.name || undefined,
-    };
-
-    const expiresInSeconds = parseExpiresIn(values.expiresIn || "");
-    if (expiresInSeconds !== undefined) {
-      updateData.expiresIn = expiresInSeconds;
-    }
-
-    if (values.prefix) updateData.prefix = values.prefix;
-    if (parsedMetadata) updateData.metadata = parsedMetadata;
-    if (parsedPermissions) updateData.permissions = parsedPermissions;
-
-    return updateData;
-  };
-
-  const buildCreateData = (
-    values: ApiKeyFormValues,
-    parsedMetadata: Record<string, unknown> | undefined,
-    parsedPermissions: Record<string, string[]> | undefined
-  ) => {
-    const createData: {
-      name?: string;
-      expiresIn?: number;
-      prefix?: string;
-      metadata?: Record<string, unknown>;
-      permissions?: Record<string, string[]>;
-    } = {
-      name: values.name || undefined,
-    };
-
-    const expiresInSeconds = parseExpiresIn(values.expiresIn || "");
-    if (expiresInSeconds !== undefined) {
-      createData.expiresIn = expiresInSeconds;
-    } else {
-      createData.expiresIn = API_KEY_CONFIG.DEFAULT_EXPIRATION_DAYS * 24 * 60 * 60;
-    }
-
-    if (values.prefix) createData.prefix = values.prefix;
-    if (parsedMetadata) createData.metadata = parsedMetadata;
-    if (parsedPermissions) createData.permissions = parsedPermissions;
-
-    return createData;
   };
 
   const handleFormError = (err: unknown): void => {
@@ -350,7 +205,7 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
               )}
             />
 
-            <PermissionsEditor value={permissions} onChange={setPermissions} />
+            <PermissionsEditor value={permissions} onChange={setFormPermissions} />
 
             {isEditing && (
               <>

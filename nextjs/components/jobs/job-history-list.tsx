@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, ChevronUp, Copy, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { JOB_ERRORS, JOB_LABELS } from "@/lib/constants";
 import { useJobHistory, useJobs } from "@/lib/hooks/api/use-jobs";
+import { useJobHistoryStore } from "@/lib/stores/job-store";
 import { formatDate } from "@/lib/utils/date";
 
 interface JobHistoryListProps {
@@ -67,11 +68,25 @@ export function JobHistoryList({
   jobId: initialJobId,
   showJobFilter = false,
 }: JobHistoryListProps) {
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [selectedJobId, setSelectedJobId] = useState<string | undefined>(initialJobId);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const {
+    page,
+    pageSize,
+    selectedJobId,
+    expandedItems,
+    copiedId,
+    setPage,
+    setPageSize,
+    setSelectedJobId,
+    toggleExpandedItem,
+    setCopiedId,
+  } = useJobHistoryStore();
+
+  // Sync initialJobId to store
+  useEffect(() => {
+    if (initialJobId !== undefined && initialJobId !== selectedJobId) {
+      setSelectedJobId(initialJobId);
+    }
+  }, [initialJobId, selectedJobId, setSelectedJobId]);
 
   const { data: jobsData } = useJobs(1, 100, { enabled: showJobFilter });
   const {
@@ -85,21 +100,12 @@ export function JobHistoryList({
   const total = historyData?.total ?? 0;
   const totalPages = historyData?.total_pages ?? 1;
 
+  // Handle error - this is a necessary useEffect for error handling
   useEffect(() => {
     if (historyError) {
       toast.error(JOB_ERRORS.LOAD_JOB_HISTORY_FAILED);
     }
   }, [historyError]);
-
-  const toggleExpand = (id: string) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedItems(newExpanded);
-  };
 
   const copyLogs = async (logs: string, id: string) => {
     try {
@@ -223,7 +229,7 @@ export function JobHistoryList({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => toggleExpand(item.id)}
+            onClick={() => toggleExpandedItem(item.id)}
             aria-label={isExpanded ? JOB_LABELS.COLLAPSE_LOGS : JOB_LABELS.EXPAND_LOGS}
             title={isExpanded ? JOB_LABELS.COLLAPSE_LOGS : JOB_LABELS.EXPAND_LOGS}
           >
@@ -288,7 +294,6 @@ export function JobHistoryList({
                 value={selectedJobId || "all"}
                 onValueChange={(value) => {
                   setSelectedJobId(value === "all" ? undefined : value);
-                  setPage(1);
                 }}
               >
                 <SelectTrigger id="job-filter-select" className="w-[300px]">
@@ -320,7 +325,6 @@ export function JobHistoryList({
                   value={pageSize.toString()}
                   onValueChange={(value) => {
                     setPageSize(Number(value));
-                    setPage(1);
                   }}
                 >
                   <SelectTrigger className="w-[100px]">

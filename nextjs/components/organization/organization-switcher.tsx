@@ -2,7 +2,7 @@
 
 import { Building2, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,8 +13,8 @@ import {
 import { ErrorToast } from "@/components/ui/error-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ORGANIZATION_ERRORS, ORGANIZATION_SWITCHER } from "@/lib/constants";
-import { useOrganizationSafe } from "@/lib/contexts/organization-context";
 import { useOrganizations, useSession, useSetActiveOrganization } from "@/lib/hooks/api/use-auth";
+import { useOrganizationSafe } from "@/lib/hooks/use-organization";
 
 interface Organization {
   id: string;
@@ -33,9 +33,14 @@ export function OrganizationSwitcher() {
 
   const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const switchingRef = useRef(false);
 
-  // Use context if available, otherwise use React Query hooks directly
-  const organizations = orgContext?.organizations || organizationsData || [];
+  // Prioritize React Query data if available, otherwise use store
+  // This ensures we show organizations even if store hasn't synced yet
+  const organizations =
+    (organizationsData && organizationsData.length > 0
+      ? organizationsData
+      : orgContext?.organizations) || [];
   const activeOrganization =
     orgContext?.organization ||
     organizations.find((o: Organization) => o.id === session?.session?.activeOrganizationId) ||
@@ -44,24 +49,37 @@ export function OrganizationSwitcher() {
   const isSwitchingContext = orgContext?.isSwitching ?? isSwitching;
 
   const handleSwitch = async (organizationId: string) => {
-    if (organizationId === activeOrganization?.id) {
+    // Prevent rapid switches
+    if (switchingRef.current || organizationId === activeOrganization?.id) {
       return;
     }
 
-    if (orgContext) {
-      await orgContext.switchOrganization(organizationId);
-    } else {
-      setIsSwitching(true);
-      setError(null);
-      try {
-        await setActiveOrgMutation.mutateAsync(organizationId);
-        router.refresh();
-        window.location.reload();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
-      } finally {
-        setIsSwitching(false);
+    switchingRef.current = true;
+
+    try {
+      // Always use context if available (which it should be now)
+      if (orgContext) {
+        await orgContext.switchOrganization(organizationId);
+      } else {
+        // Fallback for edge cases
+        setIsSwitching(true);
+        setError(null);
+        try {
+          await setActiveOrgMutation.mutateAsync(organizationId);
+          router.refresh();
+          // React Query will automatically refetch session and organizations
+          // No need for window.location.reload() which causes instability
+        } catch (err) {
+          setError(err instanceof Error ? err.message : ORGANIZATION_ERRORS.SET_ACTIVE_FAILED);
+        } finally {
+          setIsSwitching(false);
+        }
       }
+    } finally {
+      // Allow switching again after a short delay
+      setTimeout(() => {
+        switchingRef.current = false;
+      }, 500);
     }
   };
 
@@ -77,9 +95,8 @@ export function OrganizationSwitcher() {
     return <Skeleton className="h-9 w-48" />;
   }
 
-  if (organizations.length === 0) {
-    return null;
-  }
+  // Show switcher even if no organizations - user might need to create one
+  // The dropdown will show "No organizations" message
 
   const displayError = orgContext?.error || error;
   const displayIsSwitching = isSwitchingContext;

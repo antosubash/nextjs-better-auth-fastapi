@@ -2,7 +2,7 @@
 
 import { Building2, Plus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,9 +22,14 @@ import { useErrorMessage } from "@/hooks/organization/use-error-message";
 import { useSearch } from "@/hooks/organization/use-search";
 import { useSuccessMessage } from "@/hooks/organization/use-success-message";
 import { ORGANIZATION_ERRORS, ORGANIZATION_LABELS, ORGANIZATION_SUCCESS } from "@/lib/constants";
-import { useOrganizationSafe } from "@/lib/contexts/organization-context";
 import { useOrganizations, useSession } from "@/lib/hooks/api/use-auth";
 import { useAdminOrganizations } from "@/lib/hooks/api/use-organizations";
+import { useOrganizationSafe } from "@/lib/hooks/use-organization";
+import {
+  useActiveOrganization,
+  useOrganizations as useStoreOrganizations,
+} from "@/lib/stores/organization-store";
+import { useUIStore } from "@/lib/stores/ui-store";
 import { formatDate } from "@/lib/utils/date";
 import { extractOrganizations, normalizeOrganizations } from "@/lib/utils/organization-data";
 import type { NormalizedOrganization } from "@/lib/utils/organization-types";
@@ -42,16 +47,20 @@ export function OrganizationList() {
   const [organizations, setOrganizations] = useState<NormalizedOrganization[]>([]);
   const [activeOrganizationId, setActiveOrganizationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingOrganization, setEditingOrganization] = useState<NormalizedOrganization | null>(
     null
   );
+
+  const { isDialogOpen, openDialog, closeDialog } = useUIStore();
+  const showCreateForm = isDialogOpen("organization-create");
 
   const { searchValue, handleSearch } = useSearch();
   const { success, showSuccess, clearSuccess } = useSuccessMessage();
   const { error, showError, clearError } = useErrorMessage();
 
   const orgContext = useOrganizationSafe();
+  const storeOrganizations = useStoreOrganizations();
+  const storeActiveOrganization = useActiveOrganization();
   const {
     data: adminOrgsData,
     isLoading: isLoadingAdminOrgs,
@@ -60,20 +69,20 @@ export function OrganizationList() {
   const { data: userOrgsData, isLoading: isLoadingUserOrgs } = useOrganizations();
   const { data: sessionData } = useSession();
 
-  const loadContextOrganizations = useCallback(() => {
-    if (!orgContext) return;
-
-    const normalizedOrgs = normalizeOrganizations(
-      orgContext.organizations.map((org) => ({
+  // Memoize normalized organizations from store
+  const storeNormalizedOrgs = useMemo(() => {
+    if (storeOrganizations.length === 0) {
+      return null;
+    }
+    return normalizeOrganizations(
+      storeOrganizations.map((org) => ({
         id: org.id,
         name: org.name,
         slug: org.slug,
         createdAt: Date.now(),
       }))
     );
-    setOrganizations(normalizedOrgs);
-    setActiveOrganizationId(orgContext.organization?.id || null);
-  }, [orgContext]);
+  }, [storeOrganizations]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -82,13 +91,17 @@ export function OrganizationList() {
     if (isAdminContext) {
       if (adminOrgsError) {
         showError(adminOrgsError.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
+        setIsLoading(false);
       } else if (adminOrgsData) {
         const orgs = adminOrgsData.organizations || [];
         setOrganizations(normalizeOrganizations(orgs));
+        setIsLoading(isLoadingAdminOrgs);
+      } else {
+        setIsLoading(isLoadingAdminOrgs);
       }
-      setIsLoading(isLoadingAdminOrgs);
-    } else if (orgContext) {
-      loadContextOrganizations();
+    } else if (storeNormalizedOrgs) {
+      setOrganizations(storeNormalizedOrgs);
+      setActiveOrganizationId(storeActiveOrganization?.id || null);
       setIsLoading(false);
     } else if (userOrgsData) {
       const normalizedOrgs = normalizeOrganizations(extractOrganizations(userOrgsData));
@@ -99,7 +112,8 @@ export function OrganizationList() {
     }
   }, [
     isAdminContext,
-    orgContext,
+    storeNormalizedOrgs,
+    storeActiveOrganization?.id,
     adminOrgsData,
     adminOrgsError,
     isLoadingAdminOrgs,
@@ -107,7 +121,6 @@ export function OrganizationList() {
     isLoadingUserOrgs,
     clearError,
     showError,
-    loadContextOrganizations,
   ]);
 
   useEffect(() => {
@@ -117,7 +130,7 @@ export function OrganizationList() {
   }, [sessionData]);
 
   const handleOrganizationCreated = () => {
-    setShowCreateForm(false);
+    closeDialog("organization-create");
     showSuccess(ORGANIZATION_SUCCESS.ORGANIZATION_CREATED);
     if (orgContext) {
       orgContext.refreshOrganizations();
@@ -165,7 +178,7 @@ export function OrganizationList() {
             {ORGANIZATION_LABELS.TITLE}
           </h1>
         </div>
-        <Button onClick={() => setShowCreateForm(true)}>
+        <Button onClick={() => openDialog("organization-create")}>
           <Plus className="w-5 h-5" />
           {ORGANIZATION_LABELS.CREATE_ORGANIZATION}
         </Button>
@@ -178,7 +191,7 @@ export function OrganizationList() {
         <div className="mb-6">
           <OrganizationForm
             onSuccess={handleOrganizationCreated}
-            onCancel={() => setShowCreateForm(false)}
+            onCancel={() => closeDialog("organization-create")}
           />
         </div>
       )}

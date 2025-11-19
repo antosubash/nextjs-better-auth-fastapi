@@ -49,6 +49,7 @@ import {
   usePasskeys,
   useUpdatePasskey,
 } from "@/lib/hooks/api/use-passkeys";
+import { useUIStore } from "@/lib/stores/ui-store";
 
 function formatDate(date: Date | string | number): string {
   const d = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
@@ -139,9 +140,12 @@ function PasskeyRow({
 }
 
 export function PasskeyManagement() {
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  const { isDialogOpen, openDialog, closeDialog } = useUIStore();
+
+  const showAddDialog = isDialogOpen("passkey-add");
+  const showDeleteDialog = isDialogOpen("passkey-delete");
+  const showEditDialog = isDialogOpen("passkey-edit");
+
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
@@ -158,10 +162,10 @@ export function PasskeyManagement() {
   // Close dialog and reset state when passkey is successfully added
   useEffect(() => {
     if (addPasskeyMutation.isSuccess && showAddDialog) {
-      setShowAddDialog(false);
+      closeDialog("passkey-add");
       addPasskeyMutation.reset();
     }
-  }, [addPasskeyMutation.isSuccess, showAddDialog, addPasskeyMutation]);
+  }, [addPasskeyMutation.isSuccess, showAddDialog, addPasskeyMutation, closeDialog]);
 
   // Reset form state when dialog closes
   useEffect(() => {
@@ -190,7 +194,7 @@ export function PasskeyManagement() {
     setDeletingId(deletingId);
     try {
       await deletePasskeyMutation.mutateAsync(deletingId);
-      setShowDeleteDialog(false);
+      closeDialog("passkey-delete");
       setDeletingId(null);
     } catch {
       // Error handled by mutation
@@ -206,7 +210,7 @@ export function PasskeyManagement() {
         id: editingId,
         name: editingName.trim(),
       });
-      setShowEditDialog(false);
+      closeDialog("passkey-edit");
       setEditingId(null);
       setEditingName("");
     } catch {
@@ -216,13 +220,13 @@ export function PasskeyManagement() {
 
   const openDeleteDialog = (id: string) => {
     setDeletingId(id);
-    setShowDeleteDialog(true);
+    openDialog("passkey-delete");
   };
 
   const openEditDialog = (id: string, currentName?: string | null) => {
     setEditingId(id);
     setEditingName(currentName || "");
-    setShowEditDialog(true);
+    openDialog("passkey-edit");
   };
 
   // Check if passkeys are supported
@@ -245,7 +249,7 @@ export function PasskeyManagement() {
             </div>
             {isPasskeySupported && (
               <Button
-                onClick={() => setShowAddDialog(true)}
+                onClick={() => openDialog("passkey-add")}
                 disabled={addPasskeyMutation.isPending}
               >
                 {addPasskeyMutation.isPending ? (
@@ -310,7 +314,10 @@ export function PasskeyManagement() {
       </Card>
 
       {/* Add Passkey Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      <Dialog
+        open={showAddDialog}
+        onOpenChange={(open) => (open ? openDialog("passkey-add") : closeDialog("passkey-add"))}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{PASSKEY_LABELS.ADD_PASSKEY}</DialogTitle>
@@ -350,7 +357,7 @@ export function PasskeyManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+            <Button variant="outline" onClick={() => closeDialog("passkey-add")}>
               {PASSKEY_LABELS.CANCEL}
             </Button>
             <Button onClick={handleAddPasskey} disabled={addPasskeyMutation.isPending}>
@@ -368,7 +375,12 @@ export function PasskeyManagement() {
       </Dialog>
 
       {/* Delete Passkey Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog
+        open={showDeleteDialog}
+        onOpenChange={(open) =>
+          open ? openDialog("passkey-delete") : closeDialog("passkey-delete")
+        }
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{PASSKEY_LABELS.DELETE_PASSKEY}</AlertDialogTitle>
@@ -397,7 +409,10 @@ export function PasskeyManagement() {
       </AlertDialog>
 
       {/* Edit Passkey Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+      <Dialog
+        open={showEditDialog}
+        onOpenChange={(open) => (open ? openDialog("passkey-edit") : closeDialog("passkey-edit"))}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{PASSKEY_LABELS.UPDATE_PASSKEY}</DialogTitle>
@@ -415,7 +430,7 @@ export function PasskeyManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+            <Button variant="outline" onClick={() => closeDialog("passkey-edit")}>
               {PASSKEY_LABELS.CANCEL}
             </Button>
             <Button

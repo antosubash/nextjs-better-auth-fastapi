@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { OrganizationProvider } from "@/lib/contexts/organization-context";
+import { OrganizationProvider } from "@/lib/providers/organization-provider";
 import { MainLayout } from "./main-layout";
 
 interface MainLayoutWrapperProps {
