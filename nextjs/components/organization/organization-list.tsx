@@ -2,7 +2,7 @@
 
 import { Building2, Plus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +25,10 @@ import { ORGANIZATION_ERRORS, ORGANIZATION_LABELS, ORGANIZATION_SUCCESS } from "
 import { useOrganizations, useSession } from "@/lib/hooks/api/use-auth";
 import { useAdminOrganizations } from "@/lib/hooks/api/use-organizations";
 import { useOrganizationSafe } from "@/lib/hooks/use-organization";
+import {
+  useActiveOrganization,
+  useOrganizations as useStoreOrganizations,
+} from "@/lib/stores/organization-store";
 import { useUIStore } from "@/lib/stores/ui-store";
 import { formatDate } from "@/lib/utils/date";
 import { extractOrganizations, normalizeOrganizations } from "@/lib/utils/organization-data";
@@ -55,6 +59,8 @@ export function OrganizationList() {
   const { error, showError, clearError } = useErrorMessage();
 
   const orgContext = useOrganizationSafe();
+  const storeOrganizations = useStoreOrganizations();
+  const storeActiveOrganization = useActiveOrganization();
   const {
     data: adminOrgsData,
     isLoading: isLoadingAdminOrgs,
@@ -63,20 +69,20 @@ export function OrganizationList() {
   const { data: userOrgsData, isLoading: isLoadingUserOrgs } = useOrganizations();
   const { data: sessionData } = useSession();
 
-  const loadContextOrganizations = useCallback(() => {
-    if (!orgContext) return;
-
-    const normalizedOrgs = normalizeOrganizations(
-      orgContext.organizations.map((org) => ({
+  // Memoize normalized organizations from store
+  const storeNormalizedOrgs = useMemo(() => {
+    if (storeOrganizations.length === 0) {
+      return null;
+    }
+    return normalizeOrganizations(
+      storeOrganizations.map((org) => ({
         id: org.id,
         name: org.name,
         slug: org.slug,
         createdAt: Date.now(),
       }))
     );
-    setOrganizations(normalizedOrgs);
-    setActiveOrganizationId(orgContext.organization?.id || null);
-  }, [orgContext]);
+  }, [storeOrganizations]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -85,13 +91,17 @@ export function OrganizationList() {
     if (isAdminContext) {
       if (adminOrgsError) {
         showError(adminOrgsError.message || ORGANIZATION_ERRORS.LOAD_ORGANIZATIONS_FAILED);
+        setIsLoading(false);
       } else if (adminOrgsData) {
         const orgs = adminOrgsData.organizations || [];
         setOrganizations(normalizeOrganizations(orgs));
+        setIsLoading(isLoadingAdminOrgs);
+      } else {
+        setIsLoading(isLoadingAdminOrgs);
       }
-      setIsLoading(isLoadingAdminOrgs);
-    } else if (orgContext) {
-      loadContextOrganizations();
+    } else if (storeNormalizedOrgs) {
+      setOrganizations(storeNormalizedOrgs);
+      setActiveOrganizationId(storeActiveOrganization?.id || null);
       setIsLoading(false);
     } else if (userOrgsData) {
       const normalizedOrgs = normalizeOrganizations(extractOrganizations(userOrgsData));
@@ -102,7 +112,8 @@ export function OrganizationList() {
     }
   }, [
     isAdminContext,
-    orgContext,
+    storeNormalizedOrgs,
+    storeActiveOrganization?.id,
     adminOrgsData,
     adminOrgsError,
     isLoadingAdminOrgs,
@@ -110,7 +121,6 @@ export function OrganizationList() {
     isLoadingUserOrgs,
     clearError,
     showError,
-    loadContextOrganizations,
   ]);
 
   useEffect(() => {

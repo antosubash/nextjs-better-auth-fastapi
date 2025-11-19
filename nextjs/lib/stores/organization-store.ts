@@ -76,12 +76,17 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
     try {
       await mutationFn(organizationId);
 
+      // Optimistically update the active organization
       const org = organizations.find((o) => o.id === organizationId);
       if (org) {
         set({ activeOrganization: org });
       }
+
+      // Refresh router to update server-side state
       routerRefresh();
-      window.location.reload();
+
+      // React Query will automatically refetch session and organizations
+      // No need for window.location.reload() which causes instability
     } catch (err) {
       logger.error("Failed to switch organization", err);
       set({

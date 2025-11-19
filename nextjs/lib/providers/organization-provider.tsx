@@ -49,12 +49,29 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   );
 
   // Sync organizations data to store
+  // Sync whenever organizationsData changes or when IDs change
+  // This ensures the store is always up-to-date with React Query data
   useEffect(() => {
-    if (orgIdsString !== prevOrgIdsString) {
-      setOrganizations(organizationsList);
-      setPrevOrgIdsString(orgIdsString);
+    // Always sync when organizationsData is defined and IDs changed
+    // Also sync if we have data but the store might be out of sync
+    if (organizationsData !== undefined) {
+      if (orgIdsString !== prevOrgIdsString) {
+        setOrganizations(organizationsList);
+        setPrevOrgIdsString(orgIdsString);
+      } else if (organizationsList.length > 0) {
+        // Even if IDs are the same, sync to ensure data is fresh
+        // This handles cases where organization data might have changed
+        setOrganizations(organizationsList);
+      }
     }
-  }, [organizationsList, orgIdsString, prevOrgIdsString, setOrganizations, setPrevOrgIdsString]);
+  }, [
+    organizationsList,
+    organizationsData,
+    orgIdsString,
+    prevOrgIdsString,
+    setOrganizations,
+    setPrevOrgIdsString,
+  ]);
 
   // Sync loading state
   useEffect(() => {

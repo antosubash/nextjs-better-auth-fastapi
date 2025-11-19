@@ -54,19 +54,15 @@ export function useOrganization() {
 
 /**
  * Hook to safely access organization (replaces useOrganizationSafe)
- * Returns null if store is not initialized
+ * Always returns a context object (never null) since Zustand store is always initialized
  */
 export function useOrganizationSafe() {
   const store = useOrganizationStore();
   const router = useRouter();
   const setActiveOrgMutation = useSetActiveOrganization();
 
-  // Zustand stores don't throw errors, but we check if store is initialized
-  // by checking if organizations array exists
-  if (!store.organizations) {
-    return null;
-  }
-
+  // Zustand stores are always initialized, so we always return the context
+  // The store starts with empty arrays/objects, which is valid
   return {
     organization: store.activeOrganization,
     organizations: store.organizations,
