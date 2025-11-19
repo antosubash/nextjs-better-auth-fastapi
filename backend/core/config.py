@@ -49,6 +49,9 @@ DATABASE_URL_SYNC = DATABASE_URL.replace("+asyncpg", "")
 # Database schema configuration
 DB_SCHEMA = os.getenv("DB_SCHEMA", "api")
 
+# Database reset configuration
+RESET_DB_ON_STARTUP = os.getenv("RESET_DB_ON_STARTUP", "false").lower() == "true"
+
 # Database connection pool settings
 DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "5"))
 DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "10"))

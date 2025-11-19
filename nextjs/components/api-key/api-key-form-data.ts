@@ -1,6 +1,6 @@
 import { API_KEY_CONFIG } from "@/lib/constants";
-import type { ApiKeyFormValues } from "./api-key-form-schema";
 import { parseExpiresIn } from "./api-key-form-helpers";
+import type { ApiKeyFormValues } from "./api-key-form-schema";
 
 export const buildUpdateData = (
   values: ApiKeyFormValues,
