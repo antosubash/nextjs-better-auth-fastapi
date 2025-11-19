@@ -22,15 +22,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { API_KEY_ERRORS, API_KEY_LABELS, API_KEY_PLACEHOLDERS } from "@/lib/constants";
 import { useCreateApiKey, useUpdateApiKey } from "@/lib/hooks/api/use-api-keys";
 import { useApiKeyStore } from "@/lib/stores/api-key-store";
-import { PermissionsEditor } from "./permissions-editor";
-import type { ApiKeyFormProps } from "./api-key-form-types";
-import { apiKeySchema, type ApiKeyFormValues } from "./api-key-form-schema";
+import { buildCreateData, buildUpdateData } from "./api-key-form-data";
 import {
   buildFormStateFromApiKey,
   buildFormValuesFromApiKey,
   parseFormMetadata,
 } from "./api-key-form-helpers";
-import { buildCreateData, buildUpdateData } from "./api-key-form-data";
+import { type ApiKeyFormValues, apiKeySchema } from "./api-key-form-schema";
+import type { ApiKeyFormProps } from "./api-key-form-types";
+import { PermissionsEditor } from "./permissions-editor";
 
 export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
   const { form: formState, setFormPermissions, initializeForm, resetForm } = useApiKeyStore();
