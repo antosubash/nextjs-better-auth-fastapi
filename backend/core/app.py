@@ -40,12 +40,15 @@ def create_app() -> FastAPI:
     setup_logging()
 
     # Create FastAPI app
+    # Disable automatic redirect_slashes to prevent 307 redirects that can cause
+    # clients to drop Authorization headers behind reverse proxies
     app = FastAPI(
         title="Better Auth FastAPI Backend",
         description="Backend API with JWT authentication using Better Auth",
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
+        redirect_slashes=False,
     )
 
     # Setup CORS
