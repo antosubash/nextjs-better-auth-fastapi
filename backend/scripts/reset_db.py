@@ -19,7 +19,7 @@ from core.config import DATABASE_URL_SYNC, DB_SCHEMA  # noqa: E402
 
 
 def reset_database() -> None:
-    """Drop all tables in the configured database schema."""
+    """Drop all tables in the configured database schema, including migration tables."""
     print(f"Starting database reset for schema '{DB_SCHEMA}'...")
 
     try:
@@ -31,7 +31,7 @@ def reset_database() -> None:
             trans = conn.begin()
 
             try:
-                # Get all table names in the schema
+                # Get all table names in the schema (including migration tables like alembic_version)
                 query = text(
                     """
                     SELECT tablename
