@@ -36,16 +36,7 @@ export function UserSearch({
   disabled,
 }: UserSearchProps) {
   const [searchQuery, setSearchQuery] = useState(value || "");
-  const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (value !== undefined && value !== searchQuery) {
-      setSearchQuery(value);
-      setSelectedUser(null);
-    }
-  }, [value, searchQuery]);
 
   const {
     data: usersData,
@@ -58,22 +49,22 @@ export function UserSearch({
     enabled: searchQuery.length >= 2,
   });
 
-  useEffect(() => {
-    if (usersData) {
-      const usersArray = (usersData as { users?: User[] })?.users || [];
-      setUsers(usersArray);
-    } else if (searchQuery.length < 2) {
-      setUsers([]);
-    }
-  }, [usersData, searchQuery]);
+  // Use data directly from React Query instead of syncing to state
+  const users =
+    searchQuery.length >= 2 && usersData ? (usersData as { users?: User[] })?.users || [] : [];
 
+  // Use error directly from React Query
+  const error = queryError ? queryError.message || MEMBER_ERRORS.SEARCH_FAILED : "";
+
+  // Sync value prop to searchQuery when it changes - necessary useEffect for prop sync
   useEffect(() => {
-    if (queryError) {
-      setError(queryError.message || MEMBER_ERRORS.SEARCH_FAILED);
-    } else {
-      setError("");
+    if (value !== undefined && value !== searchQuery) {
+      setSearchQuery(value);
+      setSelectedUser(null);
     }
-  }, [queryError]);
+  }, [value, searchQuery]);
+
+  const currentSearchQuery = value !== undefined ? value : searchQuery;
 
   const handleSelect = (user: User) => {
     setSelectedUser(user);
@@ -89,7 +80,7 @@ export function UserSearch({
     <Command className="rounded-lg border">
       <CommandInput
         placeholder={USER_SEARCH_PLACEHOLDERS.SEARCH}
-        value={searchQuery}
+        value={currentSearchQuery}
         onValueChange={setSearchQuery}
         disabled={disabled}
       />
@@ -100,7 +91,7 @@ export function UserSearch({
           </div>
         ) : error ? (
           <div className="py-6 text-center text-sm text-red-500">{error}</div>
-        ) : users.length === 0 && searchQuery.length >= 2 ? (
+        ) : users.length === 0 && currentSearchQuery.length >= 2 ? (
           <CommandEmpty>{USER_SEARCH_LABELS.NO_USERS_FOUND}</CommandEmpty>
         ) : (
           <CommandGroup>

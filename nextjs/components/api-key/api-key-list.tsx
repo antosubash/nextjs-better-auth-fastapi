@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, Copy, Key, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,32 +37,38 @@ import {
 } from "@/components/ui/table";
 import { API_KEY_LABELS, API_KEY_SUCCESS } from "@/lib/constants";
 import { useApiKeys, useDeleteExpiredApiKeys } from "@/lib/hooks/api/use-api-keys";
+import { useApiKeyStore } from "@/lib/stores/api-key-store";
 import { SearchInput } from "../organization/shared/search-input";
 import { ApiKeyActions } from "./api-key-actions";
 import { ApiKeyDetails } from "./api-key-details";
 import { ApiKeyForm } from "./api-key-form";
 import { ApiKeyVerify } from "./api-key-verify";
 
-interface ApiKey {
-  id: string;
-  name?: string | null;
-  prefix?: string | null;
-  enabled?: boolean;
-  expiresAt?: Date | number | null;
-  createdAt: Date | number;
-}
-
 export function ApiKeyList() {
   const { data: apiKeys = [], isLoading } = useApiKeys();
   const deleteExpiredMutation = useDeleteExpiredApiKeys();
-  const [searchValue, setSearchValue] = useState("");
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingApiKey, setEditingApiKey] = useState<ApiKey | null>(null);
-  const [viewingApiKeyId, setViewingApiKeyId] = useState<string | null>(null);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
-  const [keyCopied, setKeyCopied] = useState(false);
-  const [showDeleteExpiredDialog, setShowDeleteExpiredDialog] = useState(false);
+  const {
+    list,
+    setSearchValue,
+    setShowCreateForm,
+    setEditingApiKey,
+    setViewingApiKeyId,
+    setShowVerifyModal,
+    setNewlyCreatedKey,
+    setKeyCopied,
+    setShowDeleteExpiredDialog,
+  } = useApiKeyStore();
+
+  const {
+    searchValue,
+    showCreateForm,
+    editingApiKey,
+    viewingApiKeyId,
+    showVerifyModal,
+    newlyCreatedKey,
+    keyCopied,
+    showDeleteExpiredDialog,
+  } = list;
 
   const handleSearch = (value: string) => {
     setSearchValue(value);

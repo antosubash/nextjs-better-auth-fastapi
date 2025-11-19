@@ -27,6 +27,7 @@ import {
   API_KEY_PLACEHOLDERS,
 } from "@/lib/constants";
 import { useCreateApiKey, useUpdateApiKey } from "@/lib/hooks/api/use-api-keys";
+import { useApiKeyStore } from "@/lib/stores/api-key-store";
 import { PermissionsEditor } from "./permissions-editor";
 
 interface ApiKey {
@@ -91,14 +92,55 @@ const apiKeySchema = z
 
 type ApiKeyFormValues = z.infer<typeof apiKeySchema>;
 
+// Helper function to calculate days until expiry
+const calculateDaysUntilExpiry = (expiresAt: Date | number | null | undefined): string => {
+  if (!expiresAt) {
+    return "";
+  }
+  const expiresDate = new Date(expiresAt);
+  const now = new Date();
+  const daysUntilExpiry = Math.ceil(
+    (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  return daysUntilExpiry > 0 ? daysUntilExpiry.toString() : "";
+};
+
+// Helper function to build form values from API key
+const buildFormValuesFromApiKey = (key: ApiKey): ApiKeyFormValues => {
+  return {
+    name: key.name || "",
+    prefix: key.prefix || "",
+    expiresIn: calculateDaysUntilExpiry(key.expiresAt),
+    metadata: key.metadata ? JSON.stringify(key.metadata, null, 2) : "",
+  };
+};
+
+// Helper function to build form state initialization data from API key
+const buildFormStateFromApiKey = (key: ApiKey) => {
+  return {
+    permissions: key.permissions || {},
+    remaining: key.remaining?.toString() || "",
+    refillAmount: key.refillAmount?.toString() || "",
+    refillInterval: key.refillInterval?.toString() || "",
+    rateLimitEnabled: key.rateLimitEnabled || false,
+    rateLimitTimeWindow: key.rateLimitTimeWindow?.toString() || "",
+    rateLimitMax: key.rateLimitMax?.toString() || "",
+  };
+};
+
 export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
-  const [permissions, setPermissions] = useState<Record<string, string[]>>({});
-  const [remaining, setRemaining] = useState("");
-  const [refillAmount, setRefillAmount] = useState("");
-  const [refillInterval, setRefillInterval] = useState("");
-  const [rateLimitEnabled, setRateLimitEnabled] = useState(false);
-  const [rateLimitTimeWindow, setRateLimitTimeWindow] = useState("");
-  const [rateLimitMax, setRateLimitMax] = useState("");
+  const { form: formState, setFormPermissions, initializeForm, resetForm } = useApiKeyStore();
+
+  const {
+    permissions,
+    remaining,
+    refillAmount,
+    refillInterval,
+    rateLimitEnabled,
+    rateLimitTimeWindow,
+    rateLimitMax,
+  } = formState;
+
   const [error, setError] = useState("");
 
   const isEditing = !!apiKey;
@@ -118,34 +160,14 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
 
   useEffect(() => {
     if (apiKey) {
-      const expiresInValue = apiKey.expiresAt
-        ? (() => {
-            const expiresDate = new Date(apiKey.expiresAt);
-            const now = new Date();
-            const daysUntilExpiry = Math.ceil(
-              (expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-            );
-            return daysUntilExpiry > 0 ? daysUntilExpiry.toString() : "";
-          })()
-        : "";
-      form.reset({
-        name: apiKey.name || "",
-        prefix: apiKey.prefix || "",
-        expiresIn: expiresInValue,
-        metadata: apiKey.metadata ? JSON.stringify(apiKey.metadata, null, 2) : "",
-      });
-      // Use setTimeout to avoid setState in effect warning
-      setTimeout(() => {
-        setPermissions(apiKey.permissions || {});
-        setRemaining(apiKey.remaining?.toString() || "");
-        setRefillAmount(apiKey.refillAmount?.toString() || "");
-        setRefillInterval(apiKey.refillInterval?.toString() || "");
-        setRateLimitEnabled(apiKey.rateLimitEnabled || false);
-        setRateLimitTimeWindow(apiKey.rateLimitTimeWindow?.toString() || "");
-        setRateLimitMax(apiKey.rateLimitMax?.toString() || "");
-      }, 0);
+      const formValues = buildFormValuesFromApiKey(apiKey);
+      form.reset(formValues);
+      const formState = buildFormStateFromApiKey(apiKey);
+      initializeForm(formState);
+    } else {
+      resetForm();
     }
-  }, [apiKey, form]);
+  }, [apiKey, form, initializeForm, resetForm]);
 
   const parseFormMetadata = (metadata: string): Record<string, unknown> | undefined => {
     if (metadata && metadata.trim() !== "") {
@@ -350,7 +372,7 @@ export function ApiKeyForm({ apiKey, onSuccess, onCancel }: ApiKeyFormProps) {
               )}
             />
 
-            <PermissionsEditor value={permissions} onChange={setPermissions} />
+            <PermissionsEditor value={permissions} onChange={setFormPermissions} />
 
             {isEditing && (
               <>
