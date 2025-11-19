@@ -167,7 +167,6 @@ config({ path: resolve(process.cwd(), "../.env") });
           } else {
             console.log(`✓ Created user: ${userData.email} (${userData.role})`);
           }
-
         } else {
           console.error(`✗ Failed to create user ${userData.email}:`, "Unknown error");
         }
