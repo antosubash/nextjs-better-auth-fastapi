@@ -60,6 +60,17 @@ async def create_job(
     return job
 
 
+# Register route without trailing slash to handle /jobs (not just /jobs/)
+router.add_api_route(
+    "",
+    create_job,
+    methods=["POST"],
+    response_model=JobResponse,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
+
+
 @router.get(
     "/",
     response_model=JobListResponse,
@@ -95,6 +106,16 @@ async def list_jobs(
         page_size=page_size,
         total_pages=total_pages,
     )
+
+
+# Register route without trailing slash to handle /jobs (not just /jobs/)
+router.add_api_route(
+    "",
+    list_jobs,
+    methods=["GET"],
+    response_model=JobListResponse,
+    include_in_schema=False,
+)
 
 
 @router.get(

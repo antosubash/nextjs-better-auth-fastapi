@@ -62,6 +62,17 @@ async def create_task(
     return TaskResponse.model_validate(task)
 
 
+# Register route without trailing slash to handle /tasks (not just /tasks/)
+router.add_api_route(
+    "",
+    create_task,
+    methods=["POST"],
+    response_model=TaskResponse,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
+
+
 @router.get(
     "/",
     response_model=TaskListResponse,
@@ -102,6 +113,16 @@ async def list_tasks(
         page_size=page_size,
         total_pages=total_pages,
     )
+
+
+# Register route without trailing slash to handle /tasks (not just /tasks/)
+router.add_api_route(
+    "",
+    list_tasks,
+    methods=["GET"],
+    response_model=TaskListResponse,
+    include_in_schema=False,
+)
 
 
 @router.get(
