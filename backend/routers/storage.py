@@ -2,7 +2,17 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 
 from core.constants import ErrorMessages, SuccessMessages
 from schemas.storage import ProfilePictureDeleteResponse, ProfilePictureUploadResponse
@@ -21,6 +31,60 @@ def get_storage_service() -> StorageService:
         StorageService instance
     """
     return StorageService()
+
+
+@router.get(
+    "/profile-picture/{file_path:path}",
+    summary="Get profile picture",
+    description="Get a profile picture. Users can only access their own profile pictures.",
+    response_class=Response,
+)
+async def get_profile_picture(
+    request: Request,
+    file_path: str,
+    storage_service: StorageService = Depends(get_storage_service),
+) -> Response:
+    """
+    Get a profile picture.
+
+    Args:
+        request: FastAPI request object
+        file_path: File path in MinIO (e.g., profile-pictures/{user_id}/{timestamp}.jpg)
+        storage_service: Storage service dependency
+
+    Returns:
+        Image file response
+
+    Raises:
+        HTTPException: If retrieval fails or access denied
+    """
+    user_id = getattr(request.state, "user_id", None)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=ErrorMessages.USER_ID_NOT_FOUND
+        )
+
+    try:
+        # Verify the file path belongs to the authenticated user
+        if not file_path.startswith(f"profile-pictures/{user_id}/"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. You can only access your own profile pictures.",
+            )
+
+        # Get file from MinIO
+        content, content_type = await storage_service.get_profile_picture(file_path)
+
+        logger.info(f"Profile picture retrieved for user {user_id}: {file_path}")
+        return Response(content=content, media_type=content_type)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get profile picture: {e!s}", exc_info=True)
+        error_detail = str(e) if hasattr(e, "detail") else ErrorMessages.STORAGE_GET_ERROR
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_detail
+        ) from e
 
 
 @router.post(

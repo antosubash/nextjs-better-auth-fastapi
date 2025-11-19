@@ -128,6 +128,37 @@ async function handleProxyResponse(response: Response): Promise<NextResponse> {
     });
   }
 
+  // Check if response is an image or binary content
+  const contentType = response.headers.get("content-type") || "";
+  const isImage = contentType.startsWith("image/");
+  const isBinary =
+    contentType.startsWith("application/octet-stream") || contentType.includes("binary") || isImage;
+
+  if (isBinary) {
+    // Handle binary responses (images, files, etc.)
+    const arrayBuffer = await response.arrayBuffer();
+    const contentLength = response.headers.get("content-length");
+    const headers: Record<string, string> = {
+      "Content-Type": contentType,
+    };
+
+    if (contentLength) {
+      headers["Content-Length"] = contentLength;
+    }
+
+    // Cache control for images
+    if (isImage) {
+      headers["Cache-Control"] = "public, max-age=31536000, immutable";
+    }
+
+    return new NextResponse(arrayBuffer, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
+
+  // Handle JSON/text responses
   const responseData = await response.text();
   let jsonData: unknown;
   try {
