@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         const encoder = new TextEncoder();
         const text = decoder.decode(chunk, { stream: true });
         const lines = text.split("\n");
-        
+
         for (const line of lines) {
           // Skip SSE comment lines (starting with :) to prevent parsing errors
           // These are thinking tokens that we'll handle separately if needed
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
             continue;
           }
           // Forward all other lines (preserve newlines for proper SSE formatting)
-          controller.enqueue(encoder.encode(line + "\n"));
+          controller.enqueue(encoder.encode(`${line}\n`));
         }
       },
     });

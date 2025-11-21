@@ -1,9 +1,10 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useChat } from "ai/react";
-import type { Message } from "ai";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CHAT_ERRORS, CHAT_LABELS, CHAT_MODELS } from "@/lib/constants";
@@ -15,52 +16,40 @@ import { ChatHeader } from "./chat-header";
 import { ChatInput } from "./chat-input";
 import { ChatMessage } from "./chat-message";
 import { ChatSidebar } from "./chat-sidebar";
-import { ChatThinking } from "./chat-thinking";
 
 const logger = createLogger("chat-container");
 
 export function ChatContainer() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [model, setModel] = useState<string>(CHAT_MODELS.QWEN_8B);
-  const [systemPrompt, setSystemPrompt] = useState<string>("");
-  const [temperature, setTemperature] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const createConversationMutation = useCreateConversation();
-  // Track thinking tokens per message ID
-  const [thinkingMap, setThinkingMap] = useState<Record<string, string>>({});
 
   const { data: conversationData } = useConversation(selectedConversationId);
   const queryClient = useQueryClient();
   const initializedConversationIdRef = useRef<string | null>(null);
 
   // Convert conversation messages to AI SDK format
-  const initialMessages =
-    conversationData?.messages
-      ?.filter((msg) => msg.role !== "system")
-      .map((msg) => ({
-        id: msg.id,
-        role: msg.role as "user" | "assistant",
-        content: msg.content,
-      })) || [];
+  const initialMessages = useMemo(
+    () =>
+      conversationData?.messages
+        ?.filter((msg) => msg.role !== "system")
+        .map((msg) => ({
+          id: msg.id,
+          role: msg.role as "user" | "assistant",
+          parts: [{ type: "text" as const, text: msg.content }],
+        })) || [],
+    [conversationData?.messages]
+  );
 
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    error: chatError,
-    stop,
-    setMessages,
-  } = useChat({
-    api: "/api/chat",
-    initialMessages,
-    body: {
-      model,
-      system_prompt: systemPrompt || undefined,
-      temperature: temperature || undefined,
-      conversation_id: selectedConversationId || undefined,
-    },
+  // Manage input state manually
+  const [input, setInput] = useState("");
+
+  // Use useChat hook for message management, but handle API calls manually
+  const chatState = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+    }),
     onFinish: async () => {
       // Refresh conversation to get saved messages (but don't update UI messages)
       // The useChat hook already manages the messages state from streaming
@@ -70,11 +59,116 @@ export function ChatContainer() {
         });
       }
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       // Log parsing errors for debugging
       logger.error("Chat stream error", error);
     },
   });
+
+  const { messages, status, error: chatError, stop, setMessages } = chatState;
+
+  // Initialize messages from conversation data
+  useEffect(() => {
+    if (initialMessages.length > 0 && messages.length === 0) {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages, messages.length, setMessages]);
+  const isLoading = status === "streaming" || status === "submitted";
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: UIMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      parts: [{ type: "text", text: input }],
+    };
+
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInput("");
+
+    // Make the API call manually since AI SDK v2 API is different
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: updatedMessages.map((msg: UIMessage) => {
+            const textPart = msg.parts.find((p) => p.type === "text");
+            return {
+              role: msg.role,
+              content: textPart && "text" in textPart ? (textPart.text as string) : "",
+            };
+          }),
+          model,
+          conversation_id: selectedConversationId || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      const assistantMessageId = crypto.randomUUID();
+      let assistantContent = "";
+
+      if (reader) {
+        const assistantMessage: UIMessage = {
+          id: assistantMessageId,
+          role: "assistant",
+          parts: [{ type: "text", text: "" }],
+        };
+        setMessages([...updatedMessages, assistantMessage]);
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.choices?.[0]?.delta?.content) {
+                  assistantContent += parsed.choices[0].delta.content;
+                  setMessages([
+                    ...updatedMessages,
+                    {
+                      id: assistantMessageId,
+                      role: "assistant",
+                      parts: [{ type: "text", text: assistantContent }],
+                    },
+                  ]);
+                }
+              } catch {
+                // Ignore parse errors
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.error("Failed to send message", error);
+      // Remove the user message on error
+      setMessages(messages);
+    }
+  };
 
   // Reset messages only when conversation ID changes (not on data refresh)
   useEffect(() => {
@@ -97,7 +191,7 @@ export function ChatContainer() {
           .map((msg) => ({
             id: msg.id,
             role: msg.role as "user" | "assistant",
-            content: msg.content,
+            parts: [{ type: "text" as const, text: msg.content }],
           }));
         setMessages(convertedMessages);
         initializedConversationIdRef.current = selectedConversationId;
@@ -108,7 +202,7 @@ export function ChatContainer() {
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  });
 
   // Handle form submission with conversation creation
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -135,7 +229,6 @@ export function ChatContainer() {
     stop();
     setSelectedConversationId(null);
     setMessages([]);
-    setThinkingMap({});
   };
 
   const handleStop = () => {
@@ -164,10 +257,6 @@ export function ChatContainer() {
           onClear={handleClear}
           isStreaming={isLoading}
           onStop={handleStop}
-          systemPrompt={systemPrompt}
-          onSystemPromptChange={setSystemPrompt}
-          temperature={temperature}
-          onTemperatureChange={setTemperature}
         />
         <ScrollArea className="flex-1 p-4">
           {messages.length === 0 ? (
@@ -178,25 +267,19 @@ export function ChatContainer() {
             <div className="space-y-4">
               {messages
                 .filter(
-                  (message: Message) => message.role === "user" || message.role === "assistant"
+                  (message: UIMessage) => message.role === "user" || message.role === "assistant"
                 )
-                .map((message: Message) => {
-                  const thinking = thinkingMap[message.id];
-                  const isLastMessage = message.id === messages[messages.length - 1]?.id;
-                  const isStreaming = isLoading && isLastMessage && message.role === "assistant";
-
+                .map((message: UIMessage) => {
+                  const textPart = message.parts.find((p) => p.type === "text");
+                  const content = textPart && "text" in textPart ? (textPart.text as string) : "";
                   return (
-                    <div key={message.id}>
-                      {message.role === "assistant" && thinking && (
-                        <ChatThinking thinking={thinking} isStreaming={isStreaming} />
-                      )}
-                      <ChatMessage
-                        id={message.id}
-                        role={message.role as "user" | "assistant"}
-                        content={message.content}
-                        createdAt={getMessageCreatedAt(message.id)}
-                      />
-                    </div>
+                    <ChatMessage
+                      key={message.id}
+                      id={message.id}
+                      role={message.role as "user" | "assistant"}
+                      content={content}
+                      createdAt={getMessageCreatedAt(message.id)}
+                    />
                   );
                 })}
               {isLoading && (
