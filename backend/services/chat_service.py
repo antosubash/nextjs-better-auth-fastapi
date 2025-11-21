@@ -18,7 +18,7 @@ class ChatService:
         """Initialize chat service with Ollama client."""
         self.client = AsyncClient(host=OLLAMA_BASE_URL)
 
-    async def stream_chat(self, messages: list[dict[str, str]], model: str | None = None):
+    async def stream_chat(self, messages: list[dict[str, str]], model: str | None = None) -> None:
         """
         Stream chat response from Ollama.
 
@@ -61,22 +61,33 @@ class ChatService:
                 stream = await chat_result
 
             async for chunk in stream:
+                # Extract thinking tokens if present (for models that support reasoning)
+                thinking = None
+                if chunk.get("thinking"):
+                    thinking = chunk["thinking"].get("content", "")
+
+                # Extract message content
+                content = ""
                 if chunk.get("message"):
                     content = chunk["message"].get("content", "")
-                    done = chunk.get("done", False)
-                    response_model = chunk.get("model", model_name)
 
+                done = chunk.get("done", False)
+                response_model = chunk.get("model", model_name)
+
+                # Yield response if we have content or thinking
+                if content or thinking:
                     response = ChatResponse(
                         content=content,
                         model=response_model,
                         done=done,
+                        thinking=thinking,
                     )
 
                     # Format as SSE (Server-Sent Events)
                     yield f"data: {response.model_dump_json()}\n\n"
 
-                    if done:
-                        break
+                if done:
+                    break
 
         except ResponseError as e:
             # Handle Ollama API errors (e.g., invalid model, model not found)

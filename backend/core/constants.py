@@ -114,6 +114,14 @@ class ErrorMessages:
     OLLAMA_CONNECTION_ERROR = "Failed to connect to Ollama service"
     OLLAMA_MODEL_ERROR = "Invalid or unavailable model"
     CHAT_STREAM_ERROR = "Error streaming chat response"
+    CONVERSATION_NOT_FOUND = "Conversation not found"
+    CONVERSATION_CREATE_ERROR = "Failed to create conversation"
+    CONVERSATION_UPDATE_ERROR = "Failed to update conversation"
+    CONVERSATION_DELETE_ERROR = "Failed to delete conversation"
+    CONVERSATION_ACCESS_DENIED = "Access denied to this conversation"
+    MESSAGE_NOT_FOUND = "Message not found"
+    MESSAGE_DELETE_ERROR = "Failed to delete message"
+    MESSAGE_ACCESS_DENIED = "Access denied to this message"
 
 
 # Success messages
@@ -132,6 +140,10 @@ class SuccessMessages:
     JOB_RESUMED = "Job resumed successfully"
     PROFILE_PICTURE_UPLOADED = "Profile picture uploaded successfully"
     PROFILE_PICTURE_DELETED = "Profile picture deleted successfully"
+    CONVERSATION_CREATED = "Conversation created successfully"
+    CONVERSATION_UPDATED = "Conversation updated successfully"
+    CONVERSATION_DELETED = "Conversation deleted successfully"
+    MESSAGE_DELETED = "Message deleted successfully"
 
 
 # API response messages

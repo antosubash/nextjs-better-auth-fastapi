@@ -2,204 +2,229 @@
 
 import { AlertCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useChat } from "ai/react";
+import type { Message } from "ai";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CHAT_ERRORS, CHAT_LABELS, CHAT_MODELS } from "@/lib/constants";
+import { useConversation, useCreateConversation } from "@/lib/hooks/api/use-chat";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/hooks/api/query-keys";
+import { createLogger } from "@/lib/utils/logger";
 import { ChatHeader } from "./chat-header";
 import { ChatInput } from "./chat-input";
 import { ChatMessage } from "./chat-message";
+import { ChatSidebar } from "./chat-sidebar";
+import { ChatThinking } from "./chat-thinking";
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-}
+const logger = createLogger("chat-container");
 
 export function ChatContainer() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [model, setModel] = useState(CHAT_MODELS.QWEN_8B);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [model, setModel] = useState<string>(CHAT_MODELS.QWEN_8B);
+  const [systemPrompt, setSystemPrompt] = useState<string>("");
+  const [temperature, setTemperature] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const createConversationMutation = useCreateConversation();
+  // Track thinking tokens per message ID
+  const [thinkingMap, setThinkingMap] = useState<Record<string, string>>({});
 
+  const { data: conversationData } = useConversation(selectedConversationId);
+  const queryClient = useQueryClient();
+  const initializedConversationIdRef = useRef<string | null>(null);
+
+  // Convert conversation messages to AI SDK format
+  const initialMessages =
+    conversationData?.messages
+      ?.filter((msg) => msg.role !== "system")
+      .map((msg) => ({
+        id: msg.id,
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+      })) || [];
+
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    error: chatError,
+    stop,
+    setMessages,
+  } = useChat({
+    api: "/api/chat",
+    initialMessages,
+    body: {
+      model,
+      system_prompt: systemPrompt || undefined,
+      temperature: temperature || undefined,
+      conversation_id: selectedConversationId || undefined,
+    },
+    onFinish: async () => {
+      // Refresh conversation to get saved messages (but don't update UI messages)
+      // The useChat hook already manages the messages state from streaming
+      if (selectedConversationId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.chat.conversations.detail(selectedConversationId),
+        });
+      }
+    },
+    onError: (error) => {
+      // Log parsing errors for debugging
+      logger.error("Chat stream error", error);
+    },
+  });
+
+  // Reset messages only when conversation ID changes (not on data refresh)
   useEffect(() => {
-    // Auto-scroll to bottom when new messages arrive
+    const conversationChanged = initializedConversationIdRef.current !== selectedConversationId;
+
+    if (conversationChanged) {
+      // Clear messages if no conversation selected
+      if (!selectedConversationId) {
+        setMessages([]);
+        initializedConversationIdRef.current = null;
+      } else if (
+        conversationData?.messages &&
+        // Only update if conversationData matches the selected conversation
+        // (check first message's conversation_id if available, or trust the query)
+        conversationData.id === selectedConversationId
+      ) {
+        // Load messages for the new conversation
+        const convertedMessages = conversationData.messages
+          .filter((msg) => msg.role !== "system")
+          .map((msg) => ({
+            id: msg.id,
+            role: msg.role as "user" | "assistant",
+            content: msg.content,
+          }));
+        setMessages(convertedMessages);
+        initializedConversationIdRef.current = selectedConversationId;
+      }
+    }
+  }, [selectedConversationId, conversationData, setMessages]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  });
+  }, [messages]);
 
-  const parseStreamLine = (line: string): { content?: string; done?: boolean } | null => {
-    if (!line.startsWith("data: ")) {
-      return null;
-    }
-    try {
-      return JSON.parse(line.slice(6));
-    } catch (_e) {
-      // Ignore JSON parse errors for incomplete chunks
-      return null;
-    }
-  };
+  // Handle form submission with conversation creation
+  const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  const processStreamChunk = (
-    chunk: string,
-    assistantMessage: string,
-    newMessages: Message[]
-  ): { message: string; done: boolean } => {
-    const lines = chunk.split("\n");
-    let updatedMessage = assistantMessage;
-    let isDone = false;
-
-    for (const line of lines) {
-      const data = parseStreamLine(line);
-      if (!data) continue;
-
-      if (data.content) {
-        updatedMessage += data.content;
-        setMessages([
-          ...newMessages,
-          { id: `assistant-${Date.now()}`, role: "assistant", content: updatedMessage },
-        ]);
-      }
-      if (data.done) {
-        isDone = true;
+    // Create conversation if none selected and this is the first message
+    if (!selectedConversationId && messages.length === 0 && input.trim()) {
+      try {
+        const conversation = await createConversationMutation.mutateAsync({
+          title: input.slice(0, 50) || CHAT_LABELS.NEW_CONVERSATION,
+        });
+        setSelectedConversationId(conversation.id);
+      } catch (err) {
+        // Continue without saving if creation fails
+        logger.error("Failed to create conversation", err);
       }
     }
 
-    return { message: updatedMessage, done: isDone };
-  };
-
-  const streamResponse = async (
-    reader: ReadableStreamDefaultReader<Uint8Array>,
-    newMessages: Message[]
-  ): Promise<void> => {
-    const decoder = new TextDecoder();
-    let assistantMessage = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      const result = processStreamChunk(chunk, assistantMessage, newMessages);
-      assistantMessage = result.message;
-
-      if (result.done) {
-        setIsStreaming(false);
-        return;
-      }
-    }
-
-    setIsStreaming(false);
-  };
-
-  const createUserMessage = (content: string): Message => ({
-    id: `user-${Date.now()}`,
-    role: "user",
-    content,
-  });
-
-  const prepareRequest = (newMessages: Message[]) => {
-    abortControllerRef.current = new AbortController();
-    return {
-      method: "POST" as const,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messages: newMessages.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        model,
-        stream: true,
-      }),
-      signal: abortControllerRef.current.signal,
-    };
-  };
-
-  const handleResponseError = async (response: Response): Promise<never> => {
-    const errorData = await response.json().catch(() => ({ error: CHAT_ERRORS.SEND_FAILED }));
-    throw new Error(errorData.error || CHAT_ERRORS.SEND_FAILED);
-  };
-
-  const handleSendError = (error: unknown) => {
-    setIsStreaming(false);
-    if (error instanceof Error && error.name === "AbortError") {
-      return;
-    }
-    setError(error instanceof Error ? error.message : CHAT_ERRORS.SEND_FAILED);
-    setMessages(messages);
-  };
-
-  const handleSend = async (userMessage: string) => {
-    if (isStreaming) return;
-
-    const userMsg = createUserMessage(userMessage);
-    const newMessages: Message[] = [...messages, userMsg];
-    setMessages(newMessages);
-    setIsStreaming(true);
-    setError(null);
-
-    try {
-      const requestOptions = prepareRequest(newMessages);
-      const response = await fetch("/api/chat", requestOptions);
-
-      if (!response.ok) {
-        await handleResponseError(response);
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error(CHAT_ERRORS.STREAM_ERROR);
-      }
-
-      await streamResponse(reader, newMessages);
-    } catch (error) {
-      handleSendError(error);
-    }
+    // Call the original handleSubmit
+    handleSubmit(e);
   };
 
   const handleClear = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+    stop();
+    setSelectedConversationId(null);
     setMessages([]);
-    setError(null);
-    setIsStreaming(false);
+    setThinkingMap({});
   };
 
+  const handleStop = () => {
+    stop();
+  };
+
+  // Get message creation time from conversation data
+  const getMessageCreatedAt = (messageId: string) => {
+    return conversationData?.messages?.find((msg) => msg.id === messageId)?.created_at;
+  };
+
+  const errorMessage = chatError?.message || (chatError ? CHAT_ERRORS.SEND_FAILED : null);
+
   return (
-    <div className="flex flex-col h-full">
-      <ChatHeader model={model} onModelChange={setModel} onClear={handleClear} />
-      <ScrollArea className="flex-1 p-4">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">{CHAT_LABELS.NO_MESSAGES}</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <ChatMessage key={message.id} role={message.role} content={message.content} />
-            ))}
-            {isStreaming && (
-              <div className="flex gap-3 justify-start">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <div className="flex h-full">
+      <div className="w-64 shrink-0">
+        <ChatSidebar
+          selectedConversationId={selectedConversationId}
+          onSelectConversation={setSelectedConversationId}
+        />
+      </div>
+      <div className="flex-1 flex flex-col min-w-0">
+        <ChatHeader
+          model={model}
+          onModelChange={setModel}
+          onClear={handleClear}
+          isStreaming={isLoading}
+          onStop={handleStop}
+          systemPrompt={systemPrompt}
+          onSystemPromptChange={setSystemPrompt}
+          temperature={temperature}
+          onTemperatureChange={setTemperature}
+        />
+        <ScrollArea className="flex-1 p-4">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-muted-foreground">{CHAT_LABELS.NO_MESSAGES}</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages
+                .filter(
+                  (message: Message) => message.role === "user" || message.role === "assistant"
+                )
+                .map((message: Message) => {
+                  const thinking = thinkingMap[message.id];
+                  const isLastMessage = message.id === messages[messages.length - 1]?.id;
+                  const isStreaming = isLoading && isLastMessage && message.role === "assistant";
+
+                  return (
+                    <div key={message.id}>
+                      {message.role === "assistant" && thinking && (
+                        <ChatThinking thinking={thinking} isStreaming={isStreaming} />
+                      )}
+                      <ChatMessage
+                        id={message.id}
+                        role={message.role as "user" | "assistant"}
+                        content={message.content}
+                        createdAt={getMessageCreatedAt(message.id)}
+                      />
+                    </div>
+                  );
+                })}
+              {isLoading && (
+                <div className="flex gap-3 justify-start">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                  <div className="text-sm text-muted-foreground">{CHAT_LABELS.STREAMING}</div>
                 </div>
-                <div className="text-sm text-muted-foreground">{CHAT_LABELS.STREAMING}</div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        )}
-        {error && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-      </ScrollArea>
-      <ChatInput onSend={handleSend} disabled={isStreaming} />
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+          {errorMessage && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+        </ScrollArea>
+        <ChatInput
+          input={input}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleChatSubmit}
+          disabled={isLoading}
+          error={errorMessage}
+        />
+      </div>
     </div>
   );
 }

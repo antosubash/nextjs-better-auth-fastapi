@@ -51,8 +51,34 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Return streaming response
-    return new Response(backendResponse.body, {
+    // Filter out thinking comments to prevent AI SDK parsing errors
+    // Thinking comments start with ":thinking" and are ignored by parsers
+    const transformStream = new TransformStream({
+      transform(chunk, controller) {
+        const decoder = new TextDecoder();
+        const encoder = new TextEncoder();
+        const text = decoder.decode(chunk, { stream: true });
+        const lines = text.split("\n");
+        
+        for (const line of lines) {
+          // Skip SSE comment lines (starting with :) to prevent parsing errors
+          // These are thinking tokens that we'll handle separately if needed
+          if (line.trim().startsWith(":thinking")) {
+            continue;
+          }
+          // Forward all other lines (preserve newlines for proper SSE formatting)
+          controller.enqueue(encoder.encode(line + "\n"));
+        }
+      },
+    });
+
+    // Pipe backend response through transform to filter thinking comments
+    if (!backendResponse.body) {
+      return new Response("Stream error", { status: 500 });
+    }
+
+    // Return streaming response with filtered stream
+    return new Response(backendResponse.body.pipeThrough(transformStream), {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",

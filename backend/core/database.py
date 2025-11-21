@@ -100,7 +100,7 @@ async def init_db() -> None:
             # Set search_path for this connection
             await conn.execute(text(f'SET search_path TO "{DB_SCHEMA}"'))
             # Import all models to ensure they're registered
-            from models import job_history, task  # noqa: F401, PLC0415
+            from models import chat, job_history, task  # noqa: F401, PLC0415
 
             # Create all tables
             await conn.run_sync(SQLModel.metadata.create_all)

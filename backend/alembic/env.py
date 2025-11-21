@@ -14,6 +14,7 @@ if str(backend_dir) not in sys.path:
 # Import SQLModel and models
 from sqlmodel import SQLModel  # noqa: E402
 
+from models.chat import ChatConversation, ChatMessage  # noqa: F401, E402
 from models.job_history import JobHistory  # noqa: F401, E402
 from models.task import Task  # noqa: F401, E402
 
@@ -35,9 +36,12 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 target_metadata = SQLModel.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# (removed commented code)
+
+def include_name(name, type_, parent_names):
+    """Include only tables in the specified schema."""
+    if type_ == "schema":
+        return name in ["api"]
+    return True
 
 
 def run_migrations_offline() -> None:
@@ -59,7 +63,8 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         version_table_schema=DB_SCHEMA,
-        include_schemas=True,
+        include_schemas=False,
+        include_name=include_name,
     )
 
     with context.begin_transaction():
@@ -84,15 +89,12 @@ def run_migrations_online() -> None:
         connection.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{DB_SCHEMA}"'))
         connection.commit()
 
-        # Set search_path for this connection
-        connection.execute(text(f'SET search_path TO "{DB_SCHEMA}"'))
-        connection.commit()
-
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             version_table_schema=DB_SCHEMA,
-            include_schemas=True,
+            include_schemas=False,
+            include_name=include_name,
         )
 
         with context.begin_transaction():

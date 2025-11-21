@@ -54,6 +54,17 @@ export const queryKeys = {
   storage: {
     all: ["storage"] as const,
   },
+  chat: {
+    all: ["chat"] as const,
+    conversations: {
+      all: () => [...queryKeys.chat.all, "conversations"] as const,
+      lists: () => [...queryKeys.chat.conversations.all(), "list"] as const,
+      list: (limit: number, offset: number) =>
+        [...queryKeys.chat.conversations.lists(), limit, offset] as const,
+      details: () => [...queryKeys.chat.conversations.all(), "detail"] as const,
+      detail: (id: string) => [...queryKeys.chat.conversations.details(), id] as const,
+    },
+  },
   auth: {
     all: ["auth"] as const,
     session: () => [...queryKeys.auth.all, "session"] as const,

@@ -1579,6 +1579,32 @@ export const CHAT_LABELS = {
   CONFIRM_CLEAR: "Are you sure you want to clear the chat?",
   NO_MESSAGES: "No messages yet. Start a conversation!",
   STREAMING: "Streaming...",
+  CONNECTING: "Connecting...",
+  CONNECTED: "Connected",
+  DISCONNECTED: "Disconnected",
+  NEW_CONVERSATION: "New Conversation",
+  CONVERSATIONS: "Conversations",
+  NO_CONVERSATIONS: "No conversations yet",
+  CONVERSATION_TITLE: "Conversation Title",
+  EDIT_TITLE: "Edit Title",
+  DELETE_CONVERSATION: "Delete Conversation",
+  CONFIRM_DELETE_CONVERSATION: "Are you sure you want to delete this conversation?",
+  COPY_MESSAGE: "Copy Message",
+  REGENERATE: "Regenerate",
+  DELETE_MESSAGE: "Delete Message",
+  CONFIRM_DELETE_MESSAGE: "Are you sure you want to delete this message?",
+  STOP_GENERATION: "Stop Generation",
+  SYSTEM_PROMPT: "System Prompt",
+  SYSTEM_PROMPT_PLACEHOLDER: "Enter system prompt (optional)",
+  TEMPERATURE: "Temperature",
+  TEMPERATURE_DESCRIPTION: "Controls randomness (0.0 = deterministic, 2.0 = very creative)",
+  RETRY: "Retry",
+  CHARACTER_COUNT: "characters",
+  CANCEL: "Cancel",
+  THINKING: "Thinking",
+  REASONING: "Reasoning",
+  SHOW_THINKING: "Show thinking",
+  HIDE_THINKING: "Hide thinking",
 } as const;
 
 export const CHAT_ERRORS = {
@@ -1587,6 +1613,24 @@ export const CHAT_ERRORS = {
   CONNECTION_ERROR: "Failed to connect to chat service",
   INVALID_MESSAGE: "Invalid message format",
   MESSAGE_REQUIRED: "Message is required",
+  CONVERSATION_NOT_FOUND: "Conversation not found",
+  CONVERSATION_CREATE_ERROR: "Failed to create conversation",
+  CONVERSATION_UPDATE_ERROR: "Failed to update conversation",
+  CONVERSATION_DELETE_ERROR: "Failed to delete conversation",
+  CONVERSATION_ACCESS_DENIED: "Access denied to this conversation",
+  MESSAGE_NOT_FOUND: "Message not found",
+  MESSAGE_DELETE_ERROR: "Failed to delete message",
+  MESSAGE_ACCESS_DENIED: "Access denied to this message",
+  SSE_CONNECTION_ERROR: "Failed to establish SSE connection",
+  SSE_STREAM_ERROR: "Error reading SSE stream",
+  SSE_PARSE_ERROR: "Failed to parse SSE event",
+} as const;
+
+export const CHAT_SUCCESS = {
+  CONVERSATION_CREATED: "Conversation created successfully",
+  CONVERSATION_UPDATED: "Conversation updated successfully",
+  CONVERSATION_DELETED: "Conversation deleted successfully",
+  MESSAGE_DELETED: "Message deleted successfully",
 } as const;
 
 export const CHAT_MODELS = {
