@@ -45,11 +45,11 @@ export function ChatHeader({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex items-center justify-between p-4 border-b bg-background">
+    <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center gap-4">
         <h2 className="text-lg font-semibold">{CHAT_LABELS.CHAT_WITH_AI}</h2>
         <Select value={model} onValueChange={onModelChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] h-9">
             <SelectValue placeholder={CHAT_LABELS.SELECT_MODEL} />
           </SelectTrigger>
           <SelectContent>
@@ -62,14 +62,19 @@ export function ChatHeader({
       </div>
       <div className="flex items-center gap-2">
         {isStreaming && onStop && (
-          <Button variant="outline" size="icon" onClick={onStop}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onStop}
+            className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 transition-colors"
+          >
             <Square className="w-4 h-4" />
             <span className="sr-only">{CHAT_LABELS.STOP_GENERATION}</span>
           </Button>
         )}
         <AlertDialog open={open} onOpenChange={setOpen}>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" className="h-9 w-9">
               <Trash2 className="w-4 h-4" />
               <span className="sr-only">{CHAT_LABELS.CLEAR_CHAT}</span>
             </Button>

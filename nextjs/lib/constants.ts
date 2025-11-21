@@ -1577,7 +1577,8 @@ export const CHAT_LABELS = {
   SELECT_MODEL: "Select model",
   CLEAR_CHAT: "Clear Chat",
   CONFIRM_CLEAR: "Are you sure you want to clear the chat?",
-  NO_MESSAGES: "No messages yet. Start a conversation!",
+  NO_MESSAGES: "No messages yet",
+  START_CONVERSATION: "Start a conversation by typing a message below.",
   STREAMING: "Streaming...",
   CONNECTING: "Connecting...",
   CONNECTED: "Connected",
@@ -1605,6 +1606,7 @@ export const CHAT_LABELS = {
   REASONING: "Reasoning",
   SHOW_THINKING: "Show thinking",
   HIDE_THINKING: "Hide thinking",
+  SCROLL_TO_BOTTOM: "Scroll to bottom",
 } as const;
 
 export const CHAT_ERRORS = {
@@ -1624,6 +1626,7 @@ export const CHAT_ERRORS = {
   SSE_CONNECTION_ERROR: "Failed to establish SSE connection",
   SSE_STREAM_ERROR: "Error reading SSE stream",
   SSE_PARSE_ERROR: "Failed to parse SSE event",
+  COPY_FAILED: "Failed to copy message",
 } as const;
 
 export const CHAT_SUCCESS = {
