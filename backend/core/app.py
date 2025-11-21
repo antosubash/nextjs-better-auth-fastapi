@@ -23,7 +23,7 @@ from core.middleware import (
 )
 from core.security_middleware import SecurityHeadersMiddleware
 from dependencies import close_http_client, get_http_client
-from routers import example, health, jobs, storage, tasks
+from routers import chat, example, health, jobs, storage, tasks
 from services.storage_service import StorageService
 
 logger = logging.getLogger(__name__)
@@ -85,6 +85,7 @@ def create_app() -> FastAPI:
     app.include_router(tasks.router)
     app.include_router(jobs.router)
     app.include_router(storage.router)
+    app.include_router(chat.router)
 
     # Store HTTP client in app state
     @app.on_event("startup")

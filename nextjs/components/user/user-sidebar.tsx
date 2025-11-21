@@ -1,12 +1,12 @@
 "use client";
 
-import { CheckSquare2, LayoutDashboard, User } from "lucide-react";
+import { CheckSquare2, LayoutDashboard, MessageSquare, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { AUTH_LABELS, USER_LAYOUT, USER_NAVIGATION } from "@/lib/constants";
+import { AUTH_LABELS, CHAT_LABELS, USER_LAYOUT, USER_NAVIGATION } from "@/lib/constants";
 
 interface UserSidebarProps {
   isOpen: boolean;
@@ -28,6 +28,11 @@ export function UserSidebar({ isOpen, onClose }: UserSidebarProps) {
       icon: CheckSquare2,
     },
     {
+      href: "/chat",
+      label: CHAT_LABELS.TITLE,
+      icon: MessageSquare,
+    },
+    {
       href: "/profile",
       label: AUTH_LABELS.PROFILE,
       icon: User,
@@ -43,6 +48,9 @@ export function UserSidebar({ isOpen, onClose }: UserSidebarProps) {
   const isActive = (href: string) => {
     if (href === "/dashboard/tasks") {
       return pathname?.startsWith("/dashboard/tasks");
+    }
+    if (href === "/chat") {
+      return pathname === "/chat";
     }
     if (href === "/profile") {
       return pathname === "/profile";

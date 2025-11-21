@@ -445,6 +445,7 @@ export const ADMIN_NAVIGATION = {
   TASKS: "Tasks",
   JOBS: "Jobs",
   DOCTOR: "Doctor / Diagnostics",
+  CHAT: "Chat",
   MENU_TOGGLE: "Toggle menu",
   CLOSE_MENU: "Close menu",
 } as const;
@@ -457,6 +458,7 @@ export const ADMIN_LAYOUT = {
 export const USER_NAVIGATION = {
   DASHBOARD: "Dashboard",
   TASKS: "Tasks",
+  CHAT: "Chat",
   PROFILE: "Profile",
   MENU_TOGGLE: "Toggle menu",
   CLOSE_MENU: "Close menu",
@@ -1562,4 +1564,34 @@ export const PASSKEY_SUCCESS = {
 
 export const PASSKEY_CONFIG = {
   DEFAULT_AUTOFILL: true,
+} as const;
+
+export const CHAT_LABELS = {
+  TITLE: "Chat",
+  CHAT_WITH_AI: "Chat with AI",
+  SEND_MESSAGE: "Send",
+  PLACEHOLDER: "Type your message...",
+  LOADING: "Loading...",
+  ERROR: "Error",
+  MODEL: "Model",
+  SELECT_MODEL: "Select model",
+  CLEAR_CHAT: "Clear Chat",
+  CONFIRM_CLEAR: "Are you sure you want to clear the chat?",
+  NO_MESSAGES: "No messages yet. Start a conversation!",
+  STREAMING: "Streaming...",
+} as const;
+
+export const CHAT_ERRORS = {
+  SEND_FAILED: "Failed to send message",
+  STREAM_ERROR: "Error streaming response",
+  CONNECTION_ERROR: "Failed to connect to chat service",
+  INVALID_MESSAGE: "Invalid message format",
+  MESSAGE_REQUIRED: "Message is required",
+} as const;
+
+export const CHAT_MODELS = {
+  QWEN_8B: "qwen3:8b",
+  QWEN_14B: "qwen3:14b",
+  LLAMA2: "llama2",
+  MISTRAL: "mistral",
 } as const;

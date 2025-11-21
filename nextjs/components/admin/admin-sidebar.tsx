@@ -6,6 +6,7 @@ import {
   Clock,
   Key,
   LayoutDashboard,
+  MessageSquare,
   Stethoscope,
   User,
   Users,
@@ -16,7 +17,7 @@ import { Logo } from "@/components/branding/logo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ADMIN_NAVIGATION, AUTH_LABELS, BRANDING } from "@/lib/constants";
+import { ADMIN_NAVIGATION, AUTH_LABELS, BRANDING, CHAT_LABELS } from "@/lib/constants";
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -63,6 +64,11 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       icon: Stethoscope,
     },
     {
+      href: "/admin/chat",
+      label: CHAT_LABELS.TITLE,
+      icon: MessageSquare,
+    },
+    {
       href: "/profile",
       label: AUTH_LABELS.PROFILE,
       icon: User,
@@ -75,27 +81,18 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     }
   };
 
+  // Routes that use startsWith matching (have sub-routes)
+  const prefixRoutes = new Set([
+    "/admin/organizations",
+    "/admin/api-keys",
+    "/admin/doctor",
+    "/admin/tasks",
+    "/admin/jobs",
+  ]);
+
   const isActive = (href: string) => {
-    if (href === "/admin/organizations") {
-      return pathname?.startsWith("/admin/organizations");
-    }
-    if (href === "/admin/api-keys") {
-      return pathname?.startsWith("/admin/api-keys");
-    }
-    if (href === "/admin/doctor") {
-      return pathname?.startsWith("/admin/doctor");
-    }
-    if (href === "/admin/tasks") {
-      return pathname?.startsWith("/admin/tasks");
-    }
-    if (href === "/admin/jobs") {
-      return pathname?.startsWith("/admin/jobs");
-    }
-    if (href === "/admin/users") {
-      return pathname === "/admin/users";
-    }
-    if (href === "/profile") {
-      return pathname === "/profile";
+    if (prefixRoutes.has(href)) {
+      return pathname?.startsWith(href);
     }
     return pathname === href;
   };

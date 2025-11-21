@@ -109,6 +109,12 @@ class ErrorMessages:
     INTERNAL_SERVER_ERROR = "Internal server error"
     SERVICE_UNAVAILABLE = "Service unavailable"
 
+    # Chat errors
+    CHAT_ERROR = "Chat error occurred"
+    OLLAMA_CONNECTION_ERROR = "Failed to connect to Ollama service"
+    OLLAMA_MODEL_ERROR = "Invalid or unavailable model"
+    CHAT_STREAM_ERROR = "Error streaming chat response"
+
 
 # Success messages
 class SuccessMessages:
