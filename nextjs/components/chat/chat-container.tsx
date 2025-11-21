@@ -37,6 +37,7 @@ export function ChatContainer() {
     () =>
       conversationData?.messages
         ?.filter((msg) => msg.role !== "system")
+        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
         .map((msg) => ({
           id: msg.id,
           role: msg.role as "user" | "assistant",
@@ -191,6 +192,7 @@ export function ChatContainer() {
         // Load messages for the new conversation
         const convertedMessages = conversationData.messages
           .filter((msg) => msg.role !== "system")
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
           .map((msg) => ({
             id: msg.id,
             role: msg.role as "user" | "assistant",
@@ -216,7 +218,7 @@ export function ChatContainer() {
       const scrollHeight = viewport.scrollHeight;
       const clientHeight = viewport.clientHeight;
       const maxScroll = Math.max(0, scrollHeight - clientHeight);
-      
+
       viewport.scrollTo({
         top: maxScroll,
         behavior: smooth ? "smooth" : "auto",
@@ -230,7 +232,7 @@ export function ChatContainer() {
       const scrollTop = viewport.scrollTop;
       const clientHeight = viewport.clientHeight;
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
-      
+
       if (isNearBottom) {
         // Use requestAnimationFrame for better timing
         requestAnimationFrame(() => {
@@ -378,11 +380,23 @@ export function ChatContainer() {
               </div>
             ) : (
               <div className="space-y-6 pb-4">
-                {messages
-                  .filter(
+                {(() => {
+                  const filteredMessages = messages.filter(
                     (message: UIMessage) => message.role === "user" || message.role === "assistant"
-                  )
-                  .map((message: UIMessage) => {
+                  );
+                  // Create array with indices for stable sorting
+                  const messagesWithIndices = filteredMessages.map((msg, idx) => ({ msg, idx }));
+                  // Sort by created_at if available, otherwise by original index
+                  messagesWithIndices.sort((a, b) => {
+                    const aCreatedAt = getMessageCreatedAt(a.msg.id);
+                    const bCreatedAt = getMessageCreatedAt(b.msg.id);
+                    if (aCreatedAt && bCreatedAt) {
+                      return new Date(aCreatedAt).getTime() - new Date(bCreatedAt).getTime();
+                    }
+                    // If createdAt not available, use original order
+                    return a.idx - b.idx;
+                  });
+                  return messagesWithIndices.map(({ msg: message }) => {
                     const textPart = message.parts.find((p) => p.type === "text");
                     const content = textPart && "text" in textPart ? (textPart.text as string) : "";
                     return (
@@ -394,7 +408,8 @@ export function ChatContainer() {
                         createdAt={getMessageCreatedAt(message.id)}
                       />
                     );
-                  })}
+                  });
+                })()}
                 {isLoading && (
                   <div className="flex gap-3 justify-start animate-in fade-in slide-in-from-bottom-2">
                     <div className="shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center ring-2 ring-primary/10">
@@ -406,7 +421,9 @@ export function ChatContainer() {
                         <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:-0.15s]" />
                         <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" />
                       </div>
-                      <span className="text-sm text-muted-foreground ml-2">{CHAT_LABELS.STREAMING}</span>
+                      <span className="text-sm text-muted-foreground ml-2">
+                        {CHAT_LABELS.STREAMING}
+                      </span>
                     </div>
                   </div>
                 )}
