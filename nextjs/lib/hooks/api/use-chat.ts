@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  type CreateConversationRequest,
   createConversation,
   deleteConversation,
   deleteMessage,
   getConversation,
   getConversations,
-  updateConversation,
-  type CreateConversationRequest,
+  getModels,
   type UpdateConversationRequest,
+  updateConversation,
 } from "@/lib/api/chat";
 import { CHAT_ERRORS, CHAT_SUCCESS } from "@/lib/constants";
 import { queryKeys } from "./query-keys";
@@ -23,7 +24,7 @@ export function useConversations(limit = 100, offset = 0) {
 export function useConversation(id: string | null) {
   return useQuery({
     queryKey: queryKeys.chat.conversations.detail(id || ""),
-    queryFn: () => getConversation(id!),
+    queryFn: () => getConversation(id || ""),
     enabled: !!id,
   });
 }
@@ -89,5 +90,12 @@ export function useDeleteMessage() {
     onError: (error: Error) => {
       toast.error(error.message || CHAT_ERRORS.MESSAGE_DELETE_ERROR);
     },
+  });
+}
+
+export function useModels() {
+  return useQuery({
+    queryKey: queryKeys.chat.models(),
+    queryFn: () => getModels(),
   });
 }

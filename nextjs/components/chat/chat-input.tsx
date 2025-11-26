@@ -1,7 +1,7 @@
 "use client";
 
 import { Send } from "lucide-react";
-import { useEffect, useRef, type FormEvent, type KeyboardEvent } from "react";
+import { type FormEvent, type KeyboardEvent, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CHAT_LABELS } from "@/lib/constants";
@@ -25,7 +25,7 @@ export function ChatInput({ input, handleInputChange, handleSubmit, disabled }: 
       const scrollHeight = textarea.scrollHeight;
       textarea.style.height = `${Math.min(scrollHeight, 200)}px`;
     }
-  }, [input]);
+  }, []);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -40,7 +40,10 @@ export function ChatInput({ input, handleInputChange, handleSubmit, disabled }: 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <form
+      onSubmit={handleSubmit}
+      className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    >
       <div className="p-4">
         <div className="flex gap-3 items-end max-w-4xl mx-auto">
           <div className="relative flex-1">

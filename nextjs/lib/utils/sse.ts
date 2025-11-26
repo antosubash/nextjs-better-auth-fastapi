@@ -114,15 +114,18 @@ export function readSSEStream(response: Response, options: SSEOptions = {}): Abo
     }
   };
 
+  const processChunk = (value: Uint8Array) => {
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    processLines(lines);
+  };
+
   const processStream = async () => {
     try {
       onOpen?.();
 
-      while (true) {
-        if (abortController.signal.aborted) {
-          break;
-        }
-
+      while (!abortController.signal.aborted) {
         const { done, value } = await reader.read();
 
         if (done) {
@@ -130,14 +133,7 @@ export function readSSEStream(response: Response, options: SSEOptions = {}): Abo
           break;
         }
 
-        // Decode chunk and add to buffer
-        buffer += decoder.decode(value, { stream: true });
-
-        // Process complete lines
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || ""; // Keep incomplete line in buffer
-
-        processLines(lines);
+        processChunk(value);
       }
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") {

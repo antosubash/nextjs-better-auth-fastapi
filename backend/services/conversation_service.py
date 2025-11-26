@@ -85,6 +85,31 @@ class ConversationService:
         result = await session.execute(query)
         return result.scalar_one_or_none()
 
+    async def get_conversation_for_update(
+        self, session: AsyncSession, conversation_id: UUID, user_id: str
+    ) -> ChatConversation | None:
+        """
+        Get a conversation by ID with row locking.
+
+        Args:
+            session: Database session
+            conversation_id: Conversation ID
+            user_id: User ID for access control
+
+        Returns:
+            Conversation if found and accessible, None otherwise
+        """
+        query = (
+            select(ChatConversation)
+            .where(
+                ChatConversation.id == conversation_id,
+                ChatConversation.user_id == user_id,
+            )
+            .with_for_update()
+        )
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
     async def get_conversation_messages(
         self, session: AsyncSession, conversation_id: UUID, user_id: str
     ) -> list[ChatMessage]:

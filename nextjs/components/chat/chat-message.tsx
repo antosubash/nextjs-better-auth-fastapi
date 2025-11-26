@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, Check, Copy, User } from "lucide-react";
+import { Bot, Check, Copy, RotateCcw, User } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -17,11 +17,21 @@ interface ChatMessageProps {
   content: string;
   createdAt?: string;
   onRegenerate?: () => void;
+  isLast?: boolean;
+  showTimestamps?: boolean;
 }
 
-export function ChatMessage({ role, content, createdAt }: ChatMessageProps) {
+export function ChatMessage({
+  role,
+  content,
+  createdAt,
+  onRegenerate,
+  isLast,
+  showTimestamps = true,
+}: ChatMessageProps) {
   const isUser = role === "user";
   const [copied, setCopied] = useState(false);
+  const [codeBlockCopied, setCodeBlockCopied] = useState<string | null>(null);
 
   const handleCopy = async () => {
     try {
@@ -29,6 +39,17 @@ export function ChatMessage({ role, content, createdAt }: ChatMessageProps) {
       setCopied(true);
       toast.success(CHAT_LABELS.COPY_MESSAGE);
       setTimeout(() => setCopied(false), 2000);
+    } catch (_err) {
+      toast.error(CHAT_ERRORS.COPY_FAILED);
+    }
+  };
+
+  const handleCopyCode = async (code: string, language?: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCodeBlockCopied(code);
+      toast.success(`Copied ${language || "code"} to clipboard`);
+      setTimeout(() => setCodeBlockCopied(null), 2000);
     } catch (_err) {
       toast.error(CHAT_ERRORS.COPY_FAILED);
     }
@@ -66,7 +87,12 @@ export function ChatMessage({ role, content, createdAt }: ChatMessageProps) {
           <Bot className="w-5 h-5 text-primary" />
         </div>
       )}
-      <div className={cn("flex flex-col gap-1 max-w-[85%] sm:max-w-[75%]", isUser ? "items-end" : "items-start")}>
+      <div
+        className={cn(
+          "flex flex-col gap-1 max-w-[85%] sm:max-w-[75%]",
+          isUser ? "items-end" : "items-start"
+        )}
+      >
         <div
           className={cn(
             "rounded-2xl px-4 py-3 shadow-sm transition-all",
@@ -94,20 +120,41 @@ export function ChatMessage({ role, content, createdAt }: ChatMessageProps) {
                       children?: React.ReactNode;
                     }) => {
                       const match = /language-(\w+)/.exec(className || "");
+                      const codeContent = String(children).replace(/\n$/, "");
+                      const language = match ? match[1] : undefined;
+
                       return !inline && match ? (
-                        <SyntaxHighlighter
-                          style={vscDarkPlus}
-                          language={match[1]}
-                          PreTag="div"
-                          customStyle={{
-                            margin: "0.5rem 0",
-                            borderRadius: "0.5rem",
-                            fontSize: "0.875rem",
-                          }}
-                          {...(props as Record<string, unknown>)}
-                        >
-                          {String(children).replace(/\n$/, "")}
-                        </SyntaxHighlighter>
+                        <div className="relative group">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              "absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10",
+                              "bg-background/80 hover:bg-background border shadow-sm"
+                            )}
+                            onClick={() => handleCopyCode(codeContent, language)}
+                            title={`Copy ${language} code`}
+                          >
+                            {codeBlockCopied === codeContent ? (
+                              <Check className="w-3 h-3 text-green-500" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </Button>
+                          <SyntaxHighlighter
+                            style={vscDarkPlus}
+                            language={match[1]}
+                            PreTag="div"
+                            customStyle={{
+                              margin: "0.5rem 0",
+                              borderRadius: "0.5rem",
+                              fontSize: "0.875rem",
+                            }}
+                            {...(props as Record<string, unknown>)}
+                          >
+                            {codeContent}
+                          </SyntaxHighlighter>
+                        </div>
                       ) : (
                         <code
                           className={cn(
@@ -129,8 +176,20 @@ export function ChatMessage({ role, content, createdAt }: ChatMessageProps) {
           </div>
         </div>
         <div className="flex items-center gap-2 px-1">
-          {createdAt && (
+          {showTimestamps && createdAt && (
             <span className="text-xs text-muted-foreground">{formatTime(createdAt)}</span>
+          )}
+          {!isUser && onRegenerate && isLast && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent"
+              onClick={onRegenerate}
+              title="Regenerate response"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="sr-only">{CHAT_LABELS.REGENERATE_RESPONSE}</span>
+            </Button>
           )}
           <Button
             variant="ghost"

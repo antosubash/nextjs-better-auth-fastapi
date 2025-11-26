@@ -64,6 +64,7 @@ export const queryKeys = {
       details: () => [...queryKeys.chat.conversations.all(), "detail"] as const,
       detail: (id: string) => [...queryKeys.chat.conversations.details(), id] as const,
     },
+    models: () => [...queryKeys.chat.all, "models"] as const,
   },
   auth: {
     all: ["auth"] as const,

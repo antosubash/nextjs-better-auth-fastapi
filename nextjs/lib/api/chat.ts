@@ -51,6 +51,18 @@ export interface UpdateConversationRequest {
   title: string;
 }
 
+export interface ModelInfo {
+  name: string;
+  size: number;
+  digest: string;
+  details: Record<string, unknown>;
+  modified_at: string;
+}
+
+export interface ModelsListResponse {
+  models: ModelInfo[];
+}
+
 export async function getConversations(limit = 100, offset = 0): Promise<ConversationListResponse> {
   const params = new URLSearchParams({
     limit: limit.toString(),
@@ -92,4 +104,8 @@ export async function deleteMessage(id: string): Promise<void> {
   return callFastApi<void>(`/chat/messages/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function getModels(): Promise<ModelsListResponse> {
+  return callFastApi<ModelsListResponse>("/chat/models");
 }

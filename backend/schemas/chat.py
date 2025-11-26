@@ -161,3 +161,57 @@ class UpdateConversationRequest(BaseModel):
                 "title": "Updated Conversation Title",
             }
         }
+
+
+class ModelInfo(BaseModel):
+    """Model information from Ollama."""
+
+    name: str = Field(..., description="Model name")
+    size: int = Field(..., description="Model size in bytes")
+    digest: str = Field(..., description="Model digest")
+    details: dict = Field(..., description="Model details")
+    modified_at: str = Field(..., description="Last modified timestamp")
+
+    class Config:
+        json_schema_extra: ClassVar = {
+            "example": {
+                "name": "qwen3:8b",
+                "size": 4661224676,
+                "digest": "sha256:abcd1234...",
+                "details": {
+                    "format": "gguf",
+                    "family": "qwen3",
+                    "families": ["qwen3"],
+                    "parameter_size": "8B",
+                    "quantization_level": "Q4_0",
+                },
+                "modified_at": "2024-01-01T00:00:00Z",
+            }
+        }
+
+
+class ModelsListResponse(BaseModel):
+    """Response model for listing available models."""
+
+    models: list[ModelInfo] = Field(..., description="List of available models")
+
+    class Config:
+        json_schema_extra: ClassVar = {
+            "example": {
+                "models": [
+                    {
+                        "name": "qwen3:8b",
+                        "size": 4661224676,
+                        "digest": "sha256:abcd1234...",
+                        "details": {
+                            "format": "gguf",
+                            "family": "qwen3",
+                            "families": ["qwen3"],
+                            "parameter_size": "8B",
+                            "quantization_level": "Q4_0",
+                        },
+                        "modified_at": "2024-01-01T00:00:00Z",
+                    }
+                ]
+            }
+        }

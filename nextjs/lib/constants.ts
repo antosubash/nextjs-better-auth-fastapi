@@ -1607,6 +1607,11 @@ export const CHAT_LABELS = {
   SHOW_THINKING: "Show thinking",
   HIDE_THINKING: "Hide thinking",
   SCROLL_TO_BOTTOM: "Scroll to bottom",
+  EXAMPLE_PROMPT_1: "Write a Fibonacci function in Python",
+  EXAMPLE_PROMPT_2: "Help with JavaScript errors",
+  EXAMPLE_PROMPT_3: "Summarize articles",
+  REGENERATE_RESPONSE: "Regenerate response",
+  NO_CONVERSATIONS_FOUND: "No conversations found",
 } as const;
 
 export const CHAT_ERRORS = {
@@ -1634,11 +1639,4 @@ export const CHAT_SUCCESS = {
   CONVERSATION_UPDATED: "Conversation updated successfully",
   CONVERSATION_DELETED: "Conversation deleted successfully",
   MESSAGE_DELETED: "Message deleted successfully",
-} as const;
-
-export const CHAT_MODELS = {
-  QWEN_8B: "qwen3:8b",
-  QWEN_14B: "qwen3:14b",
-  LLAMA2: "llama2",
-  MISTRAL: "mistral",
 } as const;

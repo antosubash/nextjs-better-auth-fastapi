@@ -37,7 +37,7 @@ if config.config_file_name is not None:
 target_metadata = SQLModel.metadata
 
 
-def include_name(name, type_, parent_names):
+def include_name(name, type_, _parent_names):
     """Include only tables in the specified schema."""
     if type_ == "schema":
         return name in ["api"]

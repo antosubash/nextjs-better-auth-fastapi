@@ -3,9 +3,9 @@
  * Provides a simple interface for handling SSE connections in React components.
  */
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { fetchSSE, type SSEEvent, type SSEOptions } from "@/lib/utils/sse";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createLogger } from "@/lib/utils/logger";
+import { fetchSSE, type SSEEvent, type SSEOptions } from "@/lib/utils/sse";
 
 const logger = createLogger("use-sse");
 
@@ -68,12 +68,14 @@ export function useSSE(options: UseSSEOptions = {}): UseSSEReturn {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Initialize sseOptions ref
   const sseOptionsRef = useRef(sseOptions);
 
-  // Keep sseOptions ref updated
+  // Keep sseOptions ref updated without causing dependency issues
   useEffect(() => {
     sseOptionsRef.current = sseOptions;
-  }, [sseOptions]);
+  });
 
   const handleMessage = useCallback(
     (event: SSEEvent) => {
