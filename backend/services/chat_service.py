@@ -44,17 +44,22 @@ class ChatService:
 
         try:
             chat_result = self.client.chat(model=model_name, messages=ollama_messages, stream=True)
-            stream = chat_result if hasattr(chat_result, "__aiter__") else await chat_result
+            stream = await chat_result
 
             async for chunk in stream:
+                # chunk is a ChatResponse object from ollama
                 thinking = (
-                    chunk.get("thinking", {}).get("content") if chunk.get("thinking") else None
+                    getattr(chunk.message, "thinking", None)
+                    if hasattr(chunk, "message") and chunk.message
+                    else None
                 )
                 content = (
-                    chunk.get("message", {}).get("content", "") if chunk.get("message") else ""
+                    getattr(chunk.message, "content", "")
+                    if hasattr(chunk, "message") and chunk.message
+                    else ""
                 )
-                done = chunk.get("done", False)
-                response_model = chunk.get("model", model_name)
+                done = getattr(chunk, "done", False)
+                response_model = getattr(chunk, "model", model_name)
 
                 if content or thinking:
                     response = ChatResponse(

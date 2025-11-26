@@ -12,12 +12,14 @@ import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/hooks/api/query-keys";
 import { useConversation, useCreateConversation, useModels } from "@/lib/hooks/api/use-chat";
 import { useChatStore } from "@/lib/stores/chat-store";
+import { useThinkingStore } from "@/lib/stores/thinking-store";
 import { cn } from "@/lib/utils";
 import { createLogger } from "@/lib/utils/logger";
 import { ChatHeader } from "./chat-header";
 import { ChatInput } from "./chat-input";
 import { ChatMessage } from "./chat-message";
 import { ChatSidebar } from "./chat-sidebar";
+import { ChatThinking } from "./chat-thinking";
 import {
   convertMessagesToApiFormat,
   createUserMessage,
@@ -77,6 +79,12 @@ export function ChatContainer({ className }: ChatContainerProps) {
 
   const { scrollContainerRef, messagesEndRef, showScrollButton, handleScrollToBottom } =
     useChatScroll(messages, status === "streaming", selectedConversationId);
+
+  useEffect(() => {
+    if (status !== "streaming") {
+      useThinkingStore.getState().resetThinking();
+    }
+  }, [status]);
 
   useEffect(() => {
     if (urlConversationId && urlConversationId !== selectedConversationId) {
@@ -240,7 +248,11 @@ export function ChatContainer({ className }: ChatContainerProps) {
                 </div>
               )}
             </div>
-
+ 
+            <div className="px-6 pb-3">
+              <ChatThinking isStreaming={status === "streaming"} />
+            </div>
+ 
             <ChatInput
               input={input}
               handleInputChange={(e) => setInput(e.target.value)}
@@ -251,9 +263,10 @@ export function ChatContainer({ className }: ChatContainerProps) {
               disabled={status !== "ready"}
               error={errorMessage}
             />
-
+ 
             {showScrollButton && (
               <Button
+
                 onClick={handleScrollToBottom}
                 size="icon"
                 className={cn(

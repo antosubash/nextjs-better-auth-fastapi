@@ -301,10 +301,13 @@ async def save_assistant_message_if_new(
 def _create_thinking_response(thinking: str, chunk_id: int) -> str:
     """Create thinking response for AI SDK."""
     thinking_data = {
+        "type": "thinking",
         "thinking": thinking,
-        "messageId": f"chatcmpl-{chunk_id}",
+        "messageId": f"chatcmpl-thinking-{chunk_id}",
+        "chunkId": chunk_id,
     }
-    return f":thinking {json.dumps(thinking_data, ensure_ascii=False)}\n"
+    encoded = json.dumps(thinking_data, ensure_ascii=False)
+    return f":thinking {encoded}\nevent: thinking\ndata: {encoded}\n\n"
 
 
 def _create_ai_sdk_chunk(content: str, chunk_id: int, model_name: str) -> str:
@@ -322,7 +325,7 @@ def _create_ai_sdk_chunk(content: str, chunk_id: int, model_name: str) -> str:
             }
         ],
     }
-    return f"data: {json.dumps(ai_sdk_chunk, ensure_ascii=False)}\n\n"
+    return f"event: result\ndata: {json.dumps(ai_sdk_chunk, ensure_ascii=False)}\n\n"
 
 
 def _create_final_chunk(chunk_id: int, model_name: str) -> str:
@@ -340,7 +343,7 @@ def _create_final_chunk(chunk_id: int, model_name: str) -> str:
             }
         ],
     }
-    return f"data: {json.dumps(final_chunk)}\n\n"
+    return f"event: result\ndata: {json.dumps(final_chunk)}\n\n"
 
 
 def _create_message_ids_response(
@@ -368,14 +371,16 @@ async def _process_chunk_data(
     done = data.get("done", False)
     responses = []
 
-    if thinking:
+    if thinking and thinking.strip():
         try:
+            logger.debug(f"Creating thinking response: {thinking}")
             responses.append(_create_thinking_response(thinking, state.chunk_id))
         except (TypeError, ValueError) as e:
             logger.warning(f"Failed to encode thinking data: {e!s}")
 
     if content and content.strip():
         try:
+            logger.debug(f"Creating content response: {content}")
             responses.append(_create_ai_sdk_chunk(content, state.chunk_id, context.model_name))
             state.chunk_id += 1
         except (TypeError, ValueError) as e:

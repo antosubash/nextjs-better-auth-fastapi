@@ -51,8 +51,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Filter out thinking comments to prevent AI SDK parsing errors
-    // Thinking comments start with ":thinking" and are ignored by parsers
+    // Transform stream to handle both thinking and result events
     const transformStream = new TransformStream({
       transform(chunk, controller) {
         const decoder = new TextDecoder();
@@ -61,12 +60,8 @@ export async function POST(request: NextRequest) {
         const lines = text.split("\n");
 
         for (const line of lines) {
-          // Skip SSE comment lines (starting with :) to prevent parsing errors
-          // These are thinking tokens that we'll handle separately if needed
-          if (line.trim().startsWith(":thinking")) {
-            continue;
-          }
-          // Forward all other lines (preserve newlines for proper SSE formatting)
+          // Forward all lines including thinking events
+          // The frontend will handle both event types appropriately
           controller.enqueue(encoder.encode(`${line}\n`));
         }
       },
